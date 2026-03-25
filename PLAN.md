@@ -69,6 +69,9 @@
   finite triangulation wrapper and facet API.
 - `repo/Arxiv170207325/Labeling.lean`
   Sperner labelings, encoded roommate labelings, label sets on facets.
+- `repo/Arxiv170207325/InteriorTarget.lean`
+  initial Section 5 support file for ambient coordinate faces, interior points, and the first
+  face-preserving map lemmas feeding the target-hitting theorem.
 - `repo/Arxiv170207325/PiecewiseAffine.lean`
   facetwise affine images and the global target-hitting theorem.
 - `repo/Arxiv170207325/HallTools.lean`

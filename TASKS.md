@@ -2,16 +2,19 @@
 
 <!-- SUPERVISOR_TASKS:START -->
 ## Supervisor Tasks
-- [x] Create `PaperDefinitions.lean` with the definitions needed to state the paper results.
-- [x] Create `PaperTheorems.lean` with theorem statements as close to the paper as Lean allows.
-- [x] Keep the files easy for a human to compare against the paper.
-- [x] Make both files syntactically valid Lean.
+- [ ] Prove the target statements presented in `PaperTheorems.lean`.
+- [ ] Keep reusable proof infrastructure in separate support files when that yields a cleaner project structure.
+- [ ] Maintain `TASKS.md` and `PLAN.md` as the proof frontier moves.
+- [ ] Keep sorrys within the configured policy.
+- [ ] Do not introduce unapproved axioms.
 <!-- SUPERVISOR_TASKS:END -->
 
 ## Worker Tasks
-- [ ] Strengthen `repo/Arxiv170207325/SimplexModel.lean` with the first proof-facing lemmas on supports, coordinate faces, and cyclic permutation.
+- [x] Strengthen `repo/Arxiv170207325/SimplexModel.lean` with the first proof-facing lemmas on supports, coordinate faces, barycenter coordinates, and cyclic permutation.
 - [x] Decide whether `SimplexTriangulation` should gain explicit cover/gluing fields before the proof phase begins in earnest.
-- [ ] Begin the first proof-facing support file for the interior target-hitting theorem from Section 5.
+- [x] Begin the first proof-facing support file for the interior target-hitting theorem from Section 5.
+- [ ] Extend `repo/Arxiv170207325/InteriorTarget.lean` from face-preservation lemmas to the first facet-image and interior-point reduction lemmas.
+- [ ] Decide the next support-file split for the Section 5 existence proof: triangulation combinatorics versus path-following geometry.
 
 ## Completed
 - [x] Read `repo/paper/arxiv-1702.07325.tex` from start to finish and mapped the proof structure.
@@ -21,3 +24,4 @@
 - [x] Added `repo/PaperDefinitions.lean`, `repo/PaperTheorems.lean`, and the initial simplex/support interface file.
 - [x] Verified the new files with `lake build`, `lake env lean PaperDefinitions.lean`, and `lake env lean PaperTheorems.lean`.
 - [x] Reworked the theorem-stating layer so `PaperDefinitions.lean` exposes the main paper definitions directly and `SimplexTriangulation` records cover/intersection data explicitly.
+- [x] Added the first proof-facing simplex and interior-target support lemmas in `repo/Arxiv170207325/SimplexModel.lean` and `repo/Arxiv170207325/InteriorTarget.lean`.
