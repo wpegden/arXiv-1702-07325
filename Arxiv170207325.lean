@@ -1,3 +1,4 @@
 import Arxiv170207325.Basic
-import Arxiv170207325.PaperDefinitionsCore
 import Arxiv170207325.SimplexModel
+import PaperDefinitions
+import PaperTheorems

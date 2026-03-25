@@ -1,7 +1,7 @@
 name = "Arxiv170207325"
 version = "0.1.0"
 keywords = ["math"]
-defaultTargets = ["Arxiv170207325"]
+defaultTargets = ["Arxiv170207325", "PaperDefinitions", "PaperTheorems"]
 
 [leanOptions]
 pp.unicode.fun = true # pretty-prints `fun a ↦ b`
@@ -16,3 +16,9 @@ rev = "v4.28.0"
 
 [[lean_lib]]
 name = "Arxiv170207325"
+
+[[lean_lib]]
+name = "PaperDefinitions"
+
+[[lean_lib]]
+name = "PaperTheorems"

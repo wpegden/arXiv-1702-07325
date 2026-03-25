@@ -1,53 +1,71 @@
-import Arxiv170207325.PaperDefinitionsCore
+import PaperDefinitions
 
 noncomputable section
 
 namespace Arxiv170207325
 
-/-- Section 5's central target-hitting theorem in the interior-point form used by the later paper
-results. -/
+/-! ## Support-level geometric statements -/
+
+/-- Section 5's central support theorem: a face-preserving piecewise-linear self-map of a
+triangulated simplex hits any chosen interior target on some facet. -/
 def InteriorTargetFacetStatement (n : ℕ) [NeZero n] : Prop :=
-  ∀ (T : SimplexTriangulation n) (f : SelfMapOnRentSimplex n) (y : RentCoordinates n),
-    IsPiecewiseAffineOn T f →
-    IsFaceRespecting f →
+  ∀ (T : SimplexTriangulation n) (f : PiecewiseLinearSimplexMap n) (y : RentCoordinates n),
+    IsPiecewiseLinearOn T f →
+    PreservesCoordinateFaces f →
     IsInteriorSimplexPoint y →
     ∃ τ ∈ T.facets, FacetImageContains f τ y
 
-/-- Paper Section 2, higher-dimensional Sperner lemma in the existence form used by the rest of
-the manuscript. -/
+/-- The barycenter-specialized form used directly in the second proof of Sperner's lemma and in
+the secretive-roommate theorem. -/
+def BarycenterFacetStatement (n : ℕ) [NeZero n] : Prop :=
+  ∀ (T : SimplexTriangulation n) (f : PiecewiseLinearSimplexMap n),
+    IsPiecewiseLinearOn T f →
+    PreservesCoordinateFaces f →
+    ∃ τ ∈ T.facets, FacetImageContains f τ ((rentBarycenter n : RentSimplex n) : RentCoordinates n)
+
+/-! ## Paper-facing combinatorial statements -/
+
+/-- Paper Section 2, Sperner's lemma in the higher-dimensional existence form used later in the
+manuscript. -/
 def SpernerLemmaStatement (n : ℕ) [NeZero n] : Prop :=
-  ∀ (T : SimplexTriangulation n) (L : VertexColoring n),
-    IsSpernerLabeling T L →
+  ∀ (T : SimplexTriangulation n) (L : SpernerLabeling T),
     ∃ τ ∈ T.facets, IsFullyLabeledFacet L τ
 
-/-- Paper Theorem 1.1 specialized to the `n = 3` case. -/
-def ThreeRoommateStatement : Prop :=
-  ∀ (T : SimplexTriangulation 3) (visible : VisibleRoommateIndex 3 → VertexColoring 3),
-    (∀ j, IsSpernerLabeling T (visible j)) →
+/-- Encoded combinatorial form of Theorem 1.1, before bundling the Sperner condition into the
+type of the visible profiles. -/
+def EncodedSecretiveRentalHarmonyStatement (n : ℕ) [NeZero n] : Prop :=
+  ∀ (T : SimplexTriangulation n) (visible : EncodedVisiblePreferenceProfile n),
+    IsSecretiveSpernerProfile T visible →
     ∃ τ ∈ T.facets, FacetSupportsSecretiveAssignment visible τ
 
-/-- Paper Theorem 1.1 in the encoded combinatorial form used in Sections 3 and 4. -/
+/-- Paper Theorem 1.1, specialized to the `n = 3` case and written directly in terms of two
+visible Sperner labelings. -/
+def ThreeRoommateStatement : Prop :=
+  ∀ (T : SimplexTriangulation 3) (visible : VisibleSpernerProfile T),
+    ∃ τ ∈ T.facets,
+      FacetSupportsSecretiveAssignment (VisibleSpernerProfile.toEncoded visible) τ
+
+/-- Paper Theorem 1.1, formalized via the visible roommates' Sperner encodings. -/
 def SecretiveRentalHarmonyStatement (n : ℕ) [NeZero n] : Prop :=
-  ∀ (T : SimplexTriangulation n) (visible : VisibleRoommateIndex n → VertexColoring n),
-    (∀ j, IsSpernerLabeling T (visible j)) →
-    ∃ τ ∈ T.facets, FacetSupportsSecretiveAssignment visible τ
+  ∀ (T : SimplexTriangulation n) (visible : VisibleSpernerProfile T),
+    ∃ τ ∈ T.facets,
+      FacetSupportsSecretiveAssignment (VisibleSpernerProfile.toEncoded visible) τ
 
 /-- Section 6, first multiple-labeling theorem, stated using multiplicity vectors in the scaled
-simplex. -/
+simplex `m · Δ_n`. -/
 def PrimalMultipleLabelingStatement (n m : ℕ) : Prop :=
-  ∀ (T : SimplexTriangulation (n + 1)) (labelings : Fin m → VertexColoring (n + 1))
+  ∀ (T : SimplexTriangulation (n + 1)) (labelings : SpernerLabelingFamily T m)
     (y : RentCoordinates (n + 1)),
-    (∀ j, IsSpernerLabeling T (labelings j)) →
     y ∈ scaledSimplex m (n + 1) →
     AvoidsLatticeHulls m (n + 1) n y →
-    ∃ τ ∈ T.facets, FacetCapturesMultiplicityTarget labelings τ y
+    ∃ τ ∈ T.facets,
+      FacetCapturesMultiplicityTarget (SpernerLabelingFamily.toColorings labelings) τ y
 
 /-- Section 6, second multiple-labeling theorem, phrased as lower bounds on the number of
 distinct labels shown by each labeling on one facet. -/
 def DualMultipleLabelingStatement (n m : ℕ) : Prop :=
-  ∀ (T : SimplexTriangulation (n + 1)) (labelings : Fin m → VertexColoring (n + 1))
+  ∀ (T : SimplexTriangulation (n + 1)) (labelings : SpernerLabelingFamily T m)
     (k : Fin m → ℕ),
-    (∀ j, IsSpernerLabeling T (labelings j)) →
     (∀ j, 0 < k j) →
     (∑ j, k j) = n + m →
     ∃ τ ∈ T.facets, ∀ j, FacetUsesAtLeast (labelings j) τ (k j)
