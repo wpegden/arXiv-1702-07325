@@ -136,15 +136,19 @@
   segment-intersection input from the pure graph theory, plus a start-boundary layer
   `Section5StartBoundaryGeometry` that separates the unique level-1 successor geometry from the
   rest of the local degree argument and records that a face-respecting map already forces the
-  singleton start cell `e_1` to hit `b_1`; the remaining wrappers are now collapsed into a
+  singleton start cell `e_1` to hit `b_1`; in addition, the triangulation API now proves that any
+  facet realization containing the original simplex vertex `e_1` must actually have `e_1` as a
+  vertex, so `section5StartNode` is automatically a genuine Section 5 graph node under face
+  preservation; the remaining wrappers are now collapsed into a
   direct theorem saying that face preservation, a concrete unique start successor, and the
   two local-degree hypotheses already imply a target-containing facet.
 - Next local objective:
   discharge `Section5SegmentGeometry` from the actual Section 5 geometry:
-  prove that the start vertex has exactly one boundary-chain successor, every graph node in the
-  start component has at most two neighbors, and every non-start degree-one node is a
-  barycenter-hitting endpoint, all under the paper's generic segment-intersection assumptions;
-  the `e_1 ↦ b_1` portion is now already discharged by face preservation.
+  first identify the unique level-1 successor of the now-canonical start node and prove the start
+  degree-one statement on the real start component, then prove that every graph node in that
+  component has at most two neighbors and every non-start degree-one node is a barycenter-hitting
+  endpoint, all under the paper's generic segment-intersection assumptions; the `e_1 ↦ b_1`
+  portion and the fact that `e_1` is an actual graph node are now already discharged.
 - Current structural blocker:
   the present `SimplexTriangulation` wrapper does not yet expose the induced simplicial
   subdivision of the prefix faces, especially the boundary edge `[e_1,e_2]`, and it also does

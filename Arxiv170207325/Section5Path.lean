@@ -171,6 +171,29 @@ theorem section5StartCell_card (n : ℕ) [NeZero n] :
     (section5StartCell n).vertices.card = 1 := by
   simp [section5StartCell]
 
+theorem section5StartVertex_eq_stdSimplex_vertex (n : ℕ) [NeZero n] :
+    section5StartVertex n = stdSimplex.vertex (S := ℝ) (0 : RoomIndex n) := by
+  apply eq_stdSimplex_vertex_of_apply_eq_one
+  change prefixBarycenter n 1 (0 : RoomIndex n) = 1
+  simp [prefixBarycenter]
+
+theorem section5StartCell_isFace {n : ℕ} [NeZero n] (T : SimplexTriangulation n) :
+    T.IsFace (section5StartCell n) := by
+  obtain ⟨τ, hτ, hmem⟩ := T.covers_simplex (section5StartVertex n)
+  refine ⟨τ, hτ, ?_⟩
+  intro v hv
+  have hv' : v = section5StartVertex n := by
+    simpa [section5StartCell] using hv
+  subst hv'
+  have hmem' :
+      ((stdSimplex.vertex (S := ℝ) (0 : RoomIndex n) : RentSimplex n) : RentCoordinates n) ∈
+        τ.realization := by
+    simpa [section5StartVertex_eq_stdSimplex_vertex (n := n)] using hmem
+  have hvertex :
+      stdSimplex.vertex (S := ℝ) (0 : RoomIndex n) ∈ τ.vertices := by
+    exact τ.stdSimplexVertex_mem_vertices_of_mem_realization (i := (0 : RoomIndex n)) hmem'
+  simpa [section5StartVertex_eq_stdSimplex_vertex (n := n)] using hvertex
+
 @[simp]
 theorem facetImageContains_section5StartCell_iff {n : ℕ} [NeZero n]
     {f : SelfMapOnRentSimplex n} {y : RentCoordinates n} :
@@ -258,6 +281,20 @@ theorem IsSection5GraphNode.cell_nonempty {n : ℕ} {T : SimplexTriangulation n}
   refine Finset.card_ne_zero.mp ?_
   rw [hu.card_eq]
   omega
+
+theorem IsFaceRespecting.section5StartNode_isGraphNode {n : ℕ} [NeZero n]
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n} (hf : IsFaceRespecting f) :
+    IsSection5GraphNode T f (section5StartNode n) := by
+  refine ⟨Nat.succ_le_of_lt (Nat.pos_of_ne_zero (NeZero.ne n)), section5StartCell_isFace T,
+    section5StartCell_card n, ?_, ?_⟩
+  · intro v hv
+    have hv' : v = section5StartVertex n := by
+      simpa [section5StartCell] using hv
+    subst hv'
+    exact section5StartVertex_mem_coordinateFace n
+  · refine ⟨prefixBarycenter n 1, hf.startCell_hits_prefixBarycenter, ?_⟩
+    simpa [prefixBarycenterSegment] using
+      right_mem_segment ℝ (prefixBarycenter n 0) (prefixBarycenter n 1)
 
 theorem IsSection5GraphNode.level_eq_card_pred {n : ℕ} {T : SimplexTriangulation n}
     {f : SelfMapOnRentSimplex n} {u : Section5Node n} (hu : IsSection5GraphNode T f u) :

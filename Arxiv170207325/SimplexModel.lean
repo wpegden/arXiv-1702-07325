@@ -110,6 +110,33 @@ theorem simplexSupport_rentBarycenter {n : ℕ} [NeZero n] :
   simp [simplexSupport, coordSupport, hn0]
 
 @[simp]
+theorem stdSimplex_vertex_apply {n : ℕ} (i j : RoomIndex n) :
+    (stdSimplex.vertex (S := ℝ) i : RentSimplex n) j = if j = i then 1 else 0 := by
+  by_cases h : j = i <;> simp [stdSimplex.vertex, h]
+
+theorem eq_stdSimplex_vertex_of_apply_eq_one {n : ℕ} {x : RentSimplex n} {i : RoomIndex n}
+    (hi : x i = 1) : x = stdSimplex.vertex (S := ℝ) i := by
+  apply stdSimplex.ext
+  funext j
+  by_cases hji : j = i
+  · subst hji
+    simp [stdSimplex.vertex, hi]
+  · have hsum :
+      Finset.sum (Finset.univ.erase i) (fun k => x k) = 0 := by
+      have hsplit :
+          (∑ k : RoomIndex n, x k) = x i + Finset.sum (Finset.univ.erase i) (fun k => x k) := by
+        simpa using Finset.sum_eq_add_sum_diff_singleton
+          (s := (Finset.univ : Finset (RoomIndex n))) (f := fun k => x k) (i := i)
+          (Finset.mem_univ i)
+      rw [stdSimplex.sum_eq_one x, hi] at hsplit
+      linarith
+    have hzero :
+        ∀ k ∈ Finset.univ.erase i, x k = 0 := by
+      exact (Finset.sum_eq_zero_iff_of_nonneg fun k _ => x.2.1 k).mp hsum
+    have hj0 : x j = 0 := hzero j (by simp [hji])
+    simpa [stdSimplex_vertex_apply, hji] using hj0
+
+@[simp]
 theorem rentBarycenter_mem_coordinateFace_iff {n : ℕ} [NeZero n] {I : Finset (RoomIndex n)} :
     rentBarycenter n ∈ coordinateFace I ↔ I = Finset.univ := by
   simp [coordinateFace, simplexSupport_rentBarycenter]

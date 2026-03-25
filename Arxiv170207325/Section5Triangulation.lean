@@ -1,3 +1,4 @@
+import Mathlib.Analysis.Convex.Jensen
 import Mathlib.Data.Finset.Insert
 import PaperDefinitions
 
@@ -46,8 +47,27 @@ theorem SimplexFacet.commonVertices_subset_left {n : ℕ} (τ₁ τ₂ : Simplex
   (τ₁.commonFace_isSubfaceLeft τ₂)
 
 theorem SimplexFacet.commonVertices_subset_right {n : ℕ} (τ₁ τ₂ : SimplexFacet n) :
-    τ₁.commonVertices τ₂ ⊆ τ₂.vertices :=
+  τ₁.commonVertices τ₂ ⊆ τ₂.vertices :=
   (τ₁.commonFace_isSubfaceRight τ₂)
+
+theorem SimplexFacet.stdSimplexVertex_mem_vertices_of_mem_realization {n : ℕ}
+    (τ : SimplexFacet n) (i : RoomIndex n)
+    (hx : ((stdSimplex.vertex (S := ℝ) i : RentSimplex n) : RentCoordinates n) ∈ τ.realization) :
+    stdSimplex.vertex (S := ℝ) i ∈ τ.vertices := by
+  have hproj :
+      ConvexOn ℝ (Set.univ : Set (RentCoordinates n)) (LinearMap.proj (R := ℝ) i) :=
+    (LinearMap.proj (R := ℝ) i).convexOn convex_univ
+  have hx' :
+      ((stdSimplex.vertex (S := ℝ) i : RentSimplex n) : RentCoordinates n) ∈
+        convexHull ℝ τ.pointSet := by
+    simpa [SimplexFacet.realization] using hx
+  obtain ⟨y, hyτ, hyge⟩ := hproj.exists_ge_of_mem_convexHull
+    (t := τ.pointSet) (by intro y _; simp) hx'
+  rcases hyτ with ⟨v, hv, rfl⟩
+  have hcoord : (1 : ℝ) ≤ v i := by
+    simpa using hyge
+  have hEqCoord : v i = 1 := le_antisymm (stdSimplex.le_one v i) hcoord
+  simpa [eq_stdSimplex_vertex_of_apply_eq_one hEqCoord] using hv
 
 /-- The codimension-one adjacency relation on triangulation facets used by the Section 5 graph. -/
 def SimplexTriangulation.AdjacentFacets {n : ℕ} (T : SimplexTriangulation n)
