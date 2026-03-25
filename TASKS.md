@@ -25,7 +25,8 @@
 - [x] Lift the abstract endpoint theorem from the full node set to the explicit start component, and package the paper's generic Section 5 input on that component in a reusable support-layer structure.
 - [x] Connect `Section5StartComponentGenericity` to the concrete start-component endpoint theorem by proving `Section5StartComponentGenericity.exists_targetFacet`.
 - [x] Introduce `Section5SegmentGeometry` as the paper-facing generic segment-intersection package and prove that it implies `Section5StartComponentGenericity` and therefore a target-containing facet.
-- [ ] Tie `section5StartNode` to the actual boundary-chain graph data all the way through degree one: prove it is a real graph node in the Section 5 component and that its degree in that component is exactly one.
+- [x] Isolate the Section 5 start-boundary geometry into a dedicated support layer and prove that any face-respecting map sends the singleton start cell `e₁` to the first barycenter `b₁`.
+- [ ] Tie `section5StartNode` to the actual boundary-chain graph data all the way through degree one: prove it is a real graph node in the Section 5 component, identify its unique level-1 successor, and show that its degree in that component is exactly one.
 - [ ] Prove the raw start-component hypotheses for `section5StartComponentGraph.exists_targetFacet_of_endpoint_rule`: the start vertex has one neighbor on the boundary chain, every node has at most two neighbors, and every non-start degree-one node is an endpoint hitting the barycenter.
 - [ ] Discharge `Section5SegmentGeometry` from actual Section 5 lemmas on the barycenter-chain preimage: prove the unique boundary successor, the at-most-two-neighbor bound, and the non-start endpoint characterization on the real start component.
 

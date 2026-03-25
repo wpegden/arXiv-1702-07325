@@ -133,12 +133,16 @@
   component itself, now connected to the packaged graph-theoretic assumptions via
   `Section5StartComponentGenericity.exists_targetFacet`, with a further wrapper
   `Section5SegmentGeometry.exists_targetFacet` isolating the paper's sketch-level generic
-  segment-intersection input from the pure graph theory.
+  segment-intersection input from the pure graph theory, plus a start-boundary layer
+  `Section5StartBoundaryGeometry` that separates the unique level-1 successor geometry from the
+  rest of the local degree argument and records that a face-respecting map already forces the
+  singleton start cell `e_1` to hit `b_1`.
 - Next local objective:
   discharge `Section5SegmentGeometry` from the actual Section 5 geometry:
   prove that the start vertex has exactly one boundary-chain successor, every graph node in the
   start component has at most two neighbors, and every non-start degree-one node is a
-  barycenter-hitting endpoint, all under the paper's generic segment-intersection assumptions.
+  barycenter-hitting endpoint, all under the paper's generic segment-intersection assumptions;
+  the `e_1 ↦ b_1` portion is now already discharged by face preservation.
 - First prove the barycenter-specialized version if that is the easiest entry point.
 - Then generalize to arbitrary interior targets if Section 6 needs it.
 - If full surjectivity is still awkward, keep the theorem in the "target in interior" form first; that already covers the barycenter and the interior `y` used in the first Section 6 theorem.

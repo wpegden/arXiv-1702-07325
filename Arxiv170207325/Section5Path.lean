@@ -171,6 +171,55 @@ theorem section5StartCell_card (n : ℕ) [NeZero n] :
     (section5StartCell n).vertices.card = 1 := by
   simp [section5StartCell]
 
+@[simp]
+theorem facetImageContains_section5StartCell_iff {n : ℕ} [NeZero n]
+    {f : SelfMapOnRentSimplex n} {y : RentCoordinates n} :
+    FacetImageContains f (section5StartCell n) y ↔ y = f (section5StartVertex n) := by
+  rw [FacetImageContains, FacetImageHull, section5StartCell]
+  simp [convexHull_singleton]
+
+theorem eq_prefixBarycenter_one_of_mem_ambientCoordinateFace {n : ℕ} [NeZero n]
+    {y : RentCoordinates n} (hy : y ∈ ambientCoordinateFace (prefixRooms n 1)) :
+    y = prefixBarycenter n 1 := by
+  ext i
+  by_cases hi : i.1 < 1
+  · have hsum_single : (∑ j, y j) = y i := by
+      classical
+      rw [Finset.sum_eq_single i]
+      · intro j _ hji
+        have hjnot : j ∉ prefixRooms n 1 := by
+          intro hj
+          have hi0 : i.1 = 0 := by omega
+          have hj0 : j.1 = 0 := by
+            simpa [mem_prefixRooms_iff] using hj
+          apply hji
+          apply Fin.ext
+          omega
+        exact (coordSupport_subset_iff.mp hy.2) j hjnot
+      · intro hi_not_mem
+        exact False.elim (hi_not_mem (Finset.mem_univ i))
+    have hyi : y i = (1 : ℝ) := by
+      calc
+        y i = ∑ j, y j := hsum_single.symm
+        _ = ((1 : ℕ) : ℝ) := hy.1.2
+        _ = (1 : ℝ) := by norm_num
+    simp [prefixBarycenter, hi, hyi]
+  · have hyi : y i = 0 := by
+      exact (coordSupport_subset_iff.mp hy.2) i (by simpa [mem_prefixRooms_iff] using hi)
+    simp [prefixBarycenter, hi, hyi]
+
+theorem IsFaceRespecting.map_section5StartVertex_eq_prefixBarycenter {n : ℕ} [NeZero n]
+    {f : SelfMapOnRentSimplex n} (hf : IsFaceRespecting f) :
+    f (section5StartVertex n) = prefixBarycenter n 1 := by
+  exact eq_prefixBarycenter_one_of_mem_ambientCoordinateFace <|
+    hf.mapsTo_ambientCoordinateFace (prefixRooms n 1) (section5StartVertex_mem_coordinateFace n)
+
+theorem IsFaceRespecting.startCell_hits_prefixBarycenter {n : ℕ} [NeZero n]
+    {f : SelfMapOnRentSimplex n} (hf : IsFaceRespecting f) :
+    FacetImageContains f (section5StartCell n) (prefixBarycenter n 1) := by
+  rw [facetImageContains_section5StartCell_iff]
+  exact (hf.map_section5StartVertex_eq_prefixBarycenter).symm
+
 /-- A vertex of the Section 5 graph: a simplex cell together with its level in the barycenter
 chain. -/
 structure Section5Node (n : ℕ) where
@@ -377,6 +426,57 @@ theorem section5StartComponentGraph_adj_iff {n : ℕ} [NeZero n]
     (section5StartComponentGraph hstart).Adj u v ↔ Section5Adjacent f u.1.1 v.1.1 := by
   exact SimpleGraph.ConnectedComponent.toSimpleGraph_adj (C := section5StartComponent hstart)
     u.2 v.2
+
+theorem not_section5Step_to_startNode {n : ℕ} [NeZero n] {f : SelfMapOnRentSimplex n}
+    {u : Section5Node n} : ¬ Section5Step f u (section5StartNode n) := by
+  intro hu
+  have : u.level + 1 = 0 := by simpa [section5StartNode_level] using hu.1
+  omega
+
+theorem section5Step_from_startNode_iff {n : ℕ} [NeZero n] {f : SelfMapOnRentSimplex n}
+    {u : Section5Node n} :
+    Section5Step f (section5StartNode n) u ↔
+      u.level = 1 ∧
+        (section5StartCell n).IsSubfaceOf u.cell ∧
+        FacetImageContains f (section5StartCell n) (prefixBarycenter n 1) := by
+  constructor
+  · intro hu
+    have hlevel : u.level = 1 := by
+      have hstep : (section5StartNode n).level + 1 = u.level := hu.1
+      simpa [section5StartNode_level] using hstep.symm
+    refine ⟨hlevel, hu.2.1, ?_⟩
+    simpa [section5StartNode_cell, hlevel] using hu.2.2
+  · rintro ⟨hlevel, hsub, hhit⟩
+    refine ⟨?_, ?_, ?_⟩
+    · rw [section5StartNode_level, hlevel]
+    · simpa [section5StartNode_cell] using hsub
+    · rw [section5StartNode_cell, hlevel]
+      exact hhit
+
+theorem section5Adjacent_startNode_iff {n : ℕ} [NeZero n] {f : SelfMapOnRentSimplex n}
+    {u : Section5Node n} :
+    Section5Adjacent f (section5StartNode n) u ↔
+      u.level = 1 ∧
+        (section5StartCell n).IsSubfaceOf u.cell ∧
+        FacetImageContains f (section5StartCell n) (prefixBarycenter n 1) := by
+  constructor
+  · intro hu
+    rcases hu with hsu | hus
+    · exact section5Step_from_startNode_iff.mp hsu
+    · exact False.elim <| not_section5Step_to_startNode hus
+  · intro hu
+    exact Or.inl <| section5Step_from_startNode_iff.mpr hu
+
+theorem section5StartComponentGraph_adj_start_iff {n : ℕ} [NeZero n]
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    (hstart : IsSection5GraphNode T f (section5StartNode n))
+    {v : section5StartComponent hstart} :
+    (section5StartComponentGraph hstart).Adj (section5StartVertexInComponent hstart) v ↔
+      v.1.1.level = 1 ∧
+        (section5StartCell n).IsSubfaceOf v.1.1.cell ∧
+        FacetImageContains f (section5StartCell n) (prefixBarycenter n 1) := by
+  rw [section5StartComponentGraph_adj_iff hstart]
+  exact section5Adjacent_startNode_iff
 
 /-- A path in the Section 5 graph. -/
 def Section5Path {n : ℕ} (f : SelfMapOnRentSimplex n) (p : List (Section5Node n)) : Prop :=
@@ -657,5 +757,67 @@ theorem Section5SegmentGeometry.exists_targetFacet {n : ℕ} [NeZero n]
     ∃ τ ∈ T.facets,
       FacetImageContains f τ ((rentBarycenter n : RentSimplex n) : RentCoordinates n) := by
   exact (hgeom.toStartComponentGenericity).exists_targetFacet hf
+
+/-- The start-vertex portion of the Section 5 geometry: the singleton vertex `e₁` hits `b₁`,
+and among nodes in the start component there is a unique level-1 cell containing that vertex. -/
+structure Section5StartBoundaryGeometry {n : ℕ} [NeZero n]
+    (T : SimplexTriangulation n) (f : SelfMapOnRentSimplex n)
+    (hstart : IsSection5GraphNode T f (section5StartNode n)) : Prop where
+  start_hits_barycenter :
+    FacetImageContains f (section5StartCell n) (prefixBarycenter n 1)
+  unique_levelOne_successor :
+    ∃! v : section5StartComponent hstart,
+      v.1.1.level = 1 ∧ (section5StartCell n).IsSubfaceOf v.1.1.cell
+
+theorem section5StartBoundaryGeometry_of_pointAndSuccessorData {n : ℕ} [NeZero n]
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    {hstart : IsSection5GraphNode T f (section5StartNode n)}
+    (hpoint : f (section5StartVertex n) = prefixBarycenter n 1)
+    (hsucc :
+      ∃! v : section5StartComponent hstart,
+        v.1.1.level = 1 ∧ (section5StartCell n).IsSubfaceOf v.1.1.cell) :
+    Section5StartBoundaryGeometry T f hstart := by
+  refine ⟨?_, hsucc⟩
+  rw [facetImageContains_section5StartCell_iff]
+  exact hpoint.symm
+
+theorem section5StartBoundaryGeometry_of_faceRespectingAndSuccessorData {n : ℕ} [NeZero n]
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    {hstart : IsSection5GraphNode T f (section5StartNode n)}
+    (hf : IsFaceRespecting f)
+    (hsucc :
+      ∃! v : section5StartComponent hstart,
+        v.1.1.level = 1 ∧ (section5StartCell n).IsSubfaceOf v.1.1.cell) :
+    Section5StartBoundaryGeometry T f hstart := by
+  refine ⟨hf.startCell_hits_prefixBarycenter, hsucc⟩
+
+theorem Section5StartBoundaryGeometry.start_unique_neighbor {n : ℕ} [NeZero n]
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    {hstart : IsSection5GraphNode T f (section5StartNode n)}
+    (hgeom : Section5StartBoundaryGeometry T f hstart) :
+    ∃! v : section5StartComponent hstart,
+      (section5StartComponentGraph hstart).Adj (section5StartVertexInComponent hstart) v := by
+  rcases hgeom.unique_levelOne_successor with ⟨v, hv, huniq⟩
+  refine ⟨v, ?_, ?_⟩
+  · exact (section5StartComponentGraph_adj_start_iff hstart).mpr
+      ⟨hv.1, hv.2, hgeom.start_hits_barycenter⟩
+  · intro w hw
+    apply huniq w
+    rcases (section5StartComponentGraph_adj_start_iff hstart).mp hw with ⟨hlevel, hsub, _⟩
+    exact ⟨hlevel, hsub⟩
+
+theorem section5SegmentGeometry_of_startBoundaryGeometry {n : ℕ} [NeZero n]
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    {hstart : IsSection5GraphNode T f (section5StartNode n)}
+    (hstartGeom : Section5StartBoundaryGeometry T f hstart)
+    (hdeg : ∀ v : section5StartComponent hstart, section5StartComponentNodeDegree v ≤ 2)
+    (hendpoint :
+      ∀ v : section5StartComponent hstart, section5StartComponentNodeDegree v = 1 →
+        v ≠ section5StartVertexInComponent hstart →
+          IsSection5Endpoint T f v.1.1) :
+    Section5SegmentGeometry T f hstart := by
+  refine ⟨hstartGeom.start_unique_neighbor, hdeg, ?_⟩
+  intro v hv hne
+  exact hendpoint v hv hne
 
 end Arxiv170207325
