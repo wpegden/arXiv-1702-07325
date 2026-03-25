@@ -370,6 +370,14 @@ theorem mem_section5StartComponent_iff_reachable {n : ℕ} [NeZero n]
     unfold section5StartComponent
     simpa [SimpleGraph.reachable_comm] using SimpleGraph.ConnectedComponent.sound hv
 
+theorem section5StartComponentGraph_adj_iff {n : ℕ} [NeZero n]
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    (hstart : IsSection5GraphNode T f (section5StartNode n))
+    {u v : section5StartComponent hstart} :
+    (section5StartComponentGraph hstart).Adj u v ↔ Section5Adjacent f u.1.1 v.1.1 := by
+  exact SimpleGraph.ConnectedComponent.toSimpleGraph_adj (C := section5StartComponent hstart)
+    u.2 v.2
+
 /-- A path in the Section 5 graph. -/
 def Section5Path {n : ℕ} (f : SelfMapOnRentSimplex n) (p : List (Section5Node n)) : Prop :=
   List.IsChain (Section5Adjacent f) p
@@ -405,6 +413,51 @@ theorem IsSection5Endpoint.exists_targetFacet {n : ℕ} [NeZero n]
       FacetImageContains f τ ((rentBarycenter n : RentSimplex n) : RentCoordinates n) := by
   exact ⟨u.cell, hu.cell_mem_facets hf, hu.2⟩
 
+theorem SimpleGraph.exists_other_degreeOne {α : Type*} [Fintype α]
+    (G : SimpleGraph α) [DecidableRel G.Adj]
+    {start : α} (hstart : (G.neighborFinset start).card = 1)
+    (hdeg : ∀ v : α, (G.neighborFinset v).card ≤ 2) :
+    ∃ finish : α, finish ≠ start ∧ (G.neighborFinset finish).card = 1 := by
+  classical
+  have hstartOdd : Odd ((G.neighborFinset start).card) := by
+    rw [hstart]
+    decide
+  let S : Finset α := Finset.univ.filter fun w => w ≠ start ∧ Odd ((G.neighborFinset w).card)
+  have hodd' :
+      Odd ((Finset.univ.filter fun w => w ≠ start ∧ Odd (G.degree w)).card) :=
+    G.odd_card_odd_degree_vertices_ne start <| by
+      simpa only [← G.card_neighborFinset_eq_degree] using hstartOdd
+  have hodd : Odd S.card := by
+    simpa only [S, ← G.card_neighborFinset_eq_degree] using hodd'
+  obtain ⟨finish, hfinish⟩ := Finset.card_pos.mp hodd.pos
+  have hfinish_ne : finish ≠ start := by
+    exact (Finset.mem_filter.mp hfinish).2.1
+  have hfinishOdd : Odd ((G.neighborFinset finish).card) := by
+    exact (Finset.mem_filter.mp hfinish).2.2
+  have hfinish_deg : (G.neighborFinset finish).card = 1 := by
+    have hfinish_le : (G.neighborFinset finish).card ≤ 2 := hdeg finish
+    have hcases :
+        (G.neighborFinset finish).card = 0 ∨
+          (G.neighborFinset finish).card = 1 ∨
+            (G.neighborFinset finish).card = 2 := by
+      omega
+    rcases hcases with h0 | h1 | h2
+    · exfalso
+      exact (by decide : ¬ Odd 0) (h0 ▸ hfinishOdd)
+    · exact h1
+    · exfalso
+      exact (by decide : ¬ Odd 2) (h2 ▸ hfinishOdd)
+  exact ⟨finish, hfinish_ne, hfinish_deg⟩
+
+theorem SimpleGraph.exists_other_endpoint {α : Type*} [Fintype α]
+    (G : SimpleGraph α) [DecidableRel G.Adj] {start : α}
+    (hstart : (G.neighborFinset start).card = 1)
+    (hdeg : ∀ v : α, (G.neighborFinset v).card ≤ 2) (hconn : G.Preconnected) :
+    ∃ finish : α,
+      finish ≠ start ∧ (G.neighborFinset finish).card = 1 ∧ G.Reachable start finish := by
+  rcases SimpleGraph.exists_other_degreeOne G hstart hdeg with ⟨finish, hfinish_ne, hfinish_deg⟩
+  exact ⟨finish, hfinish_ne, hfinish_deg, hconn start finish⟩
+
 theorem section5SimpleGraph.exists_other_degreeOne {n : ℕ}
     (nodes : Finset (Section5Node n)) (f : SelfMapOnRentSimplex n) {start : nodes}
     (hstart : section5NodeDegree nodes f start = 1)
@@ -413,38 +466,15 @@ theorem section5SimpleGraph.exists_other_degreeOne {n : ℕ}
       finish ≠ start ∧ section5NodeDegree nodes f finish = 1 := by
   classical
   let G : SimpleGraph nodes := section5SimpleGraph nodes f
-  have hstart' : G.degree start = 1 := by
-    rw [← G.card_neighborFinset_eq_degree]
-    simpa [section5NodeDegree, G] using hstart
-  have hdeg' : ∀ v : nodes, G.degree v ≤ 2 := by
-    intro v
-    rw [← G.card_neighborFinset_eq_degree]
-    simpa [section5NodeDegree, G] using hdeg v
-  have hstartOdd : Odd (G.degree start) := by
-    rw [hstart']
-    decide
-  let S : Finset nodes := Finset.univ.filter fun w => w ≠ start ∧ Odd (G.degree w)
-  have hodd : Odd S.card := by
-    simpa [S] using G.odd_card_odd_degree_vertices_ne start hstartOdd
-  obtain ⟨finish, hfinish⟩ := Finset.card_pos.mp hodd.pos
-  have hfinish_ne : finish ≠ start := by
-    exact (Finset.mem_filter.mp hfinish).2.1
-  have hfinishOdd : Odd (G.degree finish) := by
-    exact (Finset.mem_filter.mp hfinish).2.2
-  have hfinish_deg : G.degree finish = 1 := by
-    have hfinish_le : G.degree finish ≤ 2 := hdeg' finish
-    have hcases : G.degree finish = 0 ∨ G.degree finish = 1 ∨ G.degree finish = 2 := by
-      omega
-    rcases hcases with h0 | h1 | h2
-    · exfalso
-      exact (by decide : ¬ Odd 0) (h0 ▸ hfinishOdd)
-    · exact h1
-    · exfalso
-      exact (by decide : ¬ Odd 2) (h2 ▸ hfinishOdd)
+  letI : DecidableRel G.Adj := Classical.decRel _
+  rcases SimpleGraph.exists_other_degreeOne G
+      (by simpa [section5NodeDegree, G] using hstart)
+      (by
+        intro v
+        simpa [section5NodeDegree, G] using hdeg v) with
+    ⟨finish, hfinish_ne, hfinish_deg⟩
   exact ⟨finish, hfinish_ne, by
-    have hcard : ((section5SimpleGraph nodes f).neighborFinset finish).card = 1 := by
-      simpa [G] using (G.card_neighborFinset_eq_degree (v := finish)).trans hfinish_deg
-    simpa [section5NodeDegree] using hcard⟩
+    simpa [section5NodeDegree, G] using hfinish_deg⟩
 
 theorem section5SimpleGraph.exists_other_endpoint {n : ℕ}
     (nodes : Finset (Section5Node n)) (f : SelfMapOnRentSimplex n) {start : nodes}
@@ -455,9 +485,18 @@ theorem section5SimpleGraph.exists_other_endpoint {n : ℕ}
       finish ≠ start ∧
       section5NodeDegree nodes f finish = 1 ∧
       (section5SimpleGraph nodes f).Reachable start finish := by
-  rcases section5SimpleGraph.exists_other_degreeOne nodes f hstart hdeg with
-    ⟨finish, hfinish_ne, hfinish_deg⟩
-  exact ⟨finish, hfinish_ne, hfinish_deg, hconn start finish⟩
+  classical
+  let G : SimpleGraph nodes := section5SimpleGraph nodes f
+  letI : DecidableRel G.Adj := Classical.decRel _
+  rcases SimpleGraph.exists_other_endpoint G
+      (by simpa [section5NodeDegree, G] using hstart)
+      (by
+        intro v
+        simpa [section5NodeDegree, G] using hdeg v)
+      hconn with
+    ⟨finish, hfinish_ne, hfinish_deg, hreach⟩
+  exact ⟨finish, hfinish_ne, by
+    simpa [section5NodeDegree, G] using hfinish_deg, hreach⟩
 
 theorem section5SimpleGraph.exists_targetFacet_of_endpoint_rule {n : ℕ} [NeZero n]
     (nodes : Finset (Section5Node n)) (T : SimplexTriangulation n) (f : SelfMapOnRentSimplex n)
@@ -492,5 +531,78 @@ theorem section5Nodes.exists_targetFacet_of_endpoint_rule {n : ℕ} [NeZero n]
   exact section5SimpleGraph.exists_targetFacet_of_endpoint_rule
     (nodes := section5Nodes T f) (T := T) (f := f) hf
     (start := section5StartNodeInNodes hstart) hstartdeg hdeg hconn hendpoint
+
+/-- The degree of one node in the explicit Section 5 start component. -/
+abbrev section5StartComponentNodeDegree {n : ℕ} [NeZero n] {T : SimplexTriangulation n}
+    {f : SelfMapOnRentSimplex n}
+    {hstart : IsSection5GraphNode T f (section5StartNode n)}
+    (v : section5StartComponent hstart) : ℕ := by
+  classical
+  exact ((section5StartComponentGraph hstart).neighborFinset v).card
+
+/-- The graph-theoretic form of the paper's generic segment-intersection claims on the connected
+component of the Section 5 graph that starts at `e₁`. -/
+structure Section5StartComponentGenericity {n : ℕ} [NeZero n]
+    (T : SimplexTriangulation n) (f : SelfMapOnRentSimplex n)
+    (hstart : IsSection5GraphNode T f (section5StartNode n)) : Prop where
+  start_unique_neighbor :
+    ∃! v : section5StartComponent hstart,
+      (section5StartComponentGraph hstart).Adj (section5StartVertexInComponent hstart) v
+  degree_le_two :
+    ∀ v : section5StartComponent hstart, section5StartComponentNodeDegree v ≤ 2
+  degree_one_or_endpoint :
+    ∀ v : section5StartComponent hstart,
+      section5StartComponentNodeDegree v = 1 →
+        v = section5StartVertexInComponent hstart ∨ IsSection5Endpoint T f v.1.1
+
+theorem Section5StartComponentGenericity.start_degree_one {n : ℕ} [NeZero n]
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    {hstart : IsSection5GraphNode T f (section5StartNode n)}
+    (hgen : Section5StartComponentGenericity T f hstart) :
+    section5StartComponentNodeDegree (section5StartVertexInComponent hstart) = 1 := by
+  classical
+  rw [section5StartComponentNodeDegree, Finset.card_eq_one]
+  rcases hgen.start_unique_neighbor with ⟨v, hv, huniq⟩
+  refine ⟨v, ?_⟩
+  ext w
+  constructor
+  · intro hw
+    have hw' :
+        (section5StartComponentGraph hstart).Adj
+          (section5StartVertexInComponent hstart) w := by
+      simpa [section5StartComponentGraph_adj_iff] using hw
+    simpa [Finset.mem_singleton] using huniq _ hw'
+  · intro hw
+    have hw' : w = v := by simpa using hw
+    subst hw'
+    simpa [section5StartComponentGraph_adj_iff] using hv
+
+/-- Endpoint extraction on the explicit Section 5 start component, formulated directly with the
+neighbor-cardinality hypotheses needed by the graph argument. -/
+theorem section5StartComponentGraph.exists_targetFacet_of_endpoint_rule {n : ℕ} [NeZero n]
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    (hf : IsFaceRespecting f)
+    {hstart : IsSection5GraphNode T f (section5StartNode n)}
+    [Fintype (section5StartComponent hstart)]
+    [DecidableRel (section5StartComponentGraph hstart).Adj]
+    (hstartdeg :
+      ((section5StartComponentGraph hstart).neighborFinset
+        (section5StartVertexInComponent hstart)).card = 1)
+    (hdeg :
+      ∀ v : section5StartComponent hstart,
+        ((section5StartComponentGraph hstart).neighborFinset v).card ≤ 2)
+    (hendpoint :
+      ∀ v : section5StartComponent hstart,
+        ((section5StartComponentGraph hstart).neighborFinset v).card = 1 →
+          v = section5StartVertexInComponent hstart ∨ IsSection5Endpoint T f v.1.1) :
+    ∃ τ ∈ T.facets,
+      FacetImageContains f τ ((rentBarycenter n : RentSimplex n) : RentCoordinates n) := by
+  rcases SimpleGraph.exists_other_endpoint (section5StartComponentGraph hstart) hstartdeg
+      hdeg
+      (section5StartComponentGraph_preconnected hstart) with
+    ⟨finish, hfinish_ne, hfinish_deg, _⟩
+  rcases hendpoint finish hfinish_deg with rfl | hfinish
+  · exact False.elim (hfinish_ne rfl)
+  · exact hfinish.exists_targetFacet hf
 
 end Arxiv170207325

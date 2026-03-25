@@ -127,12 +127,17 @@
   nested prefix faces `conv{e_1, ..., e_k}`, their barycenters `b_k`, the first Section 5 graph
   node/edge/path definitions, the concrete start node `e_1 = b_1`, the actual finite node set
   built from triangulation-face candidates, the explicit start connected component inside that
-  concrete node graph, and an abstract finite-graph endpoint theorem together with its
-  specialization to the full concrete node set.
+  concrete node graph, an abstract finite-graph endpoint theorem together with its
+  specialization to the full concrete node set, and a second specialization
+  `section5StartComponentGraph.exists_targetFacet_of_endpoint_rule` on the actual start
+  component itself.
 - Next local objective:
-  prove that `section5StartNode` has degree one in the explicit start component, and verify the
-  paper's generic local degree statements for `Section5Adjacent` there so the concrete endpoint
-  theorem can be instantiated on the real component.
+  prove the raw neighbor-cardinality hypotheses for
+  `section5StartComponentGraph.exists_targetFacet_of_endpoint_rule`:
+  the start vertex has exactly one boundary-chain neighbor, every graph node has at most two
+  neighbors, and every non-start degree-one node is a barycenter-hitting endpoint. Once those are
+  available, tie them back to `Section5StartComponentGenericity` and discharge them from the
+  paper's generic segment-intersection assumptions.
 - First prove the barycenter-specialized version if that is the easiest entry point.
 - Then generalize to arbitrary interior targets if Section 6 needs it.
 - If full surjectivity is still awkward, keep the theorem in the "target in interior" form first; that already covers the barycenter and the interior `y` used in the first Section 6 theorem.
