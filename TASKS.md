@@ -23,9 +23,10 @@
 - [x] Define the actual finite Section 5 node set from triangulation-face candidates, prove every `IsSection5GraphNode` lies in it, and specialize the abstract endpoint theorem to that concrete node set.
 - [x] Define the actual start connected component inside the concrete Section 5 node graph and record its basic reachability/preconnectedness API.
 - [x] Lift the abstract endpoint theorem from the full node set to the explicit start component, and package the paper's generic Section 5 input on that component in a reusable support-layer structure.
+- [x] Connect `Section5StartComponentGenericity` to the concrete start-component endpoint theorem by proving `Section5StartComponentGenericity.exists_targetFacet`.
 - [ ] Tie `section5StartNode` to the actual boundary-chain graph data all the way through degree one: prove it is a real graph node in the Section 5 component and that its degree in that component is exactly one.
 - [ ] Prove the raw start-component hypotheses for `section5StartComponentGraph.exists_targetFacet_of_endpoint_rule`: the start vertex has one neighbor on the boundary chain, every node has at most two neighbors, and every non-start degree-one node is an endpoint hitting the barycenter.
-- [ ] Connect the graph-raw hypotheses above with `Section5StartComponentGenericity`, then discharge them from the paper's generic segment-intersection assumptions.
+- [ ] Discharge `Section5StartComponentGenericity` itself from the paper's generic segment-intersection assumptions by proving the unique boundary successor, at-most-two-neighbor bound, and endpoint characterization on the actual Section 5 component.
 
 ## Completed
 - [x] Read `repo/paper/arxiv-1702.07325.tex` from start to finish and mapped the proof structure.

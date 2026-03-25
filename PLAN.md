@@ -130,14 +130,13 @@
   concrete node graph, an abstract finite-graph endpoint theorem together with its
   specialization to the full concrete node set, and a second specialization
   `section5StartComponentGraph.exists_targetFacet_of_endpoint_rule` on the actual start
-  component itself.
+  component itself, now connected to the packaged graph-theoretic assumptions via
+  `Section5StartComponentGenericity.exists_targetFacet`.
 - Next local objective:
-  prove the raw neighbor-cardinality hypotheses for
-  `section5StartComponentGraph.exists_targetFacet_of_endpoint_rule`:
-  the start vertex has exactly one boundary-chain neighbor, every graph node has at most two
-  neighbors, and every non-start degree-one node is a barycenter-hitting endpoint. Once those are
-  available, tie them back to `Section5StartComponentGenericity` and discharge them from the
-  paper's generic segment-intersection assumptions.
+  discharge `Section5StartComponentGenericity` from the actual Section 5 geometry:
+  prove that the start vertex has exactly one boundary-chain successor, every graph node in the
+  start component has at most two neighbors, and every non-start degree-one node is a
+  barycenter-hitting endpoint, all under the paper's generic segment-intersection assumptions.
 - First prove the barycenter-specialized version if that is the easiest entry point.
 - Then generalize to arbitrary interior targets if Section 6 needs it.
 - If full surjectivity is still awkward, keep the theorem in the "target in interior" form first; that already covers the barycenter and the interior `y` used in the first Section 6 theorem.

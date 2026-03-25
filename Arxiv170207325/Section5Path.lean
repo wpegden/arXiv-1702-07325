@@ -538,7 +538,8 @@ abbrev section5StartComponentNodeDegree {n : ℕ} [NeZero n] {T : SimplexTriangu
     {hstart : IsSection5GraphNode T f (section5StartNode n)}
     (v : section5StartComponent hstart) : ℕ := by
   classical
-  exact ((section5StartComponentGraph hstart).neighborFinset v).card
+  exact (Finset.univ.filter fun w : section5StartComponent hstart =>
+    (section5StartComponentGraph hstart).Adj v w).card
 
 /-- The graph-theoretic form of the paper's generic segment-intersection claims on the connected
 component of the Section 5 graph that starts at `e₁`. -/
@@ -583,26 +584,41 @@ theorem section5StartComponentGraph.exists_targetFacet_of_endpoint_rule {n : ℕ
     {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
     (hf : IsFaceRespecting f)
     {hstart : IsSection5GraphNode T f (section5StartNode n)}
-    [Fintype (section5StartComponent hstart)]
-    [DecidableRel (section5StartComponentGraph hstart).Adj]
-    (hstartdeg :
-      ((section5StartComponentGraph hstart).neighborFinset
-        (section5StartVertexInComponent hstart)).card = 1)
-    (hdeg :
-      ∀ v : section5StartComponent hstart,
-        ((section5StartComponentGraph hstart).neighborFinset v).card ≤ 2)
+    (hstartdeg : section5StartComponentNodeDegree (section5StartVertexInComponent hstart) = 1)
+    (hdeg : ∀ v : section5StartComponent hstart, section5StartComponentNodeDegree v ≤ 2)
     (hendpoint :
-      ∀ v : section5StartComponent hstart,
-        ((section5StartComponentGraph hstart).neighborFinset v).card = 1 →
+      ∀ v : section5StartComponent hstart, section5StartComponentNodeDegree v = 1 →
           v = section5StartVertexInComponent hstart ∨ IsSection5Endpoint T f v.1.1) :
     ∃ τ ∈ T.facets,
       FacetImageContains f τ ((rentBarycenter n : RentSimplex n) : RentCoordinates n) := by
-  rcases SimpleGraph.exists_other_endpoint (section5StartComponentGraph hstart) hstartdeg
-      hdeg
+  classical
+  letI : DecidableRel (section5StartComponentGraph hstart).Adj := Classical.decRel _
+  have hstartdeg' :
+      ((section5StartComponentGraph hstart).neighborFinset
+        (section5StartVertexInComponent hstart)).card = 1 := by
+    simpa [section5StartComponentNodeDegree, SimpleGraph.neighborFinset_eq_filter] using hstartdeg
+  have hdeg' :
+      ∀ v : section5StartComponent hstart,
+        ((section5StartComponentGraph hstart).neighborFinset v).card ≤ 2 := by
+    intro v
+    simpa [section5StartComponentNodeDegree, SimpleGraph.neighborFinset_eq_filter] using hdeg v
+  rcases SimpleGraph.exists_other_endpoint (section5StartComponentGraph hstart) hstartdeg'
+      hdeg'
       (section5StartComponentGraph_preconnected hstart) with
     ⟨finish, hfinish_ne, hfinish_deg, _⟩
-  rcases hendpoint finish hfinish_deg with rfl | hfinish
+  rcases hendpoint finish (by
+      simpa [section5StartComponentNodeDegree, SimpleGraph.neighborFinset_eq_filter] using
+        hfinish_deg) with rfl | hfinish
   · exact False.elim (hfinish_ne rfl)
   · exact hfinish.exists_targetFacet hf
+
+theorem Section5StartComponentGenericity.exists_targetFacet {n : ℕ} [NeZero n]
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    (hf : IsFaceRespecting f) {hstart : IsSection5GraphNode T f (section5StartNode n)}
+    (hgen : Section5StartComponentGenericity T f hstart) :
+    ∃ τ ∈ T.facets,
+      FacetImageContains f τ ((rentBarycenter n : RentSimplex n) : RentCoordinates n) := by
+  exact section5StartComponentGraph.exists_targetFacet_of_endpoint_rule
+    (T := T) (f := f) hf hgen.start_degree_one hgen.degree_le_two hgen.degree_one_or_endpoint
 
 end Arxiv170207325
