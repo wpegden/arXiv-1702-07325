@@ -145,6 +145,13 @@
   start component has at most two neighbors, and every non-start degree-one node is a
   barycenter-hitting endpoint, all under the paper's generic segment-intersection assumptions;
   the `e_1 ↦ b_1` portion is now already discharged by face preservation.
+- Current structural blocker:
+  the present `SimplexTriangulation` wrapper does not yet expose the induced simplicial
+  subdivision of the prefix faces, especially the boundary edge `[e_1,e_2]`, and it also does
+  not formalize the perturbation/genericity argument that makes the barycenter-chain preimage a
+  finite 1-dimensional cell complex. One of those two upgrades is needed before the remaining
+  unique-successor and one-or-two-neighbor claims can be proved on the real graph rather than
+  assumed via `Section5SegmentGeometry`.
 - First prove the barycenter-specialized version if that is the easiest entry point.
 - Then generalize to arbitrary interior targets if Section 6 needs it.
 - If full surjectivity is still awkward, keep the theorem in the "target in interior" form first; that already covers the barycenter and the interior `y` used in the first Section 6 theorem.
