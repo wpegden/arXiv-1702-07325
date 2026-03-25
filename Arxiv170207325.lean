@@ -1,5 +1,7 @@
 import Arxiv170207325.Basic
 import Arxiv170207325.InteriorTarget
+import Arxiv170207325.Section5Path
+import Arxiv170207325.Section5Triangulation
 import Arxiv170207325.SimplexModel
 import PaperDefinitions
 import PaperTheorems
