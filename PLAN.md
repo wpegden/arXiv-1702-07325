@@ -126,12 +126,13 @@
   codimension-one degree lower-bound lemmas, while `Section5Path.lean` contains the paper's
   nested prefix faces `conv{e_1, ..., e_k}`, their barycenters `b_k`, the first Section 5 graph
   node/edge/path definitions, the concrete start node `e_1 = b_1`, the actual finite node set
-  built from triangulation-face candidates, and an abstract finite-graph endpoint theorem together
-  with its specialization to that concrete node set.
+  built from triangulation-face candidates, the explicit start connected component inside that
+  concrete node graph, and an abstract finite-graph endpoint theorem together with its
+  specialization to the full concrete node set.
 - Next local objective:
-  pass from the concrete node set to the start component, prove that `section5StartNode` has
-  degree one there, and verify the paper's generic local degree statements for `Section5Adjacent`
-  so the concrete endpoint theorem can be instantiated on the real component.
+  prove that `section5StartNode` has degree one in the explicit start component, and verify the
+  paper's generic local degree statements for `Section5Adjacent` there so the concrete endpoint
+  theorem can be instantiated on the real component.
 - First prove the barycenter-specialized version if that is the easiest entry point.
 - Then generalize to arbitrary interior targets if Section 6 needs it.
 - If full surjectivity is still awkward, keep the theorem in the "target in interior" form first; that already covers the barycenter and the interior `y` used in the first Section 6 theorem.

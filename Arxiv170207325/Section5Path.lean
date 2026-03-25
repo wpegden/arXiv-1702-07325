@@ -314,6 +314,62 @@ def section5StartNodeInNodes {n : ℕ} [NeZero n] {T : SimplexTriangulation n}
     (hstart : IsSection5GraphNode T f (section5StartNode n)) : section5Nodes T f :=
   ⟨section5StartNode n, section5StartNode_mem_section5Nodes_iff.mpr hstart⟩
 
+/-- The concrete Section 5 graph on the actual finite node set. -/
+abbrev section5NodeGraph {n : ℕ} (T : SimplexTriangulation n)
+    (f : SelfMapOnRentSimplex n) : SimpleGraph (section5Nodes T f) :=
+  section5SimpleGraph (section5Nodes T f) f
+
+/-- The connected component of the concrete Section 5 graph that contains the start node. -/
+def section5StartComponent {n : ℕ} [NeZero n] {T : SimplexTriangulation n}
+    {f : SelfMapOnRentSimplex n}
+    (hstart : IsSection5GraphNode T f (section5StartNode n)) :
+    (section5NodeGraph T f).ConnectedComponent :=
+  (section5NodeGraph T f).connectedComponentMk (section5StartNodeInNodes hstart)
+
+/-- The start node, viewed as a vertex of its connected component. -/
+def section5StartVertexInComponent {n : ℕ} [NeZero n] {T : SimplexTriangulation n}
+    {f : SelfMapOnRentSimplex n}
+    (hstart : IsSection5GraphNode T f (section5StartNode n)) :
+    section5StartComponent hstart := by
+  exact ⟨section5StartNodeInNodes hstart,
+    by
+      simpa [section5StartComponent] using
+        (SimpleGraph.ConnectedComponent.connectedComponentMk_mem
+          (G := section5NodeGraph T f) (v := section5StartNodeInNodes hstart))⟩
+
+/-- The graph obtained by restricting the concrete Section 5 graph to the component containing the
+start node. -/
+abbrev section5StartComponentGraph {n : ℕ} [NeZero n] {T : SimplexTriangulation n}
+    {f : SelfMapOnRentSimplex n}
+    (hstart : IsSection5GraphNode T f (section5StartNode n)) :
+    SimpleGraph (section5StartComponent hstart) :=
+  (section5StartComponent hstart).toSimpleGraph
+
+theorem section5StartComponentGraph_preconnected {n : ℕ} [NeZero n]
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    (hstart : IsSection5GraphNode T f (section5StartNode n)) :
+    (section5StartComponentGraph hstart).Preconnected :=
+  (section5StartComponent hstart).connected_toSimpleGraph.preconnected
+
+theorem mem_section5StartComponent_iff_reachable {n : ℕ} [NeZero n]
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    (hstart : IsSection5GraphNode T f (section5StartNode n)) {v : section5Nodes T f} :
+    v ∈ (section5StartComponent hstart).supp ↔
+      (section5NodeGraph T f).Reachable (section5StartNodeInNodes hstart) v := by
+  constructor
+  · intro hv
+    have hv' :
+        (section5NodeGraph T f).connectedComponentMk v = section5StartComponent hstart :=
+      (SimpleGraph.ConnectedComponent.mem_supp_iff
+        (G := section5NodeGraph T f) (C := section5StartComponent hstart)
+        (v := v)).mp hv
+    simpa [section5StartComponent] using
+      (SimpleGraph.ConnectedComponent.exact hv').symm
+  · intro hv
+    rw [SimpleGraph.ConnectedComponent.mem_supp_iff]
+    unfold section5StartComponent
+    simpa [SimpleGraph.reachable_comm] using SimpleGraph.ConnectedComponent.sound hv
+
 /-- A path in the Section 5 graph. -/
 def Section5Path {n : ℕ} (f : SelfMapOnRentSimplex n) (p : List (Section5Node n)) : Prop :=
   List.IsChain (Section5Adjacent f) p
