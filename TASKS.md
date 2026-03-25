@@ -19,8 +19,9 @@
 - [x] Create `repo/Arxiv170207325/Section5Path.lean` with the first barycenter-chain and endpoint/path invariants.
 - [x] Extend `repo/Arxiv170207325/Section5Triangulation.lean` from basic subface/adjacency definitions to the incidence and degree lemmas used in the Section 5 graph argument.
 - [x] Extend `repo/Arxiv170207325/Section5Path.lean` from prefix-face barycenters and chain segments to the actual graph/path structure and the endpoint lemma that yields a target-containing facet.
-- [ ] Prove the Section 5 local degree hypotheses for `Section5Adjacent`, starting from common-face incidence and the paper's generic segment-intersection assumptions.
-- [ ] Prove the first path-existence lemma: from the start node and the local degree conditions, the Section 5 graph has an endpoint, then feed that endpoint into `IsSection5Endpoint.exists_targetFacet`.
+- [x] Prove the first abstract path-existence lemma: in a finite `Section5Adjacent` graph, the start-degree and local degree assumptions imply another degree-one endpoint, and an endpoint rule then yields a target-containing facet.
+- [ ] Tie `section5StartNode` to the actual boundary-chain graph data: show it is a graph node in the intended finite node set and prove its degree-one start property.
+- [ ] Prove the Section 5 local degree hypotheses for `Section5Adjacent` from the paper's generic segment-intersection assumptions, then instantiate `section5SimpleGraph.exists_targetFacet_of_endpoint_rule` on the real Section 5 component.
 
 ## Completed
 - [x] Read `repo/paper/arxiv-1702.07325.tex` from start to finish and mapped the proof structure.
