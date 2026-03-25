@@ -72,6 +72,12 @@
 - `repo/Arxiv170207325/InteriorTarget.lean`
   initial Section 5 support file for ambient coordinate faces, interior points, and the first
   face-preserving map lemmas feeding the target-hitting theorem.
+- `repo/Arxiv170207325/Section5Triangulation.lean`
+  finite combinatorics for the remaining Section 5 proof: facet/subface incidence, adjacency, and
+  the discrete graph built from the triangulation.
+- `repo/Arxiv170207325/Section5Path.lean`
+  the geometric/path-following half of Section 5: the barycenter chain, preimage graph, and the
+  endpoint argument producing a target-containing facet.
 - `repo/Arxiv170207325/PiecewiseAffine.lean`
   facetwise affine images and the global target-hitting theorem.
 - `repo/Arxiv170207325/HallTools.lean`
@@ -111,6 +117,10 @@
 ### Stage 3: the central geometric theorem
 - Main technical target:
   if a piecewise-affine self-map of a triangulated standard simplex respects coordinate faces, then for a chosen target point in the interior of the simplex there exists a facet whose image contains that target.
+- File-split decision for the remaining Section 5 proof:
+  keep `InteriorTarget.lean` for face/interior reductions, move triangulation-side graph and
+  adjacency lemmas to `Section5Triangulation.lean`, and isolate the preimage-path geometry in
+  `Section5Path.lean`.
 - First prove the barycenter-specialized version if that is the easiest entry point.
 - Then generalize to arbitrary interior targets if Section 6 needs it.
 - If full surjectivity is still awkward, keep the theorem in the "target in interior" form first; that already covers the barycenter and the interior `y` used in the first Section 6 theorem.

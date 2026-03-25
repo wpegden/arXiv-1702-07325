@@ -26,6 +26,18 @@ theorem ambientCoordinateFace_univ (n : ℕ) :
   ext y
   simp [ambientCoordinateFace]
 
+theorem convex_ambientCoordinateFace {n : ℕ} (I : Finset (RoomIndex n)) :
+    Convex ℝ (ambientCoordinateFace I) := by
+  have hs : Convex ℝ (scaledSimplex 1 n) := by
+    simpa [scaledSimplex, RentSimplex] using (convex_stdSimplex ℝ (RoomIndex n))
+  intro x hx y hy a b ha hb hab
+  refine ⟨hs hx.1 hy.1 ha hb hab, ?_⟩
+  rw [coordSupport_subset_iff]
+  intro i hi
+  have hx0 : x i = 0 := (coordSupport_subset_iff.mp hx.2) i hi
+  have hy0 : y i = 0 := (coordSupport_subset_iff.mp hy.2) i hi
+  simp [hx0, hy0]
+
 theorem IsFaceRespecting.mem_scaledSimplex {n : ℕ} {f : SelfMapOnRentSimplex n}
     (hf : IsFaceRespecting f) (x : RentSimplex n) :
     f x ∈ scaledSimplex 1 n :=
@@ -47,7 +59,8 @@ theorem rentBarycenter_mem_scaledSimplex (n : ℕ) [NeZero n] :
   constructor
   · intro i
     exact le_of_lt (rentBarycenter_apply_pos i)
-  · simpa using (stdSimplex.sum_eq_one (rentBarycenter n) : ∑ i, (rentBarycenter n) i = (1 : ℝ))
+  · convert (stdSimplex.sum_eq_one (rentBarycenter n)) using 1
+    norm_num
 
 theorem rentBarycenter_isInteriorSimplexPoint (n : ℕ) [NeZero n] :
     IsInteriorSimplexPoint ((rentBarycenter n : RentSimplex n) : RentCoordinates n) := by
@@ -70,5 +83,49 @@ theorem rentBarycenter_mem_ambientCoordinateFace_iff {n : ℕ} [NeZero n]
     ((rentBarycenter n : RentSimplex n) : RentCoordinates n) ∈ ambientCoordinateFace I ↔
       I = Finset.univ := by
   exact interiorPoint_mem_ambientCoordinateFace_iff (rentBarycenter_isInteriorSimplexPoint n)
+
+theorem facetImageHull_subset_ambientCoordinateFace {n : ℕ} {f : SelfMapOnRentSimplex n}
+    {τ : SimplexFacet n} {I : Finset (RoomIndex n)}
+    (hverts : ∀ ⦃v : RentSimplex n⦄, v ∈ τ.vertices → f v ∈ ambientCoordinateFace I) :
+    FacetImageHull f τ ⊆ ambientCoordinateFace I := by
+  refine convexHull_min ?_ (convex_ambientCoordinateFace I)
+  intro z hz
+  rcases hz with ⟨v, hv, rfl⟩
+  exact hverts hv
+
+theorem IsFaceRespecting.eq_interiorPoint_of_mem_coordinateFace {n : ℕ}
+    {f : SelfMapOnRentSimplex n} (hf : IsFaceRespecting f) {x : RentSimplex n}
+    {I : Finset (RoomIndex n)} {y : RentCoordinates n} (hx : x ∈ coordinateFace I)
+    (hy : IsInteriorSimplexPoint y) (hxy : f x = y) :
+    I = Finset.univ := by
+  exact (interiorPoint_mem_ambientCoordinateFace_iff hy).mp <| by
+    rw [← hxy]
+    exact hf.mapsTo_ambientCoordinateFace I hx
+
+theorem IsFaceRespecting.ne_interiorPoint_of_mem_coordinateFace {n : ℕ}
+    {f : SelfMapOnRentSimplex n} (hf : IsFaceRespecting f) {x : RentSimplex n}
+    {I : Finset (RoomIndex n)} {y : RentCoordinates n} (hx : x ∈ coordinateFace I)
+    (hI : I ≠ Finset.univ) (hy : IsInteriorSimplexPoint y) :
+    f x ≠ y := by
+  intro hxy
+  exact hI (hf.eq_interiorPoint_of_mem_coordinateFace hx hy hxy)
+
+theorem facetImageContains_interiorPoint_of_vertexImages {n : ℕ} {f : SelfMapOnRentSimplex n}
+    {τ : SimplexFacet n} {I : Finset (RoomIndex n)} {y : RentCoordinates n}
+    (hverts : ∀ ⦃v : RentSimplex n⦄, v ∈ τ.vertices → f v ∈ ambientCoordinateFace I)
+    (hy : IsInteriorSimplexPoint y) (hyτ : FacetImageContains f τ y) :
+    I = Finset.univ := by
+  exact (interiorPoint_mem_ambientCoordinateFace_iff hy).mp <|
+    facetImageHull_subset_ambientCoordinateFace hverts hyτ
+
+theorem IsFaceRespecting.facetImageContains_interiorPoint_of_vertices {n : ℕ}
+    {f : SelfMapOnRentSimplex n} (hf : IsFaceRespecting f) {τ : SimplexFacet n}
+    {I : Finset (RoomIndex n)} {y : RentCoordinates n}
+    (hτ : ∀ ⦃v : RentSimplex n⦄, v ∈ τ.vertices → v ∈ coordinateFace I)
+    (hy : IsInteriorSimplexPoint y) (hyτ : FacetImageContains f τ y) :
+    I = Finset.univ := by
+  refine facetImageContains_interiorPoint_of_vertexImages ?_ hy hyτ
+  intro v hv
+  exact hf.mapsTo_ambientCoordinateFace I (hτ hv)
 
 end Arxiv170207325

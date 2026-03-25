@@ -88,8 +88,8 @@ theorem freeCoordinates_eq_compl_simplexSupport {n : ℕ} (x : RentSimplex n) :
 @[simp]
 theorem rentBarycenter_apply {n : ℕ} [NeZero n] (i : RoomIndex n) :
     (rentBarycenter n).1 i = (n : ℝ)⁻¹ := by
-  simpa [rentBarycenter, RoomIndex] using
-    (stdSimplex.barycenter_apply (𝕜 := ℝ) (X := RoomIndex n) i)
+  convert (stdSimplex.barycenter_apply (𝕜 := ℝ) (X := RoomIndex n) i) using 1
+  simp [RoomIndex]
 
 theorem rentBarycenter_apply_pos {n : ℕ} [NeZero n] (i : RoomIndex n) :
     0 < (rentBarycenter n).1 i := by
