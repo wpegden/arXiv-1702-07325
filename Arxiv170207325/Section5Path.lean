@@ -621,4 +621,41 @@ theorem Section5StartComponentGenericity.exists_targetFacet {n : ℕ} [NeZero n]
   exact section5StartComponentGraph.exists_targetFacet_of_endpoint_rule
     (T := T) (f := f) hf hgen.start_degree_one hgen.degree_le_two hgen.degree_one_or_endpoint
 
+/-- The paper's Section 5 genericity input, separated from the graph-theoretic packaging.
+It says that the barycenter-chain preimage looks locally like a 1-dimensional walk:
+the start node has one boundary-chain successor, every node has at most two neighbors, and any
+non-start degree-one node is already terminal at the barycenter. -/
+structure Section5SegmentGeometry {n : ℕ} [NeZero n]
+    (T : SimplexTriangulation n) (f : SelfMapOnRentSimplex n)
+    (hstart : IsSection5GraphNode T f (section5StartNode n)) : Prop where
+  start_unique_boundary_successor :
+    ∃! v : section5StartComponent hstart,
+      (section5StartComponentGraph hstart).Adj (section5StartVertexInComponent hstart) v
+  degree_le_two :
+    ∀ v : section5StartComponent hstart, section5StartComponentNodeDegree v ≤ 2
+  nonstart_degree_one_is_endpoint :
+    ∀ v : section5StartComponent hstart,
+      section5StartComponentNodeDegree v = 1 →
+        v ≠ section5StartVertexInComponent hstart →
+          IsSection5Endpoint T f v.1.1
+
+theorem Section5SegmentGeometry.toStartComponentGenericity {n : ℕ} [NeZero n]
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    {hstart : IsSection5GraphNode T f (section5StartNode n)}
+    (hgeom : Section5SegmentGeometry T f hstart) :
+    Section5StartComponentGenericity T f hstart := by
+  refine ⟨hgeom.start_unique_boundary_successor, hgeom.degree_le_two, ?_⟩
+  intro v hv
+  by_cases hEq : v = section5StartVertexInComponent hstart
+  · exact Or.inl hEq
+  · exact Or.inr (hgeom.nonstart_degree_one_is_endpoint v hv hEq)
+
+theorem Section5SegmentGeometry.exists_targetFacet {n : ℕ} [NeZero n]
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    (hf : IsFaceRespecting f) {hstart : IsSection5GraphNode T f (section5StartNode n)}
+    (hgeom : Section5SegmentGeometry T f hstart) :
+    ∃ τ ∈ T.facets,
+      FacetImageContains f τ ((rentBarycenter n : RentSimplex n) : RentCoordinates n) := by
+  exact (hgeom.toStartComponentGenericity).exists_targetFacet hf
+
 end Arxiv170207325

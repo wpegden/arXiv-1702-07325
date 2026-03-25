@@ -131,9 +131,11 @@
   specialization to the full concrete node set, and a second specialization
   `section5StartComponentGraph.exists_targetFacet_of_endpoint_rule` on the actual start
   component itself, now connected to the packaged graph-theoretic assumptions via
-  `Section5StartComponentGenericity.exists_targetFacet`.
+  `Section5StartComponentGenericity.exists_targetFacet`, with a further wrapper
+  `Section5SegmentGeometry.exists_targetFacet` isolating the paper's sketch-level generic
+  segment-intersection input from the pure graph theory.
 - Next local objective:
-  discharge `Section5StartComponentGenericity` from the actual Section 5 geometry:
+  discharge `Section5SegmentGeometry` from the actual Section 5 geometry:
   prove that the start vertex has exactly one boundary-chain successor, every graph node in the
   start component has at most two neighbors, and every non-start degree-one node is a
   barycenter-hitting endpoint, all under the paper's generic segment-intersection assumptions.
