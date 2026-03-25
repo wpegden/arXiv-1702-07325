@@ -1,3 +1,4 @@
+import Mathlib.Data.Finset.Insert
 import PaperDefinitions
 
 noncomputable section
@@ -86,5 +87,72 @@ theorem SimplexTriangulation.adjacentFacets_commonFace_right {n : ℕ}
     {T : SimplexTriangulation n} {τ₁ τ₂ : SimplexFacet n} (_h : T.AdjacentFacets τ₁ τ₂) :
     (τ₁.commonFace τ₂).IsSubfaceOf τ₂ :=
   τ₁.commonFace_isSubfaceRight τ₂
+
+/-- A cell of the triangulation is any simplex that occurs as a subface of one of its facets. -/
+def SimplexTriangulation.IsFace {n : ℕ} (T : SimplexTriangulation n) (σ : SimplexFacet n) : Prop :=
+  ∃ τ ∈ T.facets, σ.IsSubfaceOf τ
+
+theorem SimplexTriangulation.facet_isFace {n : ℕ} {T : SimplexTriangulation n}
+    {τ : SimplexFacet n} (hτ : τ ∈ T.facets) : T.IsFace τ :=
+  ⟨τ, hτ, SimplexFacet.isSubfaceOf_refl _⟩
+
+/-- The facets of `T` incident to a cell `σ`. -/
+def SimplexTriangulation.incidentFacets {n : ℕ} (T : SimplexTriangulation n)
+    (σ : SimplexFacet n) : Finset (SimplexFacet n) := by
+  classical
+  exact T.facets.filter fun τ => σ.IsSubfaceOf τ
+
+@[simp]
+theorem SimplexTriangulation.mem_incidentFacets_iff {n : ℕ} {T : SimplexTriangulation n}
+    {σ τ : SimplexFacet n} :
+    τ ∈ T.incidentFacets σ ↔ τ ∈ T.facets ∧ σ.IsSubfaceOf τ := by
+  classical
+  simp [SimplexTriangulation.incidentFacets]
+
+theorem SimplexTriangulation.incidentFacets_nonempty_of_isFace {n : ℕ}
+    {T : SimplexTriangulation n} {σ : SimplexFacet n} (hσ : T.IsFace σ) :
+    (T.incidentFacets σ).Nonempty := by
+  rcases hσ with ⟨τ, hτ, hστ⟩
+  exact ⟨τ, mem_incidentFacets_iff.mpr ⟨hτ, hστ⟩⟩
+
+theorem SimplexTriangulation.mem_facets_of_isFace_of_card {n : ℕ}
+    {T : SimplexTriangulation n} {σ : SimplexFacet n} (hσ : T.IsFace σ)
+    (hcard : σ.vertices.card = n) : σ ∈ T.facets := by
+  rcases hσ with ⟨τ, hτ, hστ⟩
+  have hEqVerts : σ.vertices = τ.vertices := by
+    refine Finset.eq_of_subset_of_card_le hστ ?_
+    simp [hcard, T.facet_card τ hτ]
+  have hEq : σ = τ := by
+    cases σ
+    cases τ
+    cases hEqVerts
+    rfl
+  exact hEq ▸ hτ
+
+theorem SimplexTriangulation.adjacentFacets_mem_incidentFacets_commonFace_left {n : ℕ}
+    {T : SimplexTriangulation n} {τ₁ τ₂ : SimplexFacet n} (h : T.AdjacentFacets τ₁ τ₂) :
+    τ₁ ∈ T.incidentFacets (τ₁.commonFace τ₂) := by
+  exact mem_incidentFacets_iff.mpr ⟨adjacentFacets_left_mem h, adjacentFacets_commonFace_left h⟩
+
+theorem SimplexTriangulation.adjacentFacets_mem_incidentFacets_commonFace_right {n : ℕ}
+    {T : SimplexTriangulation n} {τ₁ τ₂ : SimplexFacet n} (h : T.AdjacentFacets τ₁ τ₂) :
+    τ₂ ∈ T.incidentFacets (τ₁.commonFace τ₂) := by
+  exact mem_incidentFacets_iff.mpr ⟨adjacentFacets_right_mem h, adjacentFacets_commonFace_right h⟩
+
+theorem SimplexTriangulation.two_le_card_incidentFacets_commonFace {n : ℕ}
+    {T : SimplexTriangulation n} {τ₁ τ₂ : SimplexFacet n} (h : T.AdjacentFacets τ₁ τ₂) :
+    2 ≤ (T.incidentFacets (τ₁.commonFace τ₂)).card := by
+  classical
+  have hsubset :
+      ({τ₁, τ₂} : Finset (SimplexFacet n)) ⊆ T.incidentFacets (τ₁.commonFace τ₂) := by
+    intro τ hτ
+    simp only [Finset.mem_insert, Finset.mem_singleton] at hτ
+    rcases hτ with rfl | rfl
+    · exact adjacentFacets_mem_incidentFacets_commonFace_left h
+    · exact adjacentFacets_mem_incidentFacets_commonFace_right h
+  calc
+    2 = ({τ₁, τ₂} : Finset (SimplexFacet n)).card := by
+          simp [adjacentFacets_ne h]
+    _ ≤ (T.incidentFacets (τ₁.commonFace τ₂)).card := Finset.card_le_card hsubset
 
 end Arxiv170207325

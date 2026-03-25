@@ -122,14 +122,14 @@
   adjacency lemmas to `Section5Triangulation.lean`, and isolate the preimage-path geometry in
   `Section5Path.lean`.
 - Current support status:
-  `Section5Triangulation.lean` now contains the first common-face, subface, and codimension-one
-  adjacency interface, while `Section5Path.lean` contains the paper's nested prefix faces
-  `conv{e_1, ..., e_k}`, their barycenters `b_k`, and the first segment-in-face lemmas for the
-  barycenter chain.
+  `Section5Triangulation.lean` now contains the first common-face, subface, incidence, and
+  codimension-one degree lower-bound lemmas, while `Section5Path.lean` contains the paper's
+  nested prefix faces `conv{e_1, ..., e_k}`, their barycenters `b_k`, the first Section 5 graph
+  node/edge/path definitions, and an endpoint-to-target-facet reduction theorem.
 - Next local objective:
-  package the Section 5 graph vertices as faces whose images meet one barycenter-chain segment,
-  then prove the incidence/degree statements that force a path from the starting vertex to a
-  target-containing facet.
+  prove the paper's local degree statements for `Section5Adjacent`, construct the start node on
+  the boundary chain, and then extract an endpoint path whose terminal node feeds into the current
+  endpoint-to-target-facet theorem.
 - First prove the barycenter-specialized version if that is the easiest entry point.
 - Then generalize to arbitrary interior targets if Section 6 needs it.
 - If full surjectivity is still awkward, keep the theorem in the "target in interior" form first; that already covers the barycenter and the interior `y` used in the first Section 6 theorem.

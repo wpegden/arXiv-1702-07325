@@ -1,4 +1,6 @@
+import Mathlib.Data.List.Chain
 import Arxiv170207325.InteriorTarget
+import Arxiv170207325.Section5Triangulation
 
 noncomputable section
 
@@ -43,6 +45,17 @@ theorem prefixRooms_card {n k : ℕ} (hk : k ≤ n) :
       refine ⟨⟨b.1, mem_prefixRooms_iff.mp hb⟩, by simp, ?_⟩
       exact Fin.ext rfl
   simpa using hcard.symm
+
+theorem prefixRooms_eq_univ_iff {n k : ℕ} (hk : k ≤ n) :
+    prefixRooms n k = Finset.univ ↔ k = n := by
+  constructor
+  · intro h
+    have hcard : k = n := by
+      simpa [prefixRooms_card hk] using congrArg Finset.card h
+    exact hcard
+  · intro h
+    subst h
+    simp [prefixRooms_self]
 
 /-- The barycenter `b_k` of the prefix face `conv{e_1, ..., e_k}` from Section 5. -/
 def prefixBarycenter (n k : ℕ) : RentCoordinates n :=
@@ -130,5 +143,73 @@ theorem prefixBarycenterSegment_subset_ambientCoordinateFace {n k : ℕ} [NeZero
   · exact ambientCoordinateFace_mono (prefixRooms_mono (Nat.le_succ k))
       (prefixBarycenter_mem_ambientCoordinateFace hk')
   · exact prefixBarycenter_mem_ambientCoordinateFace hk
+
+/-- A vertex of the Section 5 graph: a simplex cell together with its level in the barycenter
+chain. -/
+structure Section5Node (n : ℕ) where
+  level : ℕ
+  cell : SimplexFacet n
+
+/-- The local conditions for a Section 5 graph node. -/
+structure IsSection5GraphNode {n : ℕ} (T : SimplexTriangulation n)
+    (f : SelfMapOnRentSimplex n) (u : Section5Node n) : Prop where
+  level_le : u.level + 1 ≤ n
+  isFace : SimplexTriangulation.IsFace T u.cell
+  card_eq : u.cell.vertices.card = u.level + 1
+  prefix_vertices :
+    ∀ ⦃v : RentSimplex n⦄, v ∈ u.cell.vertices →
+      v ∈ coordinateFace (prefixRooms n (u.level + 1))
+  meets_chain : (FacetImageHull f u.cell ∩ prefixBarycenterSegment n u.level).Nonempty
+
+/-- One step in the Section 5 graph: a codimension-one incidence at the next barycenter of the
+chain. -/
+def Section5Step {n : ℕ} (f : SelfMapOnRentSimplex n) (u v : Section5Node n) : Prop :=
+  u.level + 1 = v.level ∧ u.cell.IsSubfaceOf v.cell ∧
+    FacetImageContains f u.cell (prefixBarycenter n v.level)
+
+/-- The undirected adjacency relation on the Section 5 graph. -/
+def Section5Adjacent {n : ℕ} (f : SelfMapOnRentSimplex n) (u v : Section5Node n) : Prop :=
+  Section5Step f u v ∨ Section5Step f v u
+
+theorem section5Adjacent_symm {n : ℕ} {f : SelfMapOnRentSimplex n}
+    {u v : Section5Node n} : Section5Adjacent f u v ↔ Section5Adjacent f v u := by
+  constructor <;> intro h
+  · exact h.elim Or.inr Or.inl
+  · exact h.elim Or.inr Or.inl
+
+/-- A path in the Section 5 graph. -/
+def Section5Path {n : ℕ} (f : SelfMapOnRentSimplex n) (p : List (Section5Node n)) : Prop :=
+  List.IsChain (Section5Adjacent f) p
+
+def IsSection5Endpoint {n : ℕ} [NeZero n] (T : SimplexTriangulation n)
+    (f : SelfMapOnRentSimplex n) (u : Section5Node n) : Prop :=
+  IsSection5GraphNode (T := T) (f := f) u ∧
+    FacetImageContains f u.cell ((rentBarycenter n : RentSimplex n) : RentCoordinates n)
+
+theorem IsSection5GraphNode.level_eq_last_of_hitsBarycenter {n : ℕ} [NeZero n]
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n} {u : Section5Node n}
+    (hu : IsSection5GraphNode T f u) (hf : IsFaceRespecting f)
+    (hbar : FacetImageContains f u.cell ((rentBarycenter n : RentSimplex n) : RentCoordinates n)) :
+    u.level + 1 = n := by
+  have hprefix :
+      prefixRooms n (u.level + 1) = Finset.univ := by
+    exact IsFaceRespecting.facetImageContains_interiorPoint_of_vertices hf hu.prefix_vertices
+      (rentBarycenter_isInteriorSimplexPoint n) hbar
+  exact (prefixRooms_eq_univ_iff hu.level_le).mp hprefix
+
+theorem IsSection5Endpoint.cell_mem_facets {n : ℕ} [NeZero n]
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n} {u : Section5Node n}
+    (hf : IsFaceRespecting f) (hu : IsSection5Endpoint T f u) : u.cell ∈ T.facets := by
+  have hlast : u.level + 1 = n :=
+    hu.1.level_eq_last_of_hitsBarycenter hf hu.2
+  exact SimplexTriangulation.mem_facets_of_isFace_of_card (T := T) hu.1.isFace <| by
+    simpa [hlast] using hu.1.card_eq
+
+theorem IsSection5Endpoint.exists_targetFacet {n : ℕ} [NeZero n]
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n} {u : Section5Node n}
+    (hf : IsFaceRespecting f) (hu : IsSection5Endpoint T f u) :
+    ∃ τ ∈ T.facets,
+      FacetImageContains f τ ((rentBarycenter n : RentSimplex n) : RentCoordinates n) := by
+  exact ⟨u.cell, hu.cell_mem_facets hf, hu.2⟩
 
 end Arxiv170207325
