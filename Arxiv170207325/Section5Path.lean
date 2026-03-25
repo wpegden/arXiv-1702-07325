@@ -1,4 +1,5 @@
 import Mathlib.Data.List.Chain
+import Mathlib.Data.Finset.Powerset
 import Mathlib.Combinatorics.SimpleGraph.Connectivity.Connected
 import Mathlib.Combinatorics.SimpleGraph.DegreeSum
 import Arxiv170207325.InteriorTarget
@@ -202,6 +203,19 @@ structure IsSection5GraphNode {n : ℕ} (T : SimplexTriangulation n)
       v ∈ coordinateFace (prefixRooms n (u.level + 1))
   meets_chain : (FacetImageHull f u.cell ∩ prefixBarycenterSegment n u.level).Nonempty
 
+theorem IsSection5GraphNode.cell_nonempty {n : ℕ} {T : SimplexTriangulation n}
+    {f : SelfMapOnRentSimplex n} {u : Section5Node n} (hu : IsSection5GraphNode T f u) :
+    u.cell.vertices.Nonempty := by
+  refine Finset.card_ne_zero.mp ?_
+  rw [hu.card_eq]
+  omega
+
+theorem IsSection5GraphNode.level_eq_card_pred {n : ℕ} {T : SimplexTriangulation n}
+    {f : SelfMapOnRentSimplex n} {u : Section5Node n} (hu : IsSection5GraphNode T f u) :
+    u.level = u.cell.vertices.card - 1 := by
+  rw [hu.card_eq]
+  omega
+
 /-- One step in the Section 5 graph: a codimension-one incidence at the next barycenter of the
 chain. -/
 def Section5Step {n : ℕ} (f : SelfMapOnRentSimplex n) (u v : Section5Node n) : Prop :=
@@ -244,6 +258,61 @@ def section5NodeDegree {n : ℕ} (nodes : Finset (Section5Node n))
     (f : SelfMapOnRentSimplex n) (v : nodes) : ℕ := by
   classical
   exact ((section5SimpleGraph nodes f).neighborFinset v).card
+
+/-- The finite set of Section 5 node candidates contributed by one triangulation facet. -/
+def section5FacetNodes {n : ℕ} (τ : SimplexFacet n) : Finset (Section5Node n) := by
+  classical
+  exact (τ.vertices.powerset.filter fun s => s.Nonempty).image fun s =>
+    ({ level := s.card - 1, cell := ⟨s⟩ } : Section5Node n)
+
+/-- The actual finite Section 5 node set, obtained by filtering the face candidates by the graph
+conditions from Section 5. -/
+def section5Nodes {n : ℕ} (T : SimplexTriangulation n)
+    (f : SelfMapOnRentSimplex n) : Finset (Section5Node n) := by
+  classical
+  exact (T.facets.biUnion section5FacetNodes).filter fun u => IsSection5GraphNode T f u
+
+theorem mk_section5Node_from_cell_eq {n : ℕ} (u : Section5Node n)
+    (hlevel : u.level = u.cell.vertices.card - 1) :
+    ({ level := u.cell.vertices.card - 1, cell := ⟨u.cell.vertices⟩ } : Section5Node n) = u := by
+  cases u with
+  | mk level cell =>
+    cases cell with
+    | mk vertices =>
+      simp at hlevel ⊢
+      simpa using hlevel.symm
+
+theorem IsSection5GraphNode.mem_section5Nodes {n : ℕ} {T : SimplexTriangulation n}
+    {f : SelfMapOnRentSimplex n} {u : Section5Node n} (hu : IsSection5GraphNode T f u) :
+    u ∈ section5Nodes T f := by
+  classical
+  refine Finset.mem_filter.mpr ⟨?_, hu⟩
+  rcases hu.isFace with ⟨τ, hτ, hsub⟩
+  refine Finset.mem_biUnion.mpr ⟨τ, hτ, ?_⟩
+  refine Finset.mem_image.mpr ⟨u.cell.vertices, ?_, ?_⟩
+  · exact Finset.mem_filter.mpr ⟨Finset.mem_powerset.mpr hsub, hu.cell_nonempty⟩
+  · exact mk_section5Node_from_cell_eq u hu.level_eq_card_pred
+
+theorem mem_section5Nodes_iff {n : ℕ} {T : SimplexTriangulation n}
+    {f : SelfMapOnRentSimplex n} {u : Section5Node n} :
+    u ∈ section5Nodes T f ↔ IsSection5GraphNode T f u := by
+  classical
+  constructor
+  · intro hu
+    exact (Finset.mem_filter.mp hu).2
+  · intro hu
+    exact hu.mem_section5Nodes
+
+theorem section5StartNode_mem_section5Nodes_iff {n : ℕ} [NeZero n] {T : SimplexTriangulation n}
+    {f : SelfMapOnRentSimplex n} :
+    section5StartNode n ∈ section5Nodes T f ↔ IsSection5GraphNode T f (section5StartNode n) :=
+  mem_section5Nodes_iff
+
+/-- The Section 5 start node, packaged as a vertex of the actual finite node set. -/
+def section5StartNodeInNodes {n : ℕ} [NeZero n] {T : SimplexTriangulation n}
+    {f : SelfMapOnRentSimplex n}
+    (hstart : IsSection5GraphNode T f (section5StartNode n)) : section5Nodes T f :=
+  ⟨section5StartNode n, section5StartNode_mem_section5Nodes_iff.mpr hstart⟩
 
 /-- A path in the Section 5 graph. -/
 def Section5Path {n : ℕ} (f : SelfMapOnRentSimplex n) (p : List (Section5Node n)) : Prop :=
@@ -350,5 +419,22 @@ theorem section5SimpleGraph.exists_targetFacet_of_endpoint_rule {n : ℕ} [NeZer
   rcases hendpoint finish hfinish_deg with rfl | hfinish_endpoint
   · exact False.elim (hfinish_ne rfl)
   · exact hfinish_endpoint.exists_targetFacet hf
+
+theorem section5Nodes.exists_targetFacet_of_endpoint_rule {n : ℕ} [NeZero n]
+    (T : SimplexTriangulation n) (f : SelfMapOnRentSimplex n) (hf : IsFaceRespecting f)
+    (hstart : IsSection5GraphNode T f (section5StartNode n))
+    (hstartdeg :
+      section5NodeDegree (section5Nodes T f) f (section5StartNodeInNodes hstart) = 1)
+    (hdeg : ∀ v : section5Nodes T f, section5NodeDegree (section5Nodes T f) f v ≤ 2)
+    (hconn : (section5SimpleGraph (section5Nodes T f) f).Preconnected)
+    (hendpoint :
+      ∀ v : section5Nodes T f,
+        section5NodeDegree (section5Nodes T f) f v = 1 →
+          v = section5StartNodeInNodes hstart ∨ IsSection5Endpoint T f v.1) :
+    ∃ τ ∈ T.facets,
+      FacetImageContains f τ ((rentBarycenter n : RentSimplex n) : RentCoordinates n) := by
+  exact section5SimpleGraph.exists_targetFacet_of_endpoint_rule
+    (nodes := section5Nodes T f) (T := T) (f := f) hf
+    (start := section5StartNodeInNodes hstart) hstartdeg hdeg hconn hendpoint
 
 end Arxiv170207325
