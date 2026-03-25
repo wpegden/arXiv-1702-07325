@@ -1,5 +1,6 @@
 import Mathlib.Data.List.Chain
 import Mathlib.Data.Finset.Powerset
+import Mathlib.Analysis.Convex.Jensen
 import Mathlib.Combinatorics.SimpleGraph.Connectivity.Connected
 import Mathlib.Combinatorics.SimpleGraph.DegreeSum
 import Arxiv170207325.InteriorTarget
@@ -158,6 +159,11 @@ def section5StartVertex (n : ℕ) [NeZero n] : RentSimplex n :=
 def section5StartCell (n : ℕ) [NeZero n] : SimplexFacet n where
   vertices := {section5StartVertex n}
 
+theorem section5StartVertex_eq_vertex_zero (n : ℕ) [NeZero n] :
+    section5StartVertex n = stdSimplex.vertex (S := ℝ) (0 : RoomIndex n) := by
+  refine eq_vertex_of_apply_eq_one ?_
+  simp [section5StartVertex, prefixBarycenter]
+
 theorem section5StartVertex_mem_coordinateFace (n : ℕ) [NeZero n] :
     section5StartVertex n ∈ coordinateFace (prefixRooms n 1) := by
   rw [mem_coordinateFace_iff]
@@ -170,6 +176,40 @@ theorem section5StartVertex_mem_coordinateFace (n : ℕ) [NeZero n] :
 theorem section5StartCell_card (n : ℕ) [NeZero n] :
     (section5StartCell n).vertices.card = 1 := by
   simp [section5StartCell]
+
+theorem SimplexFacet.section5StartVertex_mem_vertices_of_mem_realization {n : ℕ} [NeZero n]
+    {τ : SimplexFacet n}
+    (hτ : ((section5StartVertex n : RentSimplex n) : RentCoordinates n) ∈ τ.realization) :
+    section5StartVertex n ∈ τ.vertices := by
+  have hcoord :
+      ConvexOn ℝ (Set.univ : Set (RentCoordinates n))
+        ((LinearMap.proj (0 : RoomIndex n)) : RentCoordinates n →ₗ[ℝ] ℝ) :=
+    (LinearMap.proj (0 : RoomIndex n)).convexOn convex_univ
+  obtain ⟨y, hyPointSet, hyMax⟩ := hcoord.exists_ge_of_mem_convexHull
+      (by intro y hy; simp)
+      (by simpa [SimplexFacet.realization, SimplexFacet.pointSet] using hτ)
+  rcases hyPointSet with ⟨v, hv, rfl⟩
+  have hge : (1 : ℝ) ≤ v.1 (0 : RoomIndex n) := by
+    simpa [LinearMap.proj_apply, section5StartVertex_eq_vertex_zero] using hyMax
+  have hle : v.1 (0 : RoomIndex n) ≤ 1 :=
+    stdSimplex.le_one v (0 : RoomIndex n)
+  have hv0 : v.1 (0 : RoomIndex n) = 1 :=
+    le_antisymm hle hge
+  have hvEq : v = section5StartVertex n := by
+    rw [section5StartVertex_eq_vertex_zero]
+    exact eq_vertex_of_apply_eq_one hv0
+  simpa [hvEq] using hv
+
+theorem SimplexTriangulation.section5StartCell_isFace {n : ℕ} [NeZero n]
+    (T : SimplexTriangulation n) :
+    T.IsFace (section5StartCell n) := by
+  rcases T.covers_simplex (section5StartVertex n) with ⟨τ, hτ, hreal⟩
+  refine ⟨τ, hτ, ?_⟩
+  intro v hv
+  have hv' : v = section5StartVertex n := by
+    simpa [section5StartCell] using hv
+  subst hv'
+  exact τ.section5StartVertex_mem_vertices_of_mem_realization hreal
 
 @[simp]
 theorem facetImageContains_section5StartCell_iff {n : ℕ} [NeZero n]
@@ -264,6 +304,19 @@ theorem IsSection5GraphNode.level_eq_card_pred {n : ℕ} {T : SimplexTriangulati
     u.level = u.cell.vertices.card - 1 := by
   rw [hu.card_eq]
   omega
+
+theorem IsFaceRespecting.section5StartNode_isGraphNode {n : ℕ} [NeZero n]
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n} (hf : IsFaceRespecting f) :
+    IsSection5GraphNode T f (section5StartNode n) := by
+  refine ⟨Nat.succ_le_of_lt (Nat.pos_of_ne_zero (NeZero.ne n)),
+    T.section5StartCell_isFace, section5StartCell_card n, ?_, ?_⟩
+  · intro v hv
+    have hv' : v = section5StartVertex n := by
+      simpa [section5StartCell] using hv
+    simpa [hv'] using section5StartVertex_mem_coordinateFace n
+  · refine ⟨prefixBarycenter n 1, hf.startCell_hits_prefixBarycenter, ?_⟩
+    change prefixBarycenter n 1 ∈ segment ℝ (prefixBarycenter n 0) (prefixBarycenter n 1)
+    exact right_mem_segment ℝ (prefixBarycenter n 0) (prefixBarycenter n 1)
 
 /-- One step in the Section 5 graph: a codimension-one incidence at the next barycenter of the
 chain. -/

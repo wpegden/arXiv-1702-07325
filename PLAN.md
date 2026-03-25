@@ -136,15 +136,18 @@
   segment-intersection input from the pure graph theory, plus a start-boundary layer
   `Section5StartBoundaryGeometry` that separates the unique level-1 successor geometry from the
   rest of the local degree argument and records that a face-respecting map already forces the
-  singleton start cell `e_1` to hit `b_1`; the remaining wrappers are now collapsed into a
-  direct theorem saying that face preservation, a concrete unique start successor, and the
-  two local-degree hypotheses already imply a target-containing facet.
+  singleton start cell `e_1` to hit `b_1`; the start node itself is now also discharged from
+  face preservation by proving any triangulation facet covering `e_1` must contain `e_1` as a
+  vertex, so `section5StartNode` is a genuine concrete graph node; the remaining wrappers are
+  now collapsed into a direct theorem saying that face preservation, a concrete unique start
+  successor, and the two local-degree hypotheses already imply a target-containing facet.
 - Next local objective:
   discharge `Section5SegmentGeometry` from the actual Section 5 geometry:
-  prove that the start vertex has exactly one boundary-chain successor, every graph node in the
-  start component has at most two neighbors, and every non-start degree-one node is a
-  barycenter-hitting endpoint, all under the paper's generic segment-intersection assumptions;
-  the `e_1 ↦ b_1` portion is now already discharged by face preservation.
+  prove that the start vertex has exactly one boundary-chain successor, hence degree one in the
+  actual start component, and that every graph node there has at most two neighbors while every
+  non-start degree-one node is a barycenter-hitting endpoint, all under the paper's generic
+  segment-intersection assumptions; the start-node existence and `e_1 ↦ b_1` portions are now
+  already discharged by face preservation.
 - Current structural blocker:
   the present `SimplexTriangulation` wrapper does not yet expose the induced simplicial
   subdivision of the prefix faces, especially the boundary edge `[e_1,e_2]`, and it also does

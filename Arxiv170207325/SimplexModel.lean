@@ -109,6 +109,36 @@ theorem simplexSupport_rentBarycenter {n : ℕ} [NeZero n] :
   ext i
   simp [simplexSupport, coordSupport, hn0]
 
+theorem eq_vertex_of_apply_eq_one {n : ℕ} {x : RentSimplex n} {i : RoomIndex n}
+    (hi : x.1 i = 1) : x = stdSimplex.vertex (S := ℝ) i := by
+  apply Subtype.ext
+  funext j
+  by_cases hij : j = i
+  · subst hij
+    simpa using hi
+  · have hsum :
+        Finset.sum (Finset.univ \ {i}) (fun k : RoomIndex n => x.1 k) = 0 := by
+      have hxsum : Finset.sum Finset.univ (fun k : RoomIndex n => x.1 k) = 1 := x.2.2
+      rw [Finset.sum_eq_add_sum_diff_singleton (s := Finset.univ) (i := i)
+        (f := fun k : RoomIndex n => x.1 k) (by simp)] at hxsum
+      have hcancel :
+          x.1 i + Finset.sum (Finset.univ \ {i}) (fun k : RoomIndex n => x.1 k) =
+            x.1 i + 0 := by
+        calc
+          x.1 i + Finset.sum (Finset.univ \ {i}) (fun k : RoomIndex n => x.1 k) = 1 := hxsum
+          _ = x.1 i := hi.symm
+          _ = x.1 i + 0 := by simp
+      exact add_left_cancel hcancel
+    have hj_le :
+        x.1 j ≤ Finset.sum (Finset.univ \ {i}) (fun k : RoomIndex n => x.1 k) := by
+      refine Finset.single_le_sum ?_ ?_
+      · intro k hk
+        exact x.2.1 k
+      · simp [hij]
+    have hj_eq : x.1 j = 0 := by
+      exact le_antisymm (by simpa [hsum] using hj_le) (x.2.1 j)
+    simp [hij, hj_eq]
+
 @[simp]
 theorem rentBarycenter_mem_coordinateFace_iff {n : ℕ} [NeZero n] {I : Finset (RoomIndex n)} :
     rentBarycenter n ∈ coordinateFace I ↔ I = Finset.univ := by
