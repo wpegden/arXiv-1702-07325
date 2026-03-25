@@ -136,7 +136,9 @@
   segment-intersection input from the pure graph theory, plus a start-boundary layer
   `Section5StartBoundaryGeometry` that separates the unique level-1 successor geometry from the
   rest of the local degree argument and records that a face-respecting map already forces the
-  singleton start cell `e_1` to hit `b_1`.
+  singleton start cell `e_1` to hit `b_1`; the remaining wrappers are now collapsed into a
+  direct theorem saying that face preservation, a concrete unique start successor, and the
+  two local-degree hypotheses already imply a target-containing facet.
 - Next local objective:
   discharge `Section5SegmentGeometry` from the actual Section 5 geometry:
   prove that the start vertex has exactly one boundary-chain successor, every graph node in the

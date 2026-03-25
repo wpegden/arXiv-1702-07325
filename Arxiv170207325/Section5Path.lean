@@ -806,6 +806,28 @@ theorem Section5StartBoundaryGeometry.start_unique_neighbor {n : ℕ} [NeZero n]
     rcases (section5StartComponentGraph_adj_start_iff hstart).mp hw with ⟨hlevel, hsub, _⟩
     exact ⟨hlevel, hsub⟩
 
+theorem Section5StartBoundaryGeometry.start_degree_one {n : ℕ} [NeZero n]
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    {hstart : IsSection5GraphNode T f (section5StartNode n)}
+    (hgeom : Section5StartBoundaryGeometry T f hstart) :
+    section5StartComponentNodeDegree (section5StartVertexInComponent hstart) = 1 := by
+  classical
+  rw [section5StartComponentNodeDegree, Finset.card_eq_one]
+  rcases hgeom.start_unique_neighbor with ⟨v, hv, huniq⟩
+  refine ⟨v, ?_⟩
+  ext w
+  constructor
+  · intro hw
+    have hw' :
+        (section5StartComponentGraph hstart).Adj
+          (section5StartVertexInComponent hstart) w := by
+      simpa [section5StartComponentNodeDegree] using hw
+    simpa [Finset.mem_singleton] using huniq _ hw'
+  · intro hw
+    have hw' : w = v := by simpa using hw
+    subst hw'
+    simpa [section5StartComponentNodeDegree] using hv
+
 theorem section5SegmentGeometry_of_startBoundaryGeometry {n : ℕ} [NeZero n]
     {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
     {hstart : IsSection5GraphNode T f (section5StartNode n)}
@@ -819,5 +841,38 @@ theorem section5SegmentGeometry_of_startBoundaryGeometry {n : ℕ} [NeZero n]
   refine ⟨hstartGeom.start_unique_neighbor, hdeg, ?_⟩
   intro v hv hne
   exact hendpoint v hv hne
+
+theorem Section5StartBoundaryGeometry.exists_targetFacet_of_localDegreeData {n : ℕ} [NeZero n]
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    (hf : IsFaceRespecting f)
+    {hstart : IsSection5GraphNode T f (section5StartNode n)}
+    (hstartGeom : Section5StartBoundaryGeometry T f hstart)
+    (hdeg : ∀ v : section5StartComponent hstart, section5StartComponentNodeDegree v ≤ 2)
+    (hendpoint :
+      ∀ v : section5StartComponent hstart, section5StartComponentNodeDegree v = 1 →
+        v ≠ section5StartVertexInComponent hstart →
+          IsSection5Endpoint T f v.1.1) :
+    ∃ τ ∈ T.facets,
+      FacetImageContains f τ ((rentBarycenter n : RentSimplex n) : RentCoordinates n) := by
+  exact (section5SegmentGeometry_of_startBoundaryGeometry
+    (T := T) (f := f) (hstart := hstart) hstartGeom hdeg hendpoint).exists_targetFacet hf
+
+theorem exists_targetFacet_of_faceRespectingAndSuccessorLocalDegreeData {n : ℕ} [NeZero n]
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    (hf : IsFaceRespecting f)
+    {hstart : IsSection5GraphNode T f (section5StartNode n)}
+    (hsucc :
+      ∃! v : section5StartComponent hstart,
+        v.1.1.level = 1 ∧ (section5StartCell n).IsSubfaceOf v.1.1.cell)
+    (hdeg : ∀ v : section5StartComponent hstart, section5StartComponentNodeDegree v ≤ 2)
+    (hendpoint :
+      ∀ v : section5StartComponent hstart, section5StartComponentNodeDegree v = 1 →
+        v ≠ section5StartVertexInComponent hstart →
+          IsSection5Endpoint T f v.1.1) :
+    ∃ τ ∈ T.facets,
+      FacetImageContains f τ ((rentBarycenter n : RentSimplex n) : RentCoordinates n) := by
+  exact (section5StartBoundaryGeometry_of_faceRespectingAndSuccessorData
+    (T := T) (f := f) (hstart := hstart) hf hsucc).exists_targetFacet_of_localDegreeData
+      hf hdeg hendpoint
 
 end Arxiv170207325
