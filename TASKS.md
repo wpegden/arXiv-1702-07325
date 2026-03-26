@@ -35,7 +35,7 @@
 - [x] Prove the affine-dimension/cardinality bound for induced prefix faces inside any triangulation face, and use it to show lower-level predecessors in the Section 5 graph are unique once the upper cell is fixed.
 - [x] Prove that every non-start node in the actual start component already has a lower neighbor by combining shortest-path geometry with lower-neighbor uniqueness, and package the reduction from the remaining local-degree proof to upper-neighbor uniqueness plus the no-upper-neighbor endpoint claim.
 - [x] Use the new `repo/Arxiv170207325/PiecewiseAffine.lean` face-realization API to formulate the missing Section 5 perturbation/genericity input directly in terms of actual preimage points on prefix faces, rather than only convex-hull hits.
-- [ ] Prove the Lean-ready local continuation hypothesis used by `section5LocalOneComplexGeometry_of_uniqueUpperOrEndpoint`: for each start-component node `v`, either `IsSection5Endpoint T f v.1.1` already holds or there exists a unique upper neighbor `w` with `Adj v w` and `v.level + 1 = w.level`.
+- [ ] Prove the missing witness-level geometric lemma behind `section5LocalOneComplexGeometry_of_uniqueUpperOrEndpoint`: if `v` is a start-component node and `hw : FaceHitWitness T f v.1.1.cell y` with `y ∈ prefixBarycenterSegment n v.1.1.level`, then either `IsSection5Endpoint T f v.1.1` already holds or there exists a unique upper neighbor `w` with `Adj v w` and `v.level + 1 = w.level`.
 - [ ] Discharge `Section5SegmentGeometry` from actual Section 5 lemmas on the barycenter-chain preimage by combining the finished start-boundary entrance, the lower-neighbor reductions, and the remaining upper-continuation/endpoint geometry on the real start component.
 
 ## Completed

@@ -169,9 +169,10 @@
   segment-intersection assumptions. The start-boundary entrance geometry is now complete, the
   prefix-face infrastructure is no longer tied to the first boundary edge, and both the
   lower-neighbor uniqueness and lower-neighbor existence sides are now formal. The remaining work
-  should therefore proceed by proving the hypothesis of
-  `section5LocalOneComplexGeometry_of_uniqueUpperOrEndpoint`: every start-component node is either
-  already a Section 5 endpoint or has a unique upper neighbor in the graph.
+  should therefore proceed by proving the witness-level local continuation lemma behind
+  `section5LocalOneComplexGeometry_of_uniqueUpperOrEndpoint`: for a start-component node `v`, any
+  actual `FaceHitWitness` on the segment `prefixBarycenterSegment n v.level` must either already
+  put `v` at the barycenter endpoint or determine a unique upper neighbor in the graph.
 - Current structural blocker:
   the present `SimplexTriangulation` wrapper now exposes induced prefix faces and their induced
   realizations, but it still does not expose the full simplicial-subdivision combinatorics of
