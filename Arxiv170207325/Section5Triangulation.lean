@@ -113,6 +113,11 @@ theorem SimplexTriangulation.facet_isFace {n : ℕ} {T : SimplexTriangulation n}
     {τ : SimplexFacet n} (hτ : τ ∈ T.facets) : T.IsFace τ :=
   ⟨τ, hτ, SimplexFacet.isSubfaceOf_refl _⟩
 
+theorem SimplexTriangulation.mem_vertices_of_mem_facet {n : ℕ} {T : SimplexTriangulation n}
+    {τ : SimplexFacet n} (hτ : τ ∈ T.facets) {v : RentSimplex n} (hv : v ∈ τ.vertices) :
+    v ∈ T.vertices := by
+  exact Finset.mem_biUnion.mpr ⟨τ, hτ, hv⟩
+
 /-- The facets of `T` incident to a cell `σ`. -/
 def SimplexTriangulation.incidentFacets {n : ℕ} (T : SimplexTriangulation n)
     (σ : SimplexFacet n) : Finset (SimplexFacet n) := by
