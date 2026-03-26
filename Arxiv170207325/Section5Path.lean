@@ -1483,6 +1483,21 @@ theorem minimal_section5SegmentSubface_vertices_mem_coordinateFace_of_mem_coordi
     (minimal_section5SegmentSubface_erase_realization_map_segment_of_mem_coordinateFace_point
       hxτ hxFace hfxSeg)
 
+theorem minimal_section5SegmentSubface_exists_mem_coordinateFace_point_of_vertices_mem_coordinateFace
+    {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    (hfpl : IsPiecewiseAffineOn T f) {u : Section5Node n} (hu : IsSection5GraphNode T f u)
+    {τ : SimplexFacet n} (hτ : τ ∈ section5SegmentSubfaces u f)
+    (hτface :
+      ∀ ⦃v : RentSimplex n⦄, v ∈ τ.vertices → v ∈ coordinateFace (prefixRooms n u.level)) :
+    ∃ x : RentSimplex n,
+      ((x : RentSimplex n) : RentCoordinates n) ∈ τ.realization ∧
+      x ∈ coordinateFace (prefixRooms n u.level) ∧
+      f x ∈ prefixBarycenterSegment n u.level := by
+  rcases hfpl.exists_point_in_realization_of_mem_section5SegmentSubfaces hu hτ with
+    ⟨x, hxτ, hfxSeg⟩
+  refine ⟨x, hxτ, ?_, hfxSeg⟩
+  exact τ.mem_coordinateFace_of_mem_realization_of_vertices_mem_coordinateFace hxτ hτface
+
 def minimal_section5SegmentSubface_lowerBoundaryGeometry_of_card_eq_of_erase_realization_map_segment
     {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
     (hfpl : IsPiecewiseAffineOn T f) {u : Section5Node n} (hu : IsSection5GraphNode T f u)
@@ -1529,6 +1544,27 @@ def minimal_section5SegmentSubface_lowerBoundaryGeometry_of_card_eq_of_mem_coord
     hfpl hu hτ hmin hτcard
     (minimal_section5SegmentSubface_erase_realization_map_segment_of_mem_coordinateFace_point
       hxτ hxFace hfxSeg)
+
+def minimal_section5SegmentSubface_lowerBoundaryGeometry_of_card_eq_of_vertices_mem_coordinateFace
+    {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    (hfpl : IsPiecewiseAffineOn T f) {u : Section5Node n} (hu : IsSection5GraphNode T f u)
+    {τ : SimplexFacet n} (hτ : τ ∈ section5SegmentSubfaces u f)
+    (hmin : ∀ σ ∈ section5SegmentSubfaces u f, τ.vertices.card ≤ σ.vertices.card)
+    (hτcard : τ.vertices.card = u.level)
+    (hτface :
+      ∀ ⦃v : RentSimplex n⦄, v ∈ τ.vertices → v ∈ coordinateFace (prefixRooms n u.level)) :
+    Section5MinimalSliceLowerBoundaryGeometry u f := by
+  classical
+  let hx :=
+    minimal_section5SegmentSubface_exists_mem_coordinateFace_point_of_vertices_mem_coordinateFace
+      hfpl hu hτ hτface
+  let x : RentSimplex n := Classical.choose hx
+  have hxspec := Classical.choose_spec hx
+  have hxτ : ((x : RentSimplex n) : RentCoordinates n) ∈ τ.realization := hxspec.1
+  have hxFace : x ∈ coordinateFace (prefixRooms n u.level) := hxspec.2.1
+  have hfxSeg : f x ∈ prefixBarycenterSegment n u.level := hxspec.2.2
+  exact minimal_section5SegmentSubface_lowerBoundaryGeometry_of_card_eq_of_mem_coordinateFace_point
+    hfpl hu hτ hmin hτcard hxτ hxFace hfxSeg
 
 theorem IsSection5GraphNode.vertex_mem_affineSpan_prefixVertexPoints {n : ℕ}
     {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n} {u : Section5Node n}

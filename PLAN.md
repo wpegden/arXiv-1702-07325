@@ -172,8 +172,12 @@
   of `τ` already lie in `coordinateFace (prefixRooms n u.level)`; if in addition
   `τ.vertices.card = u.level`, this immediately packages as
   `Section5MinimalSliceLowerBoundaryGeometry u f`. So the remaining geometry is now concentrated
-  in two honest claims extracted from the manuscript's generic picture: produce those erased-face
-  slice witnesses and prove the minimal face has exactly `u.level` vertices.
+  in two honest claims extracted from the manuscript's generic picture: prove all vertices of the
+  minimal face lie in the lower prefix face, and prove the minimal face has exactly `u.level`
+  vertices. The new theorem
+  `minimal_section5SegmentSubface_exists_mem_coordinateFace_point_of_vertices_mem_coordinateFace`
+  now makes the lower-prefix slice point automatic from the vertex condition, so one no longer
+  has to construct that point separately once the face-in-lower-prefix statement is known.
   The older `Section5OneComplexGeometry` layer remains useful as cleanup, but it is no longer the
   main proof boundary.
   A first concrete fragment is already in place: level `0` is rigidly the start node, so any
@@ -267,8 +271,12 @@
   to every erased face `τ.erase v` for a bad vertex `v`, hence
   `minimal_section5SegmentSubface_erase_realization_map_segment_of_mem_coordinateFace_point`
   supplies all erased-face witnesses at once. So the unresolved geometric content is now
-  precisely to produce one such lower-prefix slice point in a minimal face and to prove the
-  cardinality statement `τ.vertices.card = u.level`.
+  precisely to prove that all vertices of a minimal face already lie in the lower prefix face and
+  to prove the cardinality statement `τ.vertices.card = u.level`; the new theorem
+  `minimal_section5SegmentSubface_exists_mem_coordinateFace_point_of_vertices_mem_coordinateFace`
+  recovers the lower-prefix slice point automatically from that vertex condition, and
+  `minimal_section5SegmentSubface_lowerBoundaryGeometry_of_card_eq_of_vertices_mem_coordinateFace`
+  then feeds the result directly into the existing lower-boundary bridge.
   bridge removes even that final `b_k ∈ λ(τ)` packaging step: if the geometry gives a point of
   `τ.realization` whose image stays on `[b_k,b_{k+1}]`, convexity forces that whole face to lie in
   the lower prefix face, the endpoint lemma turns the image into `b_k`, and the direct theorem
