@@ -1052,6 +1052,110 @@ theorem IsPiecewiseAffineOn.exists_point_in_cell_realization_of_hitParamRight {n
   exact hfpl.exists_point_in_realization_of_facetImageContains hu.isFace
     (section5HitParamRight_image_mem_facetImageHull hu)
 
+/-- The nonempty subfaces of one Section 5 cell whose image contains a specified point. -/
+def section5PointHitSubfaces {n : ℕ} (u : Section5Node n) (f : SelfMapOnRentSimplex n)
+    (y : RentCoordinates n) : Finset (SimplexFacet n) := by
+  classical
+  exact ((u.cell.vertices.powerset.filter fun s =>
+      s.Nonempty ∧ y ∈ FacetImageHull f (⟨s⟩ : SimplexFacet n))
+    ).image fun s => (⟨s⟩ : SimplexFacet n)
+
+theorem mem_section5PointHitSubfaces_iff {n : ℕ} {u : Section5Node n}
+    {f : SelfMapOnRentSimplex n} {y : RentCoordinates n} {τ : SimplexFacet n} :
+    τ ∈ section5PointHitSubfaces u f y ↔
+      τ.IsSubfaceOf u.cell ∧ τ.vertices.Nonempty ∧ y ∈ FacetImageHull f τ := by
+  classical
+  constructor
+  · intro hτ
+    rcases Finset.mem_image.mp hτ with ⟨s, hs, hs_eq⟩
+    have hs_vertices : s = τ.vertices := by
+      simpa using congrArg SimplexFacet.vertices hs_eq
+    subst hs_vertices
+    refine ⟨Finset.mem_powerset.mp (Finset.mem_filter.mp hs).1, ?_, ?_⟩
+    · exact (Finset.mem_filter.mp hs).2.1
+    · exact (Finset.mem_filter.mp hs).2.2
+  · rintro ⟨hτsub, hτne, hτhit⟩
+    refine Finset.mem_image.mpr ⟨τ.vertices, ?_, by rfl⟩
+    exact Finset.mem_filter.mpr ⟨Finset.mem_powerset.mpr hτsub, hτne, hτhit⟩
+
+theorem section5PointHitSubfaces_nonempty {n : ℕ} {u : Section5Node n}
+    {f : SelfMapOnRentSimplex n} {y : RentCoordinates n}
+    (huy : y ∈ FacetImageHull f u.cell) (hune : u.cell.vertices.Nonempty) :
+    (section5PointHitSubfaces u f y).Nonempty := by
+  refine ⟨u.cell, (mem_section5PointHitSubfaces_iff (u := u) (f := f) (y := y)).mpr ?_⟩
+  exact ⟨by intro v hv; exact hv, hune, huy⟩
+
+theorem exists_minimal_section5PointHitSubface {n : ℕ} {u : Section5Node n}
+    {f : SelfMapOnRentSimplex n} {y : RentCoordinates n}
+    (hnonempty : (section5PointHitSubfaces u f y).Nonempty) :
+    ∃ τ ∈ section5PointHitSubfaces u f y,
+      ∀ σ ∈ section5PointHitSubfaces u f y, τ.vertices.card ≤ σ.vertices.card := by
+  classical
+  exact Finset.exists_min_image (section5PointHitSubfaces u f y) (fun τ => τ.vertices.card)
+    hnonempty
+
+theorem IsPiecewiseAffineOn.exists_point_in_realization_of_mem_section5PointHitSubfaces
+    {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    (hfpl : IsPiecewiseAffineOn T f) {u : Section5Node n} (hu : IsSection5GraphNode T f u)
+    {y : RentCoordinates n} {τ : SimplexFacet n}
+    (hτ : τ ∈ section5PointHitSubfaces u f y) :
+    ∃ x : RentSimplex n, ((x : RentSimplex n) : RentCoordinates n) ∈ τ.realization ∧
+      f x = y := by
+  rcases (mem_section5PointHitSubfaces_iff (u := u) (f := f) (y := y) (τ := τ)).mp hτ with
+    ⟨hτsub, _hτne, hτhit⟩
+  have hτface : T.IsFace τ := by
+    rcases hu.isFace with ⟨σ, hσ, hσsub⟩
+    exact ⟨σ, hσ, hτsub.trans hσsub⟩
+  exact hfpl.exists_point_in_realization_of_facetImageContains hτface hτhit
+
+def section5HitParamLeftSubfaces {n : ℕ} (u : Section5Node n)
+    (f : SelfMapOnRentSimplex n) : Finset (SimplexFacet n) :=
+  section5PointHitSubfaces u f (section5HitParamMap n u.level (section5HitParamLeft u f))
+
+def section5HitParamRightSubfaces {n : ℕ} (u : Section5Node n)
+    (f : SelfMapOnRentSimplex n) : Finset (SimplexFacet n) :=
+  section5PointHitSubfaces u f (section5HitParamMap n u.level (section5HitParamRight u f))
+
+theorem section5HitParamLeftSubfaces_nonempty {n : ℕ} {T : SimplexTriangulation n}
+    {f : SelfMapOnRentSimplex n} {u : Section5Node n} (hu : IsSection5GraphNode T f u) :
+    (section5HitParamLeftSubfaces u f).Nonempty := by
+  exact section5PointHitSubfaces_nonempty
+    (section5HitParamLeft_image_mem_facetImageHull hu) hu.cell_nonempty
+
+theorem section5HitParamRightSubfaces_nonempty {n : ℕ} {T : SimplexTriangulation n}
+    {f : SelfMapOnRentSimplex n} {u : Section5Node n} (hu : IsSection5GraphNode T f u) :
+    (section5HitParamRightSubfaces u f).Nonempty := by
+  exact section5PointHitSubfaces_nonempty
+    (section5HitParamRight_image_mem_facetImageHull hu) hu.cell_nonempty
+
+theorem exists_minimal_section5HitParamLeftSubface {n : ℕ} {T : SimplexTriangulation n}
+    {f : SelfMapOnRentSimplex n} {u : Section5Node n} (hu : IsSection5GraphNode T f u) :
+    ∃ τ ∈ section5HitParamLeftSubfaces u f,
+      ∀ σ ∈ section5HitParamLeftSubfaces u f, τ.vertices.card ≤ σ.vertices.card := by
+  exact exists_minimal_section5PointHitSubface (section5HitParamLeftSubfaces_nonempty hu)
+
+theorem exists_minimal_section5HitParamRightSubface {n : ℕ} {T : SimplexTriangulation n}
+    {f : SelfMapOnRentSimplex n} {u : Section5Node n} (hu : IsSection5GraphNode T f u) :
+    ∃ τ ∈ section5HitParamRightSubfaces u f,
+      ∀ σ ∈ section5HitParamRightSubfaces u f, τ.vertices.card ≤ σ.vertices.card := by
+  exact exists_minimal_section5PointHitSubface (section5HitParamRightSubfaces_nonempty hu)
+
+theorem IsPiecewiseAffineOn.exists_point_in_realization_of_mem_section5HitParamLeftSubfaces
+    {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    (hfpl : IsPiecewiseAffineOn T f) {u : Section5Node n} (hu : IsSection5GraphNode T f u)
+    {τ : SimplexFacet n} (hτ : τ ∈ section5HitParamLeftSubfaces u f) :
+    ∃ x : RentSimplex n, ((x : RentSimplex n) : RentCoordinates n) ∈ τ.realization ∧
+      f x = section5HitParamMap n u.level (section5HitParamLeft u f) := by
+  exact hfpl.exists_point_in_realization_of_mem_section5PointHitSubfaces hu hτ
+
+theorem IsPiecewiseAffineOn.exists_point_in_realization_of_mem_section5HitParamRightSubfaces
+    {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    (hfpl : IsPiecewiseAffineOn T f) {u : Section5Node n} (hu : IsSection5GraphNode T f u)
+    {τ : SimplexFacet n} (hτ : τ ∈ section5HitParamRightSubfaces u f) :
+    ∃ x : RentSimplex n, ((x : RentSimplex n) : RentCoordinates n) ∈ τ.realization ∧
+      f x = section5HitParamMap n u.level (section5HitParamRight u f) := by
+  exact hfpl.exists_point_in_realization_of_mem_section5PointHitSubfaces hu hτ
+
 /-- The nonempty subfaces of one Section 5 cell whose image still meets the current barycenter
 segment. -/
 def section5SegmentSubfaces {n : ℕ} (u : Section5Node n) (f : SelfMapOnRentSimplex n) :
@@ -1079,6 +1183,30 @@ theorem mem_section5SegmentSubfaces_iff {n : ℕ} {u : Section5Node n} {f : Self
   · rintro ⟨hτsub, hτne, hτhit⟩
     refine Finset.mem_image.mpr ⟨τ.vertices, ?_, by rfl⟩
     exact Finset.mem_filter.mpr ⟨Finset.mem_powerset.mpr hτsub, hτne, hτhit⟩
+
+theorem mem_section5SegmentSubfaces_of_mem_section5HitParamLeftSubfaces {n : ℕ}
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n} {u : Section5Node n}
+    (hu : IsSection5GraphNode T f u) {τ : SimplexFacet n}
+    (hτ : τ ∈ section5HitParamLeftSubfaces u f) :
+    τ ∈ section5SegmentSubfaces u f := by
+  rcases (mem_section5PointHitSubfaces_iff
+      (u := u) (f := f)
+      (y := section5HitParamMap n u.level (section5HitParamLeft u f)) (τ := τ)).mp hτ with
+    ⟨hτsub, hτne, hτhit⟩
+  exact (mem_section5SegmentSubfaces_iff (u := u) (f := f) (τ := τ)).mpr
+    ⟨hτsub, hτne, ⟨_, hτhit, section5HitParamLeft_image_mem_prefixBarycenterSegment hu⟩⟩
+
+theorem mem_section5SegmentSubfaces_of_mem_section5HitParamRightSubfaces {n : ℕ}
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n} {u : Section5Node n}
+    (hu : IsSection5GraphNode T f u) {τ : SimplexFacet n}
+    (hτ : τ ∈ section5HitParamRightSubfaces u f) :
+    τ ∈ section5SegmentSubfaces u f := by
+  rcases (mem_section5PointHitSubfaces_iff
+      (u := u) (f := f)
+      (y := section5HitParamMap n u.level (section5HitParamRight u f)) (τ := τ)).mp hτ with
+    ⟨hτsub, hτne, hτhit⟩
+  exact (mem_section5SegmentSubfaces_iff (u := u) (f := f) (τ := τ)).mpr
+    ⟨hτsub, hτne, ⟨_, hτhit, section5HitParamRight_image_mem_prefixBarycenterSegment hu⟩⟩
 
 theorem section5SegmentSubfaces_nonempty {n : ℕ} {T : SimplexTriangulation n}
     {f : SelfMapOnRentSimplex n} {u : Section5Node n} (hu : IsSection5GraphNode T f u) :

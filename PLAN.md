@@ -230,6 +230,15 @@
   nondegeneracy/codimension-one boundary-face statement on top of this local transversality, or
   finish the interval-endpoint route and extract the same codimension-one witnesses directly from
   `section5HitParamLeft/Right`.
+- Current exact-endpoint frontier:
+  `Section5Path.lean` now also has the exact-point subface families
+  `section5PointHitSubfaces`, `section5HitParamLeftSubfaces`, and
+  `section5HitParamRightSubfaces`. For the left/right endpoint images these families are nonempty,
+  admit minimal-cardinality members, provide exact realization witnesses, and are known to lie
+  inside the older `section5SegmentSubfaces` family. This is the right interface for the next
+  step: prove that a minimal subface hitting the left endpoint image cannot be degenerate, extract
+  a codimension-one lower face from it, and do the analogous uniqueness/endpoint analysis on the
+  right endpoint family.
 - Current structural blocker:
   the present `SimplexTriangulation` wrapper does not yet expose the induced simplicial
   subdivision of the prefix faces, especially the boundary edge `[e_1,e_2]`, and it also does
