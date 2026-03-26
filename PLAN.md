@@ -79,7 +79,9 @@
   the geometric/path-following half of Section 5: the barycenter chain, preimage graph, and the
   endpoint argument producing a target-containing facet.
 - `repo/Arxiv170207325/PiecewiseAffine.lean`
-  facetwise affine images and the global target-hitting theorem.
+  facewise affine-image lemmas converting `FacetImageHull` membership into actual points in face
+  realizations under `IsPiecewiseAffineOn`, and compatibility of different facetwise affine
+  extensions on shared faces, together with support for the global target-hitting theorem.
 - `repo/Arxiv170207325/HallTools.lean`
   bipartite-graph wrappers specialized to acceptable-room relations.
 - `repo/Arxiv170207325/Sperner.lean`
@@ -174,7 +176,11 @@
   side can now be derived from affine independence plus prefix-face dimension bounds and promoted
   to the actual start component by shortest-path arguments; the remaining work is to express
   enough local geometry of the barycenter-chain preimage to control the upper continuation and
-  the terminal no-upper-neighbor endpoint case on the actual start component.
+  the terminal no-upper-neighbor endpoint case on the actual start component. The new
+  `PiecewiseAffine.lean` layer removes one ambiguity here: `FacetImageContains` on a face can now
+  be converted into an actual point of that face realization together with a facetwise affine
+  image witness, and such witnesses agree on shared subfaces. So the unresolved issue is truly the
+  local continuation/genericity of the chain preimage, not the existence of pointwise witnesses.
 - First prove the barycenter-specialized version if that is the easiest entry point.
 - Then generalize to arbitrary interior targets if Section 6 needs it.
 - If full surjectivity is still awkward, keep the theorem in the "target in interior" form first; that already covers the barycenter and the interior `y` used in the first Section 6 theorem.

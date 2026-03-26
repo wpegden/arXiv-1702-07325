@@ -34,9 +34,9 @@
 - [x] Generalize the induced boundary-face API to arbitrary prefix faces `conv{e₁, ..., e_{k+1}}`, including induced face realizations for points already lying in those coordinate faces, so later degree proofs are not hard-coded to the `k = 1` boundary edge.
 - [x] Prove the affine-dimension/cardinality bound for induced prefix faces inside any triangulation face, and use it to show lower-level predecessors in the Section 5 graph are unique once the upper cell is fixed.
 - [x] Prove that every non-start node in the actual start component already has a lower neighbor by combining shortest-path geometry with lower-neighbor uniqueness, and package the reduction from the remaining local-degree proof to upper-neighbor uniqueness plus the no-upper-neighbor endpoint claim.
-- [ ] Resolve the current Section 5 modeling gap: either strengthen the triangulation support layer to expose the induced boundary subdivisions of the prefix faces, or formalize the perturbation/genericity argument that turns the barycenter-chain preimage into a finite 1-dimensional cell complex.
+- [ ] Use the new `repo/Arxiv170207325/PiecewiseAffine.lean` face-realization API to formulate the missing Section 5 perturbation/genericity input directly in terms of actual preimage points on prefix faces, rather than only convex-hull hits.
 - [ ] Prove the remaining raw start-component hypotheses for `section5StartComponentGraph.exists_targetFacet_of_upper_neighbor_and_no_upper_endpoint_rule`: uniqueness of the upper continuation through each `k`-face and the claim that a non-start node with no upper neighbor is already an endpoint hitting the barycenter.
-- [ ] Discharge `Section5SegmentGeometry` from actual Section 5 lemmas on the barycenter-chain preimage by combining the finished start-boundary entrance, the new lower-neighbor reductions, and the remaining upper-continuation/endpoint geometry on the real start component.
+- [ ] Discharge `Section5SegmentGeometry` from actual Section 5 lemmas on the barycenter-chain preimage by combining the finished start-boundary entrance, the lower-neighbor reductions, and the remaining upper-continuation/endpoint geometry on the real start component.
 
 ## Completed
 - [x] Read `repo/paper/arxiv-1702.07325.tex` from start to finish and mapped the proof structure.

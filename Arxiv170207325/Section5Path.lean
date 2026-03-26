@@ -7,6 +7,7 @@ import Mathlib.Combinatorics.SimpleGraph.Metric
 import Mathlib.Combinatorics.SimpleGraph.DegreeSum
 import Mathlib.LinearAlgebra.AffineSpace.FiniteDimensional
 import Arxiv170207325.InteriorTarget
+import Arxiv170207325.PiecewiseAffine
 import Arxiv170207325.Section5Triangulation
 
 noncomputable section
@@ -1102,6 +1103,19 @@ theorem IsSection5GraphNode.level_eq_card_pred {n : ℕ} {T : SimplexTriangulati
     u.level = u.cell.vertices.card - 1 := by
   rw [hu.card_eq]
   omega
+
+theorem IsSection5GraphNode.exists_realizationPoint_mem_chain_of_piecewiseAffineOn {n : ℕ}
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n} {u : Section5Node n}
+    (hu : IsSection5GraphNode T f u) (hpa : IsPiecewiseAffineOn T f) :
+    ∃ τ ∈ T.facets, u.cell.IsSubfaceOf τ ∧
+      ∃ g : RentCoordinates n →ᵃ[ℝ] RentCoordinates n,
+        (∀ v ∈ (τ.vertices : Set (RentSimplex n)), g v = f v) ∧
+        ∃ x ∈ u.cell.realization, g x ∈ prefixBarycenterSegment n u.level := by
+  rcases hu.meets_chain with ⟨y, hyHull, hySeg⟩
+  rcases T.exists_point_in_realization_of_facetImageContains hu.isFace hpa hyHull with
+    ⟨τ, hτ, hsub, g, hg, x, hx, hxy⟩
+  refine ⟨τ, hτ, hsub, g, hg, x, hx, ?_⟩
+  simpa [hxy] using hySeg
 
 theorem IsSection5GraphNode.levelOne_cell_eq_boundaryVertices_of_incidentFacet {n : ℕ}
     [NeZero n] (hn : 2 ≤ n) {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}

@@ -1,5 +1,6 @@
 import Arxiv170207325.Basic
 import Arxiv170207325.InteriorTarget
+import Arxiv170207325.PiecewiseAffine
 import Arxiv170207325.Section5Path
 import Arxiv170207325.Section5Triangulation
 import Arxiv170207325.SimplexModel
