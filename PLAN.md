@@ -143,26 +143,31 @@
   `Section5CanonicalBoundarySuccessorData`, and the new boundary-ordering lemmas on
   `ambientCoordinateFace (prefixRooms n 2)` together with facet-realization recovery now show
   that any level-1 Section 5 cell containing `e_1` is automatically unique whenever it exists, so
-  the remaining local goal is now only the existence of a level-1 successor on the real start
-  component from actual boundary geometry rather than a separate uniqueness proof; the remaining
-  wrappers are now collapsed into a
+  the remaining local goal was reduced to the existence of a level-1 successor on the real start
+  component from actual boundary geometry rather than a separate uniqueness proof. That existence
+  step is now also proved in the genuine boundary-edge range `2 ≤ n`: `Section5Path.lean`
+  extracts a non-start triangulation vertex on `[e_1,e_2]`, uses a maximal boundary vertex to
+  force `e_1` into the support of a nearby covered point, and packages the resulting start edge as
+  `IsFaceRespecting.exists_levelOne_canonical_start_subface` and
+  `IsFaceRespecting.section5CanonicalBoundarySuccessorData_of_two_le`; the remaining wrappers are
+  now collapsed into a
   direct theorem saying that face preservation, a concrete unique start successor, and the
   two local-degree hypotheses already imply a target-containing facet.
 - Next local objective:
   discharge `Section5SegmentGeometry` from the actual Section 5 geometry:
-  first construct some level-1 graph node on the boundary edge `[e_1,e_2]` containing `e_1`;
-  `Section5CanonicalBoundarySuccessorData` then follows immediately from the new automatic
-  uniqueness theorem and will in turn give the start degree-one statement on the canonical start
-  component. After that, prove that every graph node in that component has at most two neighbors
-  and every non-start degree-one node is a barycenter-hitting endpoint, all under the paper's
-  generic segment-intersection assumptions; the `e_1 ↦ b_1` portion, the fact that `e_1` is an
-  actual graph node, and the uniqueness half of the boundary successor are now already discharged.
+  the start-successor problem is now solved in the interesting range `2 ≤ n`, so the next work is
+  to prove that every graph node in the canonical start component has at most two neighbors and
+  that every non-start degree-one node is a barycenter-hitting endpoint, all under the paper's
+  generic segment-intersection assumptions. In parallel, decide whether the final paper-facing
+  theorem should isolate the trivial `n = 1` case instead of passing it through the Section 5
+  path machinery.
 - Current structural blocker:
   the present `SimplexTriangulation` wrapper does not yet expose the induced simplicial
   subdivision of the prefix faces, especially the boundary edge `[e_1,e_2]`, and it also does
   not formalize the perturbation/genericity argument that makes the barycenter-chain preimage a
-  finite 1-dimensional cell complex. One of those two upgrades is still needed before the
-  remaining existence-of-successor and one-or-two-neighbor claims can be proved on the real graph
+  finite 1-dimensional cell complex. The start-successor existence claim has now been recovered
+  directly from boundary-edge geometry, but one of those two upgrades is still needed before the
+  remaining one-or-two-neighbor and non-start-endpoint claims can be proved on the real graph
   rather than assumed via `Section5SegmentGeometry`.
 - First prove the barycenter-specialized version if that is the easiest entry point.
 - Then generalize to arbitrary interior targets if Section 6 needs it.
