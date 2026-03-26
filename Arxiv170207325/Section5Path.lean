@@ -504,6 +504,60 @@ theorem mem_segment_prefixBarycenter_stdSimplexVertex_apply_of_lt
   rw [hyk]
   field_simp [hkR]
 
+theorem mem_segment_prefixBarycenter_stdSimplexVertex_of_mem_ambientCoordinateFace_and_apply_of_lt
+    {n k : ℕ} [NeZero k] (hk : k + 1 ≤ n) {y : RentCoordinates n}
+    (hyFace : y ∈ ambientCoordinateFace (prefixRooms n (k + 1)))
+    (hprefix :
+      let ik : RoomIndex n := ⟨k, lt_of_lt_of_le (Nat.lt_succ_self k) hk⟩
+      ∀ {i : RoomIndex n}, i.1 < k → y i = (k : ℝ)⁻¹ - y ik / k) :
+    y ∈ segment ℝ (prefixBarycenter n k)
+      (((stdSimplex.vertex (S := ℝ)
+          (⟨k, lt_of_lt_of_le (Nat.lt_succ_self k) hk⟩ : RoomIndex n) : RentSimplex n) :
+            RentCoordinates n)) := by
+  let ik : RoomIndex n := ⟨k, lt_of_lt_of_le (Nat.lt_succ_self k) hk⟩
+  have hyk_nonneg : 0 ≤ y ik := hyFace.1.1 ik
+  have hyk_le_one : y ik ≤ 1 := by
+    have hsum : ∑ j : RoomIndex n, y j = (1 : ℝ) := by
+      simpa using hyFace.1.2
+    calc
+      y ik ≤ ∑ j : RoomIndex n, y j := by
+        exact Finset.single_le_sum (fun j _ => hyFace.1.1 j) (Finset.mem_univ ik)
+      _ = (1 : ℝ) := hsum
+  rw [segment_eq_image_lineMap ℝ (prefixBarycenter n k)
+    (((stdSimplex.vertex (S := ℝ) ik : RentSimplex n) : RentCoordinates n))]
+  refine ⟨y ik, ⟨hyk_nonneg, hyk_le_one⟩, ?_⟩
+  ext i
+  by_cases hi : i.1 < k
+  · have hkR : (k : ℝ) ≠ 0 := by exact_mod_cast (NeZero.ne k)
+    have hi_ne_ik : i ≠ ik := by
+      intro hii
+      have : i.1 = k := by simpa [ik] using congrArg Fin.val hii
+      exact (Nat.ne_of_lt hi) this
+    have hyi : y i = (k : ℝ)⁻¹ - y ik / k := hprefix hi
+    rw [hyi]
+    simp [AffineMap.lineMap_apply_module, prefixBarycenter, hi, hi_ne_ik]
+    field_simp [hkR]
+  · by_cases hik : i = ik
+    · subst hik
+      simp [AffineMap.lineMap_apply_module, prefixBarycenter, ik]
+    · have hik_notin : i ∉ prefixRooms n (k + 1) := by
+        rw [mem_prefixRooms_iff]
+        by_contra hik_mem
+        have : i.1 = k := by omega
+        exact hik (Fin.ext this)
+      have hyi_zero : y i = 0 := (coordSupport_subset_iff.mp hyFace.2) i hik_notin
+      have hprefix_zero : prefixBarycenter n k i = 0 := by
+        simp [prefixBarycenter, hi]
+      have hvertex_zero :
+          (((stdSimplex.vertex (S := ℝ) ik : RentSimplex n) : RentCoordinates n) i) = 0 := by
+        simp [stdSimplex_vertex_apply, hik]
+      rw [hyi_zero]
+      rw [AffineMap.lineMap_apply_module]
+      change (1 - y ik) * prefixBarycenter n k i +
+          y ik * (((stdSimplex.vertex (S := ℝ) ik : RentSimplex n) : RentCoordinates n) i) = 0
+      rw [hprefix_zero, hvertex_zero]
+      ring
+
 theorem
     mem_prefixBarycenterSegment_of_mem_segment_prefixBarycenter_stdSimplexVertex_and_levelCoord_le
     {n k : ℕ} [NeZero k] (hk : k + 1 ≤ n) {y : RentCoordinates n}
@@ -519,6 +573,25 @@ theorem
   refine ⟨segment_prefixBarycenter_stdSimplexVertex_subset_ambientCoordinateFace hk hySeg, ?_⟩
   exact ⟨hyk_le, fun hi =>
     mem_segment_prefixBarycenter_stdSimplexVertex_apply_of_lt hk hySeg hi⟩
+
+theorem
+    mem_prefixBarycenterSegment_of_mem_ambientCoordinateFace_and_apply_of_lt_and_levelCoord_le
+    {n k : ℕ} [NeZero k] (hk : k + 1 ≤ n) {y : RentCoordinates n}
+    (hyFace : y ∈ ambientCoordinateFace (prefixRooms n (k + 1)))
+    (hprefix :
+      let ik : RoomIndex n := ⟨k, lt_of_lt_of_le (Nat.lt_succ_self k) hk⟩
+      ∀ {i : RoomIndex n}, i.1 < k → y i = (k : ℝ)⁻¹ - y ik / k)
+    (hyk_le :
+      let ik : RoomIndex n := ⟨k, lt_of_lt_of_le (Nat.lt_succ_self k) hk⟩
+      y ik ≤ ((k + 1 : ℝ)⁻¹)) :
+    y ∈ prefixBarycenterSegment n k := by
+  apply
+    mem_prefixBarycenterSegment_of_mem_segment_prefixBarycenter_stdSimplexVertex_and_levelCoord_le
+      hk
+  · exact
+      mem_segment_prefixBarycenter_stdSimplexVertex_of_mem_ambientCoordinateFace_and_apply_of_lt
+        hk hyFace hprefix
+  · exact hyk_le
 
 theorem ambientCoordinateFace_pair_of_lineMap_mem
     {n : ℕ} {I : Finset (RoomIndex n)} {x y : RentCoordinates n} {c : ℝ}

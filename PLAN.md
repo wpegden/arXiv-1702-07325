@@ -283,11 +283,13 @@
   forces both endpoints into `ambientCoordinateFace (prefixRooms n (k + 1))`, and the existing
   minimal-subface erased-face decomposition therefore already yields an erased-face point whose
   chart image lies in that upper prefix face. The newest refinement isolates the manuscript's
-  remaining hard codomain model case explicitly: `Section5Path.lean` now also characterizes the
-  larger segment `[b_k, e_{k+1}]` by the same lower-coordinate formulas and proves that the old
-  level-`k` bound already upgrades membership from `[b_k, e_{k+1}]` back to `[b_k,b_{k+1}]`.
-  So the honest next check is now only the remaining scalar equations there: place the erased-face
-  chart image on `[b_k, e_{k+1}]`, then verify the existing level-`k` bound.
+  remaining hard codomain model case explicitly: `Section5Path.lean` now characterizes the
+  larger segment `[b_k, e_{k+1}]` in both directions by the same lower-coordinate formulas on
+  `ambientCoordinateFace (prefixRooms n (k + 1))`, and proves that the old level-`k` bound
+  upgrades membership from `[b_k, e_{k+1}]` back to `[b_k,b_{k+1}]`. So the honest next check is
+  now only to prove those concrete equations for the erased-face chart image: upper-prefix
+  support is already done, and the missing work is exactly the lower-coordinate formulas plus the
+  existing level-`k` bound.
   This support layer is now also named globally on the real start component:
   `Section5BoundaryFaceGenericity` asks for that exact lower-boundary-face datum on every
   non-start node, keeps the existing upper-step uniqueness and endpoint fields, and then compiles
