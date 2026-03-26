@@ -150,19 +150,20 @@
   coordinate faces, so the next degree arguments can be formulated without hard-coding `k = 1`.
   In addition, the induced prefix-face vertices inside any triangulation face are now shown to
   have the expected affine-dimension bound `≤ k + 1`, which gives uniqueness of any lower-level
-  predecessor once an upper Section 5 cell is fixed. The remaining Section 5 reduction is
-  therefore collapsed to the genuinely chain-local upper-branching and terminal-endpoint
-  hypotheses needed to finish the endpoint argument.
+  predecessor once an upper Section 5 cell is fixed. Shortest-path arguments on the actual start
+  component now also show that every non-start node really does have such a lower neighbor, and
+  the endpoint theorem has been repackaged so that the remaining Lean frontier is precisely the
+  chain-local upper-branching and no-upper-neighbor endpoint hypotheses.
 - Next local objective:
   discharge `Section5SegmentGeometry` from the actual Section 5 geometry:
   prove that every graph node in the actual start component has at most two neighbors while every
   non-start degree-one node is a barycenter-hitting endpoint, all under the paper's generic
   segment-intersection assumptions. The start-boundary entrance geometry is now complete, the
-  prefix-face infrastructure is no longer tied to the first boundary edge, and the lower-neighbor
-  side of the local degree bound is now formal. The remaining work should therefore proceed by
-  showing that the segment `[b_k,b_{k+1}]` can contribute at most one upper continuation through a
-  `k`-face and that the single-continuation case forces a barycenter endpoint when it is not the
-  start.
+  prefix-face infrastructure is no longer tied to the first boundary edge, and both the
+  lower-neighbor uniqueness and lower-neighbor existence sides are now formal. The remaining work
+  should therefore proceed by showing that the segment `[b_k,b_{k+1}]` can contribute at most one
+  upper continuation through a `k`-face and that the absence of such a continuation forces a
+  barycenter endpoint when the node is not the start.
 - Current structural blocker:
   the present `SimplexTriangulation` wrapper now exposes induced prefix faces and their induced
   realizations, but it still does not expose the full simplicial-subdivision combinatorics of
@@ -170,9 +171,10 @@
   perturbation/genericity argument that makes the barycenter-chain preimage a finite
   1-dimensional cell complex. The boundary-edge existence/uniqueness entrance step is now
   complete, so the immediate blocker is no longer on `[e_1,e_2]` itself. The lower-predecessor
-  side can now be derived from affine independence plus prefix-face dimension bounds; the
-  remaining work is to express enough local geometry of the barycenter-chain preimage to control
-  the upper continuation and the terminal endpoint case on the actual start component.
+  side can now be derived from affine independence plus prefix-face dimension bounds and promoted
+  to the actual start component by shortest-path arguments; the remaining work is to express
+  enough local geometry of the barycenter-chain preimage to control the upper continuation and
+  the terminal no-upper-neighbor endpoint case on the actual start component.
 - First prove the barycenter-specialized version if that is the easiest entry point.
 - Then generalize to arbitrary interior targets if Section 6 needs it.
 - If full surjectivity is still awkward, keep the theorem in the "target in interior" form first; that already covers the barycenter and the interior `y` used in the first Section 6 theorem.

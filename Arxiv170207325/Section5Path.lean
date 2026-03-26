@@ -3,6 +3,7 @@ import Mathlib.Data.Finset.Powerset
 import Mathlib.Analysis.Convex.Between
 import Mathlib.Analysis.Convex.Jensen
 import Mathlib.Combinatorics.SimpleGraph.Connectivity.Connected
+import Mathlib.Combinatorics.SimpleGraph.Metric
 import Mathlib.Combinatorics.SimpleGraph.DegreeSum
 import Mathlib.LinearAlgebra.AffineSpace.FiniteDimensional
 import Arxiv170207325.InteriorTarget
@@ -1034,9 +1035,20 @@ theorem eq_prefixBarycenter_one_of_mem_ambientCoordinateFace {n : ℕ} [NeZero n
       exact (coordSupport_subset_iff.mp hy.2) i (by simpa [mem_prefixRooms_iff] using hi)
     simp [prefixBarycenter, hi, hyi]
 
+theorem eq_section5StartVertex_of_mem_coordinateFace_one {n : ℕ} [NeZero n]
+    {x : RentSimplex n} (hx : x ∈ coordinateFace (prefixRooms n 1)) :
+    x = section5StartVertex n := by
+  have hxSimplex : ((x : RentSimplex n) : RentCoordinates n) ∈ scaledSimplex 1 n := by
+    refine ⟨x.2.1, ?_⟩
+    exact_mod_cast x.2.2
+  apply Subtype.ext
+  exact eq_prefixBarycenter_one_of_mem_ambientCoordinateFace <|
+    mem_ambientCoordinateFace_iff.mpr
+      ⟨hxSimplex, coordSupport_subset_iff.mpr <| mem_coordinateFace_iff.mp hx⟩
+
 theorem IsFaceRespecting.map_section5StartVertex_eq_prefixBarycenter {n : ℕ} [NeZero n]
     {f : SelfMapOnRentSimplex n} (hf : IsFaceRespecting f) :
-    f (section5StartVertex n) = prefixBarycenter n 1 := by
+  f (section5StartVertex n) = prefixBarycenter n 1 := by
   exact eq_prefixBarycenter_one_of_mem_ambientCoordinateFace <|
     hf.mapsTo_ambientCoordinateFace (prefixRooms n 1) (section5StartVertex_mem_coordinateFace n)
 
@@ -1513,6 +1525,53 @@ theorem section5StartComponentGraph_adj_iff {n : ℕ} [NeZero n]
   exact SimpleGraph.ConnectedComponent.toSimpleGraph_adj (C := section5StartComponent hstart)
     u.2 v.2
 
+theorem section5StartComponentGraph_adj_level_cases {n : ℕ} [NeZero n]
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    (hstart : IsSection5GraphNode T f (section5StartNode n))
+    {u v : section5StartComponent hstart}
+    (huv : (section5StartComponentGraph hstart).Adj u v) :
+    u.1.1.level + 1 = v.1.1.level ∨ v.1.1.level + 1 = u.1.1.level := by
+  rcases (section5StartComponentGraph_adj_iff hstart).mp huv with huv | hvu
+  · exact Or.inl huv.1
+  · exact Or.inr hvu.1
+
+theorem section5StartComponent_eq_start_of_level_zero {n : ℕ} [NeZero n]
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    {hstart : IsSection5GraphNode T f (section5StartNode n)}
+    {v : section5StartComponent hstart} (hv0 : v.1.1.level = 0) :
+    v = section5StartVertexInComponent hstart := by
+  have hvNode : IsSection5GraphNode T f v.1.1 := mem_section5Nodes_iff.mp v.1.2
+  have hcard : v.1.1.cell.vertices.card = 1 := by
+    simpa [hv0] using hvNode.card_eq
+  rcases Finset.card_eq_one.mp hcard with ⟨w, hw⟩
+  have hwMem : w ∈ v.1.1.cell.vertices := by
+    rw [hw]
+    simp
+  have hwFace : w ∈ coordinateFace (prefixRooms n 1) := by
+    simpa [hv0] using hvNode.prefix_vertices hwMem
+  have hwEq : w = section5StartVertex n :=
+    eq_section5StartVertex_of_mem_coordinateFace_one hwFace
+  have hcell : v.1.1.cell = section5StartCell n := by
+    cases hvCell : v.1.1.cell with
+    | mk verts =>
+      simpa [hvCell, section5StartCell, hwEq] using hw
+  have hnode : v.1.1 = section5StartNode n :=
+    Section5Node.eq_of_level_eq_of_cell_eq
+      (by simpa [section5StartNode_level] using hv0) hcell
+  have hnode' : v.1 = section5StartNodeInNodes hstart := Subtype.ext hnode
+  exact Subtype.ext hnode'
+
+theorem section5StartComponent_level_pos_of_ne_start {n : ℕ} [NeZero n]
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    {hstart : IsSection5GraphNode T f (section5StartNode n)}
+    {v : section5StartComponent hstart}
+    (hv : v ≠ section5StartVertexInComponent hstart) :
+    0 < v.1.1.level := by
+  have hv0 : v.1.1.level ≠ 0 := by
+    intro hv0
+    exact hv (section5StartComponent_eq_start_of_level_zero hv0)
+  exact Nat.pos_of_ne_zero hv0
+
 theorem section5StartComponentGraph_lower_neighbor_unique {n : ℕ} [NeZero n]
     {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
     {hstart : IsSection5GraphNode T f (section5StartNode n)}
@@ -1535,6 +1594,128 @@ theorem section5StartComponentGraph_lower_neighbor_unique {n : ℕ} [NeZero n]
     huNode.lower_step_unique haNode hbNode haStep hbStep
   have habNode' : a.1 = b.1 := Subtype.ext habNode
   exact Subtype.ext habNode'
+
+theorem section5StartComponentGraph_penultimate_level_succ_of_shortest_path {n : ℕ}
+    [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    {hstart : IsSection5GraphNode T f (section5StartNode n)}
+    {v : section5StartComponent hstart}
+    (hv : v ≠ section5StartVertexInComponent hstart)
+    {p : (section5StartComponentGraph hstart).Walk (section5StartVertexInComponent hstart) v}
+    (hpPath : p.IsPath)
+    (hpLen :
+      p.length =
+        (section5StartComponentGraph hstart).dist (section5StartVertexInComponent hstart) v) :
+    p.penultimate.1.1.level + 1 = v.1.1.level := by
+  have hvPos : 0 < v.1.1.level := section5StartComponent_level_pos_of_ne_start hv
+  have hpPos : 0 < p.length := by
+    rw [hpLen]
+    exact p.reachable.pos_dist_of_ne hv.symm
+  have hLastAdj :
+      (section5StartComponentGraph hstart).Adj p.penultimate v := by
+    have hLastAdjRaw := p.adj_getVert_succ (i := p.length - 1) (by omega)
+    have hArith : p.length - 1 + 1 = p.length := by
+      omega
+    simpa [SimpleGraph.Walk.penultimate, hArith] using hLastAdjRaw
+  rcases section5StartComponentGraph_adj_level_cases hstart hLastAdj with hUp | hDown
+  · exact hUp
+  · exfalso
+    let k : ℕ := v.1.1.level
+    let P : ℕ → Prop := fun i =>
+      i ≤ p.length - 1 ∧
+        ∀ j, i ≤ j → j ≤ p.length →
+          (p.getVert j).1.1.level = k + (p.length - j)
+    have hPExists : ∃ i, P i := by
+      refine ⟨p.length - 1, ?_⟩
+      refine ⟨le_rfl, ?_⟩
+      intro j hj hj'
+      have hCases : j = p.length - 1 ∨ j = p.length := by
+        omega
+      rcases hCases with rfl | rfl
+      · have hPen : p.penultimate.1.1.level = k + 1 := by
+          simpa [k] using hDown.symm
+        have hArith : p.length - (p.length - 1) = 1 := by
+          omega
+        simp [k, hPen, hArith]
+      · simp [k]
+    let i : ℕ := Nat.find hPExists
+    have hiSpec : P i := Nat.find_spec hPExists
+    have hiLe : i ≤ p.length - 1 := hiSpec.1
+    have hiLevel : (p.getVert i).1.1.level = k + (p.length - i) :=
+      hiSpec.2 i le_rfl (by omega)
+    have hiPos : 0 < i := by
+      by_contra hiZero
+      have hStartLevel :
+          (section5StartVertexInComponent hstart).1.1.level = k + p.length := by
+        simpa [i, hiZero, k] using hiSpec.2 0 (by omega) (by omega)
+      have : 0 = k + p.length := by
+        simpa [k] using hStartLevel
+      have hkPos : 0 < k := by
+        simpa [k] using hvPos
+      omega
+    have hiLt : i < p.length := by
+      omega
+    have hPrevAdj :
+        (section5StartComponentGraph hstart).Adj (p.getVert (i - 1)) (p.getVert i) := by
+      have hPrevAdjRaw := p.adj_getVert_succ (i := i - 1) (by omega)
+      have hArith : i - 1 + 1 = i := by
+        omega
+      simpa [hArith] using hPrevAdjRaw
+    have hNextAdj :
+        (section5StartComponentGraph hstart).Adj (p.getVert i) (p.getVert (i + 1)) := by
+      exact p.adj_getVert_succ (i := i) hiLt
+    have hiNextLevel : (p.getVert (i + 1)).1.1.level = k + (p.length - (i + 1)) :=
+      hiSpec.2 (i + 1) (by omega) (by omega)
+    have hNextLower : (p.getVert (i + 1)).1.1.level + 1 = (p.getVert i).1.1.level := by
+      omega
+    have hPrevLower : (p.getVert (i - 1)).1.1.level + 1 = (p.getVert i).1.1.level := by
+      rcases section5StartComponentGraph_adj_level_cases hstart hPrevAdj with hPrev | hPrev
+      · exact hPrev
+      · exfalso
+        have hPrevSpec : P (i - 1) := by
+          refine ⟨by omega, ?_⟩
+          intro j hj hj'
+          by_cases hEq : j = i - 1
+          · subst hEq
+            omega
+          · exact hiSpec.2 j (by omega) hj'
+        have : i ≤ i - 1 := Nat.find_min' hPExists hPrevSpec
+        omega
+    have hRepeat :
+        p.getVert (i - 1) = p.getVert (i + 1) :=
+      section5StartComponentGraph_lower_neighbor_unique
+        (hstart := hstart) (u := p.getVert i)
+        (a := p.getVert (i - 1)) (b := p.getVert (i + 1))
+        hPrevAdj hPrevLower hNextAdj.symm hNextLower
+    have hIdxEq : i - 1 = i + 1 := hpPath.getVert_injOn
+      (by simp [show i - 1 ≤ p.length by omega])
+      (by simp [show i + 1 ≤ p.length by omega])
+      hRepeat
+    omega
+
+theorem section5StartComponent_exists_lower_neighbor_of_ne_start {n : ℕ} [NeZero n]
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    {hstart : IsSection5GraphNode T f (section5StartNode n)}
+    {v : section5StartComponent hstart}
+    (hv : v ≠ section5StartVertexInComponent hstart) :
+    ∃ u : section5StartComponent hstart,
+      (section5StartComponentGraph hstart).Adj u v ∧ u.1.1.level + 1 = v.1.1.level := by
+  have hReach :
+      (section5StartComponentGraph hstart).Reachable (section5StartVertexInComponent hstart) v :=
+    (section5StartComponentGraph_preconnected hstart) _ _
+  rcases hReach.exists_path_of_dist with ⟨p, hpPath, hpLen⟩
+  have hpPos : 0 < p.length := by
+    rw [hpLen]
+    exact hReach.pos_dist_of_ne hv.symm
+  refine ⟨p.penultimate, ?_, ?_⟩
+  · simpa [SimpleGraph.Walk.penultimate] using
+      (show (section5StartComponentGraph hstart).Adj
+          (p.getVert (p.length - 1)) (p.getVert p.length) from
+          by
+            have hAdj := p.adj_getVert_succ (i := p.length - 1) (by omega)
+            have hArith : p.length - 1 + 1 = p.length := by
+              omega
+            simpa [hArith] using hAdj)
+  · exact section5StartComponentGraph_penultimate_level_succ_of_shortest_path hv hpPath hpLen
 
 theorem not_section5Step_to_startNode {n : ℕ} [NeZero n] {f : SelfMapOnRentSimplex n}
     {u : Section5Node n} : ¬ Section5Step f u (section5StartNode n) := by
@@ -1750,6 +1931,85 @@ abbrev section5StartComponentNodeDegree {n : ℕ} [NeZero n] {T : SimplexTriangu
   exact (Finset.univ.filter fun w : section5StartComponent hstart =>
     (section5StartComponentGraph hstart).Adj v w).card
 
+theorem section5StartComponentGraph_degree_le_two_of_upper_neighbor_unique {n : ℕ} [NeZero n]
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    {hstart : IsSection5GraphNode T f (section5StartNode n)}
+    (hupper :
+      ∀ {u a b : section5StartComponent hstart},
+        (section5StartComponentGraph hstart).Adj u a →
+        u.1.1.level + 1 = a.1.1.level →
+        (section5StartComponentGraph hstart).Adj u b →
+        u.1.1.level + 1 = b.1.1.level →
+        a = b) :
+    ∀ u : section5StartComponent hstart, section5StartComponentNodeDegree u ≤ 2 := by
+  classical
+  intro u
+  rw [section5StartComponentNodeDegree]
+  by_contra hdeg
+  have hthree :
+      2 <
+        (Finset.univ.filter fun w : section5StartComponent hstart =>
+          (section5StartComponentGraph hstart).Adj u w).card := by
+    omega
+  rcases Finset.two_lt_card.mp hthree with
+    ⟨a, ha, b, hb, c, hc, hab, hac, hbc⟩
+  have haAdj : (section5StartComponentGraph hstart).Adj u a :=
+    (Finset.mem_filter.mp ha).2
+  have hbAdj : (section5StartComponentGraph hstart).Adj u b :=
+    (Finset.mem_filter.mp hb).2
+  have hcAdj : (section5StartComponentGraph hstart).Adj u c :=
+    (Finset.mem_filter.mp hc).2
+  rcases section5StartComponentGraph_adj_level_cases hstart haAdj with haDir | haDir
+  · rcases section5StartComponentGraph_adj_level_cases hstart hbAdj with hbDir | hbDir
+    · exact hab <| hupper haAdj haDir hbAdj hbDir
+    · rcases section5StartComponentGraph_adj_level_cases hstart hcAdj with hcDir | hcDir
+      · exact hac <| hupper haAdj haDir hcAdj hcDir
+      · exact hbc <| section5StartComponentGraph_lower_neighbor_unique
+          (hstart := hstart) (u := u) (a := b) (b := c) hbAdj.symm hbDir hcAdj.symm hcDir
+  · rcases section5StartComponentGraph_adj_level_cases hstart hbAdj with hbDir | hbDir
+    · rcases section5StartComponentGraph_adj_level_cases hstart hcAdj with hcDir | hcDir
+      · exact hbc <| hupper hbAdj hbDir hcAdj hcDir
+      · exact hac <| section5StartComponentGraph_lower_neighbor_unique
+          (hstart := hstart) (u := u) (a := a) (b := c) haAdj.symm haDir hcAdj.symm hcDir
+    · exact hab <| section5StartComponentGraph_lower_neighbor_unique
+        (hstart := hstart) (u := u) (a := a) (b := b) haAdj.symm haDir hbAdj.symm hbDir
+
+theorem section5StartComponent_nonstart_degree_one_is_endpoint_of_no_upper_neighbor_endpoint
+    {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    {hstart : IsSection5GraphNode T f (section5StartNode n)}
+    (hendpoint :
+      ∀ v : section5StartComponent hstart,
+        (¬ ∃ w : section5StartComponent hstart,
+            (section5StartComponentGraph hstart).Adj v w ∧
+              v.1.1.level + 1 = w.1.1.level) →
+          IsSection5Endpoint T f v.1.1) :
+    ∀ v : section5StartComponent hstart, section5StartComponentNodeDegree v = 1 →
+      v ≠ section5StartVertexInComponent hstart →
+        IsSection5Endpoint T f v.1.1 := by
+  classical
+  intro v hvdeg hvstart
+  by_cases hupper :
+      ∃ w : section5StartComponent hstart,
+        (section5StartComponentGraph hstart).Adj v w ∧
+          v.1.1.level + 1 = w.1.1.level
+  · rcases section5StartComponent_exists_lower_neighbor_of_ne_start hvstart with ⟨u, huAdj, huLevel⟩
+    rcases hupper with ⟨w, hwAdj, hwLevel⟩
+    have huwNe : u ≠ w := by
+      intro huw
+      subst w
+      omega
+    have hCard :
+        1 <
+          (Finset.univ.filter fun z : section5StartComponent hstart =>
+            (section5StartComponentGraph hstart).Adj v z).card := by
+      apply Finset.one_lt_card.mpr
+      refine ⟨u, ?_, w, ?_, huwNe⟩
+      · simp [huAdj.symm]
+      · simp [hwAdj]
+    rw [section5StartComponentNodeDegree] at hvdeg
+    omega
+  · exact hendpoint v hupper
+
 /-- The graph-theoretic form of the paper's generic segment-intersection claims on the connected
 component of the Section 5 graph that starts at `e₁`. -/
 structure Section5StartComponentGenericity {n : ℕ} [NeZero n]
@@ -1820,6 +2080,37 @@ theorem section5StartComponentGraph.exists_targetFacet_of_endpoint_rule {n : ℕ
         hfinish_deg) with rfl | hfinish
   · exact False.elim (hfinish_ne rfl)
   · exact hfinish.exists_targetFacet hf
+
+theorem section5StartComponentGraph.exists_targetFacet_of_upper_neighbor_and_no_upper_endpoint_rule
+    {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    (hf : IsFaceRespecting f)
+    {hstart : IsSection5GraphNode T f (section5StartNode n)}
+    (hstartdeg : section5StartComponentNodeDegree (section5StartVertexInComponent hstart) = 1)
+    (hupper :
+      ∀ {u a b : section5StartComponent hstart},
+        (section5StartComponentGraph hstart).Adj u a →
+        u.1.1.level + 1 = a.1.1.level →
+        (section5StartComponentGraph hstart).Adj u b →
+        u.1.1.level + 1 = b.1.1.level →
+        a = b)
+    (hendpoint :
+      ∀ v : section5StartComponent hstart,
+        (¬ ∃ w : section5StartComponent hstart,
+            (section5StartComponentGraph hstart).Adj v w ∧
+              v.1.1.level + 1 = w.1.1.level) →
+          IsSection5Endpoint T f v.1.1) :
+    ∃ τ ∈ T.facets,
+      FacetImageContains f τ ((rentBarycenter n : RentSimplex n) : RentCoordinates n) := by
+  refine section5StartComponentGraph.exists_targetFacet_of_endpoint_rule
+    (T := T) (f := f) hf hstartdeg
+    (section5StartComponentGraph_degree_le_two_of_upper_neighbor_unique
+      (hstart := hstart) hupper) ?_
+  intro v hvdeg
+  by_cases hvstart : v = section5StartVertexInComponent hstart
+  · exact Or.inl hvstart
+  · exact Or.inr <|
+      section5StartComponent_nonstart_degree_one_is_endpoint_of_no_upper_neighbor_endpoint
+        (T := T) (f := f) (hstart := hstart) hendpoint v hvdeg hvstart
 
 theorem Section5StartComponentGenericity.exists_targetFacet {n : ℕ} [NeZero n]
     {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
