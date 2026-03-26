@@ -225,10 +225,14 @@
   further to proving the concrete fields of `Section5BoundarySegmentGenericity` from actual simplex
   intersections with the barycenter chain. A later cleanup may still derive the remaining
   `Section5OneComplexGeometry` fields from the same input, but that is no longer the main blocker
-  for the target-facet theorem. The immediate next experiment should use the new point/hull bridge
-  to attack `Section5PerturbationGenericity.lower_step_exists_of_ne_start` by taking a real point
-  in one Section 5 cell whose image lies on `[b_k, b_{k+1}]` and shrinking it to a lower-face
-  witness at `b_k`.
+  for the target-facet theorem. The support-shrinking half of the lower-step argument is now in
+  place: if a point of one Section 5 cell already lies in the lower prefix face and maps to
+  `b_k`, then the filtered subface `section5LowerPrefixVertices` already realizes that point and
+  its image hull contains `b_k`, giving a genuine predecessor `Section5Step` as soon as the
+  filtered subface has cardinality `k`. The immediate next experiment should therefore stay local
+  inside one Section 5 cell and prove the two remaining geometric inputs for
+  `Section5PerturbationGenericity.lower_step_exists_of_ne_start`: construct such a lower-face
+  point mapping to `b_k`, and prove `(section5LowerPrefixVertices u).card = u.level`.
 - First prove the barycenter-specialized version if that is the easiest entry point.
 - Then generalize to arbitrary interior targets if Section 6 needs it.
 - If full surjectivity is still awkward, keep the theorem in the "target in interior" form first; that already covers the barycenter and the interior `y` used in the first Section 6 theorem.

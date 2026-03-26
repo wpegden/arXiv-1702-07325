@@ -500,18 +500,82 @@ theorem mem_ambientCoordinateFace_prefixRooms_two_of_scaledSimplex_zero_off {n :
   rw [coordSupport_subset_iff]
   exact hzero
 
+theorem mem_coordinateFace_of_mem_ambientCoordinateFace {n : ℕ} {I : Finset (RoomIndex n)}
+    {v : RentSimplex n}
+    (hv : ((v : RentSimplex n) : RentCoordinates n) ∈ ambientCoordinateFace I) :
+    v ∈ coordinateFace I := by
+  rw [mem_coordinateFace_iff]
+  exact coordSupport_subset_iff.mp hv.2
+
 theorem mem_coordinateFace_prefixRooms_two_of_mem_ambientCoordinateFace {n : ℕ} [NeZero n]
     {v : RentSimplex n}
     (hv : ((v : RentSimplex n) : RentCoordinates n) ∈ ambientCoordinateFace (prefixRooms n 2)) :
     v ∈ coordinateFace (prefixRooms n 2) := by
-  rw [mem_coordinateFace_iff]
-  exact coordSupport_subset_iff.mp hv.2
+  exact mem_coordinateFace_of_mem_ambientCoordinateFace hv
+
+theorem point_mem_ambientCoordinateFace_of_nonzero_weight {n : ℕ} {I : Finset (RoomIndex n)}
+    {τ : SimplexFacet n} {x : RentCoordinates n}
+    (_hxτ : x ∈ τ.realization) (hxFace : x ∈ ambientCoordinateFace I)
+    {w : RentCoordinates n → ℝ}
+    (hw_nonneg :
+      ∀ y ∈ τ.vertices.image fun v : RentSimplex n => ((v : RentSimplex n) : RentCoordinates n),
+        0 ≤ w y)
+    (hw_sum :
+      ∑ y ∈ τ.vertices.image fun v : RentSimplex n => ((v : RentSimplex n) : RentCoordinates n),
+        w y = 1)
+    (hw_center :
+      (τ.vertices.image fun v : RentSimplex n => ((v : RentSimplex n) : RentCoordinates n)).centerMass
+        w id = x)
+    {y : RentCoordinates n}
+    (hy : y ∈ τ.vertices.image fun v : RentSimplex n => ((v : RentSimplex n) : RentCoordinates n))
+    (hwy : w y ≠ 0) :
+    y ∈ ambientCoordinateFace I := by
+  rcases Finset.mem_image.mp hy with ⟨v, hv, rfl⟩
+  rw [mem_ambientCoordinateFace_iff]
+  constructor
+  · simpa [RentSimplex, scaledSimplex] using v.2
+  · rw [coordSupport_subset_iff]
+    intro i hi
+    have hx_zero : x i = 0 := (coordSupport_subset_iff.mp hxFace.2) i hi
+    have hsum_i :
+        ∑ y ∈ τ.vertices.image fun v : RentSimplex n => ((v : RentSimplex n) : RentCoordinates n),
+          w y * y i = x i := by
+      calc
+        ∑ y ∈ τ.vertices.image fun v : RentSimplex n => ((v : RentSimplex n) : RentCoordinates n),
+            w y * y i
+          = (∑ y ∈ τ.vertices.image fun v : RentSimplex n =>
+                ((v : RentSimplex n) : RentCoordinates n), w y • y) i := by
+              simp [Pi.smul_apply]
+        _ = ((τ.vertices.image fun v : RentSimplex n => ((v : RentSimplex n) : RentCoordinates n)).centerMass
+              w id) i := by
+              rw [Finset.centerMass_eq_of_sum_1
+                (τ.vertices.image fun v : RentSimplex n => ((v : RentSimplex n) :
+                  RentCoordinates n)) id hw_sum]
+              rfl
+        _ = x i := by
+              exact congrArg (fun z : RentCoordinates n => z i) hw_center
+    have hsum_zero :
+        ∑ y ∈ τ.vertices.image fun v : RentSimplex n => ((v : RentSimplex n) : RentCoordinates n),
+          w y * y i = 0 := by
+      simpa [hx_zero] using hsum_i
+    have hterms_zero :
+        ∀ z ∈ τ.vertices.image fun v : RentSimplex n => ((v : RentSimplex n) : RentCoordinates n),
+          w z * z i = 0 := by
+      refine (Finset.sum_eq_zero_iff_of_nonneg ?_).mp hsum_zero
+      intro z hz
+      rcases Finset.mem_image.mp hz with ⟨u, hu, rfl⟩
+      exact mul_nonneg (hw_nonneg _ (Finset.mem_image.mpr ⟨u, hu, rfl⟩)) (u.2.1 i)
+    have hwi_zero :
+        w (((v : RentSimplex n) : RentCoordinates n)) *
+          ((v : RentSimplex n) : RentCoordinates n) i = 0 :=
+      hterms_zero _ (Finset.mem_image.mpr ⟨v, hv, rfl⟩)
+    exact (mul_eq_zero.mp hwi_zero).resolve_left hwy
 
 /-- If a point of a facet lies on the boundary edge `conv(e₁,e₂)`, then any vertex with nonzero
 weight in a convex-hull presentation of that point also lies on the same boundary edge. -/
 theorem point_mem_ambientCoordinateFace_prefixRooms_two_of_nonzero_weight {n : ℕ} [NeZero n]
     {τ : SimplexFacet n} {x : RentCoordinates n}
-    (_hxτ : x ∈ τ.realization) (hxFace : x ∈ ambientCoordinateFace (prefixRooms n 2))
+    (hxτ : x ∈ τ.realization) (hxFace : x ∈ ambientCoordinateFace (prefixRooms n 2))
     {w : RentCoordinates n → ℝ}
     (hw_nonneg :
       ∀ y ∈ τ.vertices.image fun v : RentSimplex n => ((v : RentSimplex n) : RentCoordinates n),
@@ -526,44 +590,8 @@ theorem point_mem_ambientCoordinateFace_prefixRooms_two_of_nonzero_weight {n : �
     (hy : y ∈ τ.vertices.image fun v : RentSimplex n => ((v : RentSimplex n) : RentCoordinates n))
     (hwy : w y ≠ 0) :
     y ∈ ambientCoordinateFace (prefixRooms n 2) := by
-  rcases Finset.mem_image.mp hy with ⟨v, hv, rfl⟩
-  refine mem_ambientCoordinateFace_prefixRooms_two_of_scaledSimplex_zero_off
-    (by simpa [RentSimplex, scaledSimplex] using v.2) ?_
-  intro i hi
-  have hx_zero : x i = 0 := (coordSupport_subset_iff.mp hxFace.2) i hi
-  have hsum_i :
-      ∑ y ∈ τ.vertices.image fun v : RentSimplex n => ((v : RentSimplex n) : RentCoordinates n),
-        w y * y i = x i := by
-    calc
-      ∑ y ∈ τ.vertices.image fun v : RentSimplex n => ((v : RentSimplex n) : RentCoordinates n),
-          w y * y i
-        = (∑ y ∈ τ.vertices.image fun v : RentSimplex n =>
-              ((v : RentSimplex n) : RentCoordinates n), w y • y) i := by
-            simp [Pi.smul_apply]
-      _ = ((τ.vertices.image fun v : RentSimplex n => ((v : RentSimplex n) : RentCoordinates n)).centerMass
-            w id) i := by
-            rw [Finset.centerMass_eq_of_sum_1
-              (τ.vertices.image fun v : RentSimplex n => ((v : RentSimplex n) :
-                RentCoordinates n)) id hw_sum]
-            rfl
-      _ = x i := by
-            exact congrArg (fun z : RentCoordinates n => z i) hw_center
-  have hsum_zero :
-      ∑ y ∈ τ.vertices.image fun v : RentSimplex n => ((v : RentSimplex n) : RentCoordinates n),
-        w y * y i = 0 := by
-    simpa [hx_zero] using hsum_i
-  have hterms_zero :
-      ∀ z ∈ τ.vertices.image fun v : RentSimplex n => ((v : RentSimplex n) : RentCoordinates n),
-        w z * z i = 0 := by
-    refine (Finset.sum_eq_zero_iff_of_nonneg ?_).mp hsum_zero
-    intro z hz
-    rcases Finset.mem_image.mp hz with ⟨u, hu, rfl⟩
-    exact mul_nonneg (hw_nonneg _ (Finset.mem_image.mpr ⟨u, hu, rfl⟩)) (u.2.1 i)
-  have hwi_zero :
-      w (((v : RentSimplex n) : RentCoordinates n)) *
-        ((v : RentSimplex n) : RentCoordinates n) i = 0 :=
-    hterms_zero _ (Finset.mem_image.mpr ⟨v, hv, rfl⟩)
-  exact (mul_eq_zero.mp hwi_zero).resolve_left hwy
+  exact point_mem_ambientCoordinateFace_of_nonzero_weight hxτ hxFace hw_nonneg hw_sum hw_center
+    hy hwy
 
 theorem exists_boundaryEdgeVertex_ne_start {n : ℕ} [NeZero n] (hn : 2 ≤ n)
     (T : SimplexTriangulation n) :
@@ -753,6 +781,85 @@ theorem IsSection5GraphNode.vertex_mem_affineSpan_prefixVertexPoints {n : ℕ}
 def section5LowerPrefixVertices {n : ℕ} (u : Section5Node n) : Finset (RentSimplex n) := by
   classical
   exact u.cell.vertices.filter fun v => v ∈ coordinateFace (prefixRooms n u.level)
+
+theorem section5LowerPrefixVertices_isSubface {n : ℕ} (u : Section5Node n) :
+    (⟨section5LowerPrefixVertices u⟩ : SimplexFacet n).IsSubfaceOf u.cell := by
+  classical
+  intro v hv
+  exact (Finset.mem_filter.mp hv).1
+
+theorem mem_realization_section5LowerPrefixVertices_of_mem_realization_of_mem_coordinateFace
+    {n : ℕ} {u : Section5Node n} {x : RentSimplex n}
+    (hxτ : ((x : RentSimplex n) : RentCoordinates n) ∈ u.cell.realization)
+    (hxFace : x ∈ coordinateFace (prefixRooms n u.level)) :
+    ((x : RentSimplex n) : RentCoordinates n) ∈
+      (⟨section5LowerPrefixVertices u⟩ : SimplexFacet n).realization := by
+  classical
+  let s : Finset (RentCoordinates n) :=
+    u.cell.vertices.image fun v : RentSimplex n => ((v : RentSimplex n) : RentCoordinates n)
+  have hxconv :
+      ((x : RentSimplex n) : RentCoordinates n) ∈ convexHull ℝ (s : Set (RentCoordinates n)) := by
+    simpa [s, SimplexFacet.realization, SimplexFacet.pointSet] using hxτ
+  obtain ⟨w, hw_nonneg, hw_sum, hw_center⟩ := (Finset.mem_convexHull).mp hxconv
+  let supp : Finset (RentCoordinates n) := s.filter fun y => w y ≠ 0
+  have hsupp_sum : ∑ y ∈ supp, w y = 1 := by
+    calc
+      ∑ y ∈ supp, w y = ∑ y ∈ s, w y := by
+        simpa [supp] using (Finset.sum_filter_ne_zero (s := s) (f := w))
+      _ = 1 := hw_sum
+  have hsupp_center :
+      supp.centerMass w id = ((x : RentSimplex n) : RentCoordinates n) := by
+    calc
+      supp.centerMass w id = s.centerMass w id := by
+        simpa [supp] using (Finset.centerMass_filter_ne_zero (t := s) (w := w) (z := id))
+      _ = ((x : RentSimplex n) : RentCoordinates n) := hw_center
+  have hsupp_conv :
+      ((x : RentSimplex n) : RentCoordinates n) ∈ convexHull ℝ (supp : Set (RentCoordinates n)) := by
+    rw [← hsupp_center]
+    refine Finset.centerMass_id_mem_convexHull supp ?_ ?_
+    · intro y hy
+      exact hw_nonneg _ (Finset.mem_filter.mp hy).1
+    · rw [hsupp_sum]
+      norm_num
+  have hxFace' :
+      ((x : RentSimplex n) : RentCoordinates n) ∈ ambientCoordinateFace (prefixRooms n u.level) :=
+    mem_ambientCoordinateFace_of_mem_coordinateFace hxFace
+  have hsupp_face :
+      ∀ y ∈ supp, y ∈ ambientCoordinateFace (prefixRooms n u.level) := by
+    intro y hy
+    exact point_mem_ambientCoordinateFace_of_nonzero_weight hxτ hxFace'
+      hw_nonneg hw_sum hw_center (Finset.mem_filter.mp hy).1 (Finset.mem_filter.mp hy).2
+  have hsupp_subset :
+      (supp : Set (RentCoordinates n)) ⊆
+        (⟨section5LowerPrefixVertices u⟩ : SimplexFacet n).pointSet := by
+    intro y hy
+    rcases Finset.mem_image.mp (Finset.mem_filter.mp hy).1 with ⟨v, hv, rfl⟩
+    have hvFace : v ∈ coordinateFace (prefixRooms n u.level) :=
+      mem_coordinateFace_of_mem_ambientCoordinateFace (hsupp_face _ hy)
+    exact Set.mem_image_of_mem ((↑) : RentSimplex n → RentCoordinates n)
+      (Finset.mem_filter.mpr ⟨hv, hvFace⟩)
+  exact convexHull_mono hsupp_subset hsupp_conv
+
+theorem IsPiecewiseAffineOn.facetImageContains_section5LowerPrefixVertices_of_mem_realization
+    {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    (hfpl : IsPiecewiseAffineOn T f) {u : Section5Node n}
+    (hu : IsSection5GraphNode T f u) {x : RentSimplex n}
+    (hxτ : ((x : RentSimplex n) : RentCoordinates n) ∈ u.cell.realization)
+    (hxFace : x ∈ coordinateFace (prefixRooms n u.level))
+    (hfx : f x = prefixBarycenter n u.level) :
+    FacetImageContains f (⟨section5LowerPrefixVertices u⟩ : SimplexFacet n)
+      (prefixBarycenter n u.level) := by
+  have hσreal :
+      ((x : RentSimplex n) : RentCoordinates n) ∈
+        (⟨section5LowerPrefixVertices u⟩ : SimplexFacet n).realization :=
+    mem_realization_section5LowerPrefixVertices_of_mem_realization_of_mem_coordinateFace hxτ hxFace
+  have hσFace : T.IsFace (⟨section5LowerPrefixVertices u⟩ : SimplexFacet n) := by
+    rcases hu.isFace with ⟨τ, hτ, hsub⟩
+    exact ⟨τ, hτ, (section5LowerPrefixVertices_isSubface u).trans hsub⟩
+  have hhit :
+      FacetImageContains f (⟨section5LowerPrefixVertices u⟩ : SimplexFacet n) (f x) :=
+    hfpl.facetImageContains_of_mem_realization hσFace hσreal
+  simpa [hfx] using hhit
 
 theorem IsSection5GraphNode.card_lowerPrefixVertices_le {n : ℕ}
     {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n} {u : Section5Node n}
@@ -1055,6 +1162,74 @@ theorem section5_levelZero_eq_startNode {n : ℕ} [NeZero n]
       have hcell : uc = section5StartCell n :=
         section5_levelZero_cell_eq_startCell (u := ⟨0, uc⟩) hu rfl
       simp [section5StartNode, hcell]
+
+theorem exists_section5LowerStep_of_card_eq_and_mem_realization_map_prefixBarycenter
+    {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    (hfpl : IsPiecewiseAffineOn T f) {u : Section5Node n} (hu : IsSection5GraphNode T f u)
+    (hulevel : 0 < u.level) {x : RentSimplex n}
+    (hxτ : ((x : RentSimplex n) : RentCoordinates n) ∈ u.cell.realization)
+    (hxFace : x ∈ coordinateFace (prefixRooms n u.level))
+    (hfx : f x = prefixBarycenter n u.level)
+    (hcard : (section5LowerPrefixVertices u).card = u.level) :
+    ∃ v : Section5Node n, IsSection5GraphNode T f v ∧ Section5Step f v u := by
+  classical
+  let v : Section5Node n := ⟨u.level - 1, ⟨section5LowerPrefixVertices u⟩⟩
+  have hlevel : v.level + 1 = u.level := by
+    dsimp [v]
+    exact Nat.sub_add_cancel (Nat.succ_le_of_lt hulevel)
+  have hhit :
+      FacetImageContains f v.cell (prefixBarycenter n u.level) := by
+    simpa [v] using hfpl.facetImageContains_section5LowerPrefixVertices_of_mem_realization
+      hu hxτ hxFace hfx
+  have hv : IsSection5GraphNode T f v := by
+    refine ⟨?_, ?_, ?_, ?_, ?_⟩
+    · simpa [hlevel] using le_trans (Nat.le_succ u.level) hu.level_le
+    · rcases hu.isFace with ⟨τ, hτ, hsub⟩
+      exact ⟨τ, hτ, (section5LowerPrefixVertices_isSubface u).trans hsub⟩
+    · calc
+        v.cell.vertices.card = (section5LowerPrefixVertices u).card := by simp [v]
+        _ = u.level := hcard
+        _ = v.level + 1 := hlevel.symm
+    · intro w hw
+      have hw' : w ∈ section5LowerPrefixVertices u := by simpa [v] using hw
+      have hwFace : w ∈ coordinateFace (prefixRooms n u.level) := (Finset.mem_filter.mp hw').2
+      simpa [hlevel] using hwFace
+    · refine ⟨prefixBarycenter n u.level, hhit, ?_⟩
+      simpa [prefixBarycenterSegment, hlevel] using
+        right_mem_segment ℝ (prefixBarycenter n (u.level - 1)) (prefixBarycenter n u.level)
+  refine ⟨v, hv, hlevel, section5LowerPrefixVertices_isSubface u, hhit⟩
+
+theorem exists_section5StartComponentLowerStep_of_card_eq_and_mem_realization_map_prefixBarycenter
+    {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    (hfpl : IsPiecewiseAffineOn T f)
+    {hstart : IsSection5GraphNode T f (section5StartNode n)}
+    {u : section5StartComponent hstart}
+    (hu_ne : u ≠ section5StartVertexInComponent hstart) {x : RentSimplex n}
+    (hxτ : ((x : RentSimplex n) : RentCoordinates n) ∈ u.1.1.cell.realization)
+    (hxFace : x ∈ coordinateFace (prefixRooms n u.1.1.level))
+    (hfx : f x = prefixBarycenter n u.1.1.level)
+    (hcard : (section5LowerPrefixVertices u.1.1).card = u.1.1.level) :
+    ∃ v : section5StartComponent hstart, Section5Step f v.1.1 u.1.1 := by
+  have hu_node : IsSection5GraphNode T f u.1.1 := (mem_section5Nodes_iff).mp u.1.2
+  have hulevel : 0 < u.1.1.level := by
+    by_contra hzero
+    have hu0 : u.1.1.level = 0 := Nat.eq_zero_of_not_pos hzero
+    have hu_eq_start : u.1.1 = section5StartNode n := section5_levelZero_eq_startNode hu_node hu0
+    apply hu_ne
+    exact Subtype.ext (Subtype.ext hu_eq_start)
+  rcases exists_section5LowerStep_of_card_eq_and_mem_realization_map_prefixBarycenter hfpl hu_node
+      hulevel hxτ hxFace hfx hcard with ⟨v0, hv0, hv0_step⟩
+  let vnode : section5Nodes T f := ⟨v0, hv0.mem_section5Nodes⟩
+  have hu_reach :
+      (section5NodeGraph T f).Reachable (section5StartNodeInNodes hstart) u.1 := by
+    exact (mem_section5StartComponent_iff_reachable (hstart := hstart)).mp u.2
+  have hv0_adj : (section5NodeGraph T f).Adj vnode u.1 := by
+    simpa [section5NodeGraph, section5SimpleGraph, vnode] using
+      (Or.inl hv0_step : Section5Adjacent f v0 u.1.1)
+  have hv_reach :
+      (section5NodeGraph T f).Reachable (section5StartNodeInNodes hstart) vnode := by
+    exact hu_reach.trans <| (SimpleGraph.reachable_comm.mp (SimpleGraph.Adj.reachable hv0_adj))
+  refine ⟨⟨vnode, (mem_section5StartComponent_iff_reachable (hstart := hstart)).mpr hv_reach⟩, hv0_step⟩
 
 theorem section5StartComponentGraph_lower_neighbor_unique {n : ℕ} [NeZero n]
     {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
