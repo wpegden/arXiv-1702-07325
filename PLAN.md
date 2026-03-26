@@ -278,9 +278,13 @@
   identify `[b_k,b_{k+1}]` with the subset of
   `ambientCoordinateFace (prefixRooms n (k + 1))` where the level-`k` coordinate is at most
   `1 / (k + 1)` and every lower coordinate is `1 / k - y_k / k`. So the remaining optimizer
-  contradiction is no longer an abstract same-image problem: the honest next check is to show
-  that the erased-face point produced from a positive outside-prefix barycentric weight still
-  satisfies exactly those upper-prefix support and coordinate equations.
+  contradiction is no longer an abstract same-image problem. The first codomain half is now
+  checked in Lean as well: a nontrivial affine decomposition of any point on `[b_k,b_{k+1}]`
+  forces both endpoints into `ambientCoordinateFace (prefixRooms n (k + 1))`, and the existing
+  minimal-subface erased-face decomposition therefore already yields an erased-face point whose
+  chart image lies in that upper prefix face. So the honest next check is now only the remaining
+  scalar equations there: verify the level-`k` coordinate bound and the lower-coordinate formulas
+  for that erased-face point.
   This support layer is now also named globally on the real start component:
   `Section5BoundaryFaceGenericity` asks for that exact lower-boundary-face datum on every
   non-start node, keeps the existing upper-step uniqueness and endpoint fields, and then compiles
