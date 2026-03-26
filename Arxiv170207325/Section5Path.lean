@@ -2994,6 +2994,21 @@ theorem minimal_section5HitParamLeftSubface_card_eq_one_of_levelOne_and_start_su
       (τ := τ)).mp hτ |>.2.1
   omega
 
+theorem eq_section5StartCell_of_card_eq_one_and_vertices_mem_coordinateFace_prefixRooms_one
+    {n : ℕ} [NeZero n] {τ : SimplexFacet n} (hcard : τ.vertices.card = 1)
+    (hface :
+      ∀ ⦃w : RentSimplex n⦄, w ∈ τ.vertices → w ∈ coordinateFace (prefixRooms n 1)) :
+    τ = section5StartCell n := by
+  rcases Finset.card_eq_one.mp hcard with ⟨v, hv⟩
+  have hvFace : v ∈ coordinateFace (prefixRooms n 1) := by
+    exact hface (by simpa [hv] using Finset.mem_singleton_self v)
+  have hvEq : v = section5StartVertex n :=
+    eq_section5StartVertex_of_mem_coordinateFace_prefixRooms_one hvFace
+  have hverts : τ.vertices = (section5StartCell n).vertices := by
+    simpa [section5StartCell, hvEq] using hv
+  cases τ
+  simpa [section5StartCell] using hverts
+
 /-- Exact remaining local left-endpoint input: a minimal exact left hit already occurs on a
 codimension-one lower face of the current Section 5 cell. -/
 def Section5LocalLeftBoundaryFaceGenericity {n : ℕ} (u : Section5Node n)
@@ -3023,6 +3038,30 @@ theorem section5LocalLeftCodimensionGenericity_of_levelOne_and_start_subface
   rw [hulevel]
   exact minimal_section5HitParamLeftSubface_card_eq_one_of_levelOne_and_start_subface
     hf hu hulevel hstartsub hτ hmin
+
+theorem section5LocalLeftBoundaryFaceGenericity_of_levelOne_and_start_subface_of_minimal_vertex_mem
+    {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    {u : Section5Node n} (hf : IsFaceRespecting f) (hu : IsSection5GraphNode T f u)
+    (hulevel : u.level = 1) (hstartsub : (section5StartCell n).IsSubfaceOf u.cell)
+    (hvertexFace :
+      ∀ {τ : SimplexFacet n},
+        τ ∈ section5HitParamLeftSubfaces u f →
+        (∀ σ ∈ section5HitParamLeftSubfaces u f, τ.vertices.card ≤ σ.vertices.card) →
+          ∀ ⦃w : RentSimplex n⦄,
+            w ∈ τ.vertices → w ∈ coordinateFace (prefixRooms n 1)) :
+    Section5LocalLeftBoundaryFaceGenericity u f := by
+  intro τ hτ hmin
+  have hτcard : τ.vertices.card = 1 :=
+    minimal_section5HitParamLeftSubface_card_eq_one_of_levelOne_and_start_subface
+      hf hu hulevel hstartsub hτ hmin
+  have hτeq : τ = section5StartCell n :=
+    eq_section5StartCell_of_card_eq_one_and_vertices_mem_coordinateFace_prefixRooms_one hτcard
+      (hvertexFace hτ hmin)
+  refine ⟨by simpa [hulevel] using hτcard, ?_⟩
+  intro w hw
+  have hwEq : w = section5StartVertex n := by
+    simpa [hτeq, section5StartCell] using hw
+  simpa [hulevel, hwEq] using section5StartVertex_mem_coordinateFace n
 
 theorem Section5LocalLowerTransversality.leftBoundaryFaceGenericity_of_leftCodimensionGenericity
     {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}

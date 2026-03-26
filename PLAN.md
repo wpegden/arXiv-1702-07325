@@ -270,6 +270,12 @@
   left hit, minimal exact left hits are singletons, and therefore `Section5LocalLeftCodimensionGenericity u f`
   already holds in that explicit regime. What remains there is no longer cardinality; it is the
   genuinely geometric claim that such a singleton exact left hit must be the lower face itself.
+  The newest reduction makes that level-1 gap completely explicit: the support layer now proves
+  that any singleton facet whose unique vertex lies in `coordinateFace (prefixRooms n 1)` is
+  literally `section5StartCell n`, and packages a conditional
+  `section5LocalLeftBoundaryFaceGenericity_of_levelOne_and_start_subface_of_minimal_vertex_mem`.
+  So the remaining level-1 work is exactly to show that the unique vertex of a minimal singleton
+  exact left hit lies in that lower face.
   On the packaging side, the remaining graph-theoretic conversion gap is now gone: the support
   layer proves `Section5PerturbationGenericity.toBoundarySegmentGenericity`, and the existing
   local-left/upper-endpoint wrapper is rerouted through
