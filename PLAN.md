@@ -246,6 +246,13 @@
   still meets `[b_k,b_{k+1}]`, and it compiles immediately to
   `Section5MinimalSliceLowerBoundaryFaceData u f` and then to
   `Section5MinimalSliceLowerBoundaryGeometry u f`.
+  The remaining gap is now even more specific: the current API does not yet prove the manuscript's
+  local slice-endpoint theorem on one minimal `τ`. The next honest target is to show that
+  `section5CellSlice u f ∩ τ.realization` is a nonempty 1-dimensional segment whose lower
+  endpoint lies in a unique codimension-one subface `ρ ≤ τ`, and that this lower endpoint face
+  lies in `coordinateFace (prefixRooms n u.level)`. Once that single geometric statement is
+  available, `Section5MinimalSubfaceLowerBoundaryGenericity u f` follows immediately from any
+  witness point of `ρ.realization` mapping into `[b_k,b_{k+1}]`.
   This support layer is now also named globally on the real start component:
   `Section5BoundaryFaceGenericity` asks for that exact lower-boundary-face datum on every
   non-start node, keeps the existing upper-step uniqueness and endpoint fields, and then compiles
