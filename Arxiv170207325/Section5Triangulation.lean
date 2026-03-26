@@ -49,6 +49,23 @@ theorem SimplexFacet.commonVertices_subset_right {n : ℕ} (τ₁ τ₂ : Simple
     τ₁.commonVertices τ₂ ⊆ τ₂.vertices :=
   (τ₁.commonFace_isSubfaceRight τ₂)
 
+theorem SimplexFacet.pointSet_subset_of_isSubface {n : ℕ} {σ τ : SimplexFacet n}
+    (hστ : σ.IsSubfaceOf τ) :
+    σ.pointSet ⊆ τ.pointSet := by
+  rintro x ⟨v, hv, rfl⟩
+  exact Set.mem_image_of_mem ((↑) : RentSimplex n → RentCoordinates n) (hστ hv)
+
+theorem SimplexFacet.realization_subset_of_isSubface {n : ℕ} {σ τ : SimplexFacet n}
+    (hστ : σ.IsSubfaceOf τ) :
+    σ.realization ⊆ τ.realization :=
+  convexHull_mono (σ.pointSet_subset_of_isSubface hστ)
+
+theorem SimplexFacet.mem_realization_of_mem_vertices {n : ℕ} {τ : SimplexFacet n}
+    {v : RentSimplex n} (hv : v ∈ τ.vertices) :
+    ((v : RentSimplex n) : RentCoordinates n) ∈ τ.realization := by
+  exact subset_convexHull ℝ τ.pointSet <|
+    Set.mem_image_of_mem ((↑) : RentSimplex n → RentCoordinates n) hv
+
 /-- The codimension-one adjacency relation on triangulation facets used by the Section 5 graph. -/
 def SimplexTriangulation.AdjacentFacets {n : ℕ} (T : SimplexTriangulation n)
     (τ₁ τ₂ : SimplexFacet n) : Prop :=

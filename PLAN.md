@@ -138,29 +138,31 @@
   rest of the local degree argument and records that a face-respecting map already forces the
   singleton start cell `e_1` to hit `b_1`; the start node itself is now also discharged from
   face preservation by proving any triangulation facet covering `e_1` must contain `e_1` as a
-  vertex, so `section5StartNode` is a genuine concrete graph node; the remaining wrappers are
-  now collapsed into a direct theorem saying that face preservation, a concrete unique start
-  successor, and the two local-degree hypotheses already imply a target-containing facet.
+  vertex, so `section5StartNode` is a genuine concrete graph node; the boundary-edge support now
+  also includes realization-monotonicity lemmas for subfaces, a direct segment-order lemma on
+  `[e_1,e_2]`, a proof that any two level-1 graph cells through `e_1` must coincide via
+  `face_intersection`, and conditional wrappers upgrading existence of one such cell to the
+  paper-facing unique-successor and start-degree-one data. The remaining wrappers are therefore
+  now collapsed into a direct theorem saying that face preservation, existence of the first
+  boundary successor, and the two local-degree hypotheses imply a target-containing facet.
 - Next local objective:
   discharge `Section5SegmentGeometry` from the actual Section 5 geometry:
-  prove that the start vertex has exactly one boundary-chain successor, hence degree one in the
-  actual start component, and that every graph node there has at most two neighbors while every
-  non-start degree-one node is a barycenter-hitting endpoint, all under the paper's generic
-  segment-intersection assumptions; the start-node existence and `e_1 ↦ b_1` portions are now
-  already discharged by face preservation. The boundary-edge support has also been strengthened:
-  points of `coordinateFace (prefixRooms n 2)` are now explicitly parametrized along `[e_1,e_2]`,
-  every facet has at most two such boundary vertices, and a level-1 graph node through `e_1`
-  identifies with the boundary-vertex pair cut out by any containing facet.
+  first prove existence of the initial boundary edge through `e_1` in the induced subdivision of
+  `[e_1,e_2]`, so the new uniqueness theorem upgrades to an unconditional unique level-1
+  successor and start-degree-one statement in the actual start component. After that, prove that
+  every graph node there has at most two neighbors while every non-start degree-one node is a
+  barycenter-hitting endpoint, all under the paper's generic segment-intersection assumptions;
+  the start-node existence, `e_1 ↦ b_1`, and uniqueness of any candidate first boundary cell are
+  now already discharged by face preservation plus the new boundary-edge overlap argument.
 - Current structural blocker:
   the present `SimplexTriangulation` wrapper does not yet expose the induced simplicial
   subdivision of the prefix faces, especially the boundary edge `[e_1,e_2]`, and it also does
   not formalize the perturbation/genericity argument that makes the barycenter-chain preimage a
-  finite 1-dimensional cell complex. The new boundary lemmas reduce the immediate proof frontier
-  to a sharper local claim: use `face_intersection` and the boundary-point-in-convex-hull API on
-  common vertex sets to show two candidate level-1 cells through `e_1` must share the same
-  non-start boundary vertex, hence coincide. After that, the unique-successor and degree-one
-  claims should follow directly on the real graph rather than remain assumptions via
-  `Section5SegmentGeometry`.
+  finite 1-dimensional cell complex. The `face_intersection` step is now complete: any two
+  candidate level-1 cells through `e_1` already coincide. The immediate remaining blocker is
+  existence rather than uniqueness: formalize enough induced-boundary-subdivision API on
+  `[e_1,e_2]` to produce one actual level-1 face through `e_1`, then feed that witness into the
+  new uniqueness wrappers and continue with the degree-at-most-two and endpoint lemmas.
 - First prove the barycenter-specialized version if that is the easiest entry point.
 - Then generalize to arbitrary interior targets if Section 6 needs it.
 - If full surjectivity is still awkward, keep the theorem in the "target in interior" form first; that already covers the barycenter and the interior `y` used in the first Section 6 theorem.
