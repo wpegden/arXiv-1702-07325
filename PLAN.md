@@ -289,7 +289,13 @@
   upgrades membership from `[b_k, e_{k+1}]` back to `[b_k,b_{k+1}]`. So the honest next check is
   now only to prove those concrete equations for the erased-face chart image: upper-prefix
   support is already done, and the missing work is exactly the lower-coordinate formulas plus the
-  existing level-`k` bound.
+  existing level-`k` bound. There is now also a sharp conditional reduction showing exactly what
+  exceptional codomain identity would suffice if the direct coordinate argument remains blocked:
+  if the erased vertex in the line-map decomposition already has chart image equal to the upper
+  standard basis vector `e_{k+1}`, then the current Lean pipeline closes immediately via
+  `IsPiecewiseAffineOn.minimal_section5SegmentSubface_mem_coordinateFace_of_erase_vertexImage_eq_stdSimplexVertex`.
+  This is probably stronger than the manuscript's intended local geometry, so it should be treated
+  as a diagnostic frontier rather than as the expected final theorem.
   This support layer is now also named globally on the real start component:
   `Section5BoundaryFaceGenericity` asks for that exact lower-boundary-face datum on every
   non-start node, keeps the existing upper-step uniqueness and endpoint fields, and then compiles

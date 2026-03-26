@@ -593,6 +593,87 @@ theorem
         hk hyFace hprefix
   · exact hyk_le
 
+theorem mem_prefixBarycenterSegment_of_mem_ambientCoordinateFace_of_lineMap_stdSimplexVertex
+    {n k : ℕ} [NeZero k] (hk : k + 1 ≤ n) {y z : RentCoordinates n} {c : ℝ}
+    (hyFace : y ∈ ambientCoordinateFace (prefixRooms n (k + 1)))
+    (hc0 : 0 < c) (hc1 : c < 1)
+    (hline :
+      let ik : RoomIndex n := ⟨k, lt_of_lt_of_le (Nat.lt_succ_self k) hk⟩
+      z = AffineMap.lineMap y
+        (((stdSimplex.vertex (S := ℝ) ik : RentSimplex n) : RentCoordinates n)) c)
+    (hzSeg : z ∈ prefixBarycenterSegment n k) :
+    y ∈ prefixBarycenterSegment n k := by
+  let ik : RoomIndex n := ⟨k, lt_of_lt_of_le (Nat.lt_succ_self k) hk⟩
+  have hprefix :
+      ∀ {i : RoomIndex n}, i.1 < k → y i = (k : ℝ)⁻¹ - y ik / k := by
+    intro i hi
+    have hzprefix : z i = (k : ℝ)⁻¹ - z ik / k := by
+      simpa [ik] using mem_prefixBarycenterSegment_apply_of_lt hk hzSeg hi
+    have hi_ne_ik : i ≠ ik := by
+      intro hii
+      have : i.1 = k := by simpa [ik] using congrArg Fin.val hii
+      exact (Nat.ne_of_lt hi) this
+    have hzi : z i = (1 - c) * y i := by
+      rw [hline]
+      have hvertex_zero :
+          (((stdSimplex.vertex (S := ℝ) ik : RentSimplex n) : RentCoordinates n) i) = 0 := by
+        simp [stdSimplex_vertex_apply, hi_ne_ik]
+      rw [AffineMap.lineMap_apply_module]
+      change (1 - c) * y i +
+          c * (((stdSimplex.vertex (S := ℝ) ik : RentSimplex n) : RentCoordinates n) i) =
+        (1 - c) * y i
+      rw [hvertex_zero]
+      ring
+    have hzk : z ik = (1 - c) * y ik + c := by
+      rw [hline]
+      have hvertex_one :
+          (((stdSimplex.vertex (S := ℝ) ik : RentSimplex n) : RentCoordinates n) ik) = 1 := by
+        simp [stdSimplex_vertex_apply, ik]
+      rw [AffineMap.lineMap_apply_module]
+      change (1 - c) * y ik +
+          c * (((stdSimplex.vertex (S := ℝ) ik : RentSimplex n) : RentCoordinates n) ik) =
+        (1 - c) * y ik + c
+      rw [hvertex_one]
+      ring
+    rw [hzi, hzk] at hzprefix
+    have hkR : (k : ℝ) ≠ 0 := by
+      exact_mod_cast (NeZero.ne k)
+    have h1c_ne : (1 - c : ℝ) ≠ 0 := by
+      linarith
+    field_simp [hkR] at hzprefix
+    have hfactor : (1 - c) * ((k : ℝ) * y i + y ik - 1) = 0 := by
+      nlinarith [hzprefix]
+    have hlinear : (k : ℝ) * y i + y ik - 1 = 0 := by
+      rcases mul_eq_zero.mp hfactor with hzero | hzero
+      · linarith
+      · exact hzero
+    have : y i = (k : ℝ)⁻¹ - y ik / k := by
+      field_simp [hkR]
+      linarith [hlinear]
+    exact this
+  have hyk_le :
+      y ik ≤ ((k + 1 : ℝ)⁻¹) := by
+    have hyk_le_one : y ik ≤ 1 := by
+      have hsum : ∑ j : RoomIndex n, y j = (1 : ℝ) := by
+        simpa using hyFace.1.2
+      calc
+        y ik ≤ ∑ j : RoomIndex n, y j := by
+          exact Finset.single_le_sum (fun j _ => hyFace.1.1 j) (Finset.mem_univ ik)
+        _ = (1 : ℝ) := hsum
+    have hzk : z ik = y ik + c * (1 - y ik) := by
+      rw [hline]
+      simp [AffineMap.lineMap_apply_module, ik]
+      ring
+    have hyk_le_zk : y ik ≤ z ik := by
+      rw [hzk]
+      nlinarith
+    have hzk_le : z ik ≤ ((k + 1 : ℝ)⁻¹) := by
+      simpa [ik] using mem_prefixBarycenterSegment_levelCoord_le hk hzSeg
+    exact le_trans hyk_le_zk hzk_le
+  exact
+    mem_prefixBarycenterSegment_of_mem_ambientCoordinateFace_and_apply_of_lt_and_levelCoord_le
+      hk hyFace hprefix hyk_le
+
 theorem ambientCoordinateFace_pair_of_lineMap_mem
     {n : ℕ} {I : Finset (RoomIndex n)} {x y : RentCoordinates n} {c : ℝ}
     (hxSimplex : x ∈ scaledSimplex 1 n) (hySimplex : y ∈ scaledSimplex 1 n)
@@ -1937,6 +2018,45 @@ theorem IsFaceRespecting.exists_erased_face_point_chart_mem_upperPrefixFace_of_m
         Set.mem_image_of_mem ((↑) : RentSimplex n → RentCoordinates n) hv
   · simpa [hg x' hx'τ] using hfx'_face
 
+theorem
+    IsFaceRespecting.exists_erased_face_point_chart_mem_prefixBarycenterSegment_of_minimal_section5SegmentSubface_of_vertexImage_eq_stdSimplexVertex
+    {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    (hf : IsFaceRespecting f) (hfpl : IsPiecewiseAffineOn T f)
+    {u : Section5Node n} (hu : IsSection5GraphNode T f u) (hulevel : 0 < u.level)
+    {τ : SimplexFacet n} (hτ : τ ∈ section5SegmentSubfaces u f)
+    (hmin : ∀ σ ∈ section5SegmentSubfaces u f, τ.vertices.card ≤ σ.vertices.card)
+    {g : RentCoordinates n →ᵃ[ℝ] RentCoordinates n}
+    (hg : ∀ x : RentSimplex n,
+      ((x : RentSimplex n) : RentCoordinates n) ∈ τ.realization → g x = f x)
+    {v : RentSimplex n} (hv : v ∈ τ.vertices) (hcard : 1 < τ.vertices.card)
+    (hvImage :
+      let ik : RoomIndex n := ⟨u.level, lt_of_lt_of_le (Nat.lt_succ_self u.level) hu.level_le⟩
+      g v = (((stdSimplex.vertex (S := ℝ) ik : RentSimplex n) : RentCoordinates n))) :
+    ∃ x x' : RentSimplex n, ∃ c : ℝ,
+      ((x : RentSimplex n) : RentCoordinates n) ∈ τ.realization ∧
+      g x ∈ prefixBarycenterSegment n u.level ∧
+      ((x' : RentSimplex n) : RentCoordinates n) ∈ (⟨τ.vertices.erase v⟩ : SimplexFacet n).realization ∧
+      0 < c ∧ c < 1 ∧
+      ((x : RentSimplex n) : RentCoordinates n) =
+        AffineMap.lineMap (((x' : RentSimplex n) : RentCoordinates n))
+          (((v : RentSimplex n) : RentCoordinates n)) c ∧
+      g x = AffineMap.lineMap (g x') (g v) c ∧
+      g x' ∈ prefixBarycenterSegment n u.level := by
+  haveI : NeZero u.level := ⟨Nat.ne_of_gt hulevel⟩
+  rcases hf.exists_erased_face_point_chart_mem_upperPrefixFace_of_minimal_section5SegmentSubface
+      hfpl hu hulevel hτ hmin hg hv hcard with
+    ⟨x, x', c, hxτ, hgxSeg, hx'erase, hc0, hc1, hx_line, hgx_line, hgx'_face⟩
+  have hgx'_seg : g x' ∈ prefixBarycenterSegment n u.level := by
+    have hgx_line' :
+        g x = AffineMap.lineMap (g x')
+          (((stdSimplex.vertex (S := ℝ)
+            (⟨u.level, lt_of_lt_of_le (Nat.lt_succ_self u.level) hu.level_le⟩ :
+              RoomIndex n) : RentSimplex n) : RentCoordinates n)) c := by
+      simpa [hvImage] using hgx_line
+    exact mem_prefixBarycenterSegment_of_mem_ambientCoordinateFace_of_lineMap_stdSimplexVertex
+      hu.level_le hgx'_face hc0 hc1 hgx_line' hgxSeg
+  exact ⟨x, x', c, hxτ, hgxSeg, hx'erase, hc0, hc1, hx_line, hgx_line, hgx'_seg⟩
+
 theorem minimal_section5SegmentSubface_erase_not_mem
     {n : ℕ} {f : SelfMapOnRentSimplex n} {u : Section5Node n} {τ : SimplexFacet n}
     (hmin : ∀ σ ∈ section5SegmentSubfaces u f, τ.vertices.card ≤ σ.vertices.card)
@@ -2073,6 +2193,37 @@ theorem IsPiecewiseAffineOn.minimal_section5SegmentSubface_mem_coordinateFace_of
         (by intro w hw; exact Finset.mem_of_mem_erase hw) hx'erase
     rw [← hg x' hx'τ, ← hg x hxτ]
     exact hx'eq
+
+theorem IsPiecewiseAffineOn.minimal_section5SegmentSubface_mem_coordinateFace_of_erase_vertexImage_eq_stdSimplexVertex
+    {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    (hf : IsFaceRespecting f) (hfpl : IsPiecewiseAffineOn T f)
+    {u : Section5Node n} (hu : IsSection5GraphNode T f u) (hulevel : 0 < u.level)
+    {τ : SimplexFacet n} (hτ : τ ∈ section5SegmentSubfaces u f)
+    (hmin : ∀ σ ∈ section5SegmentSubfaces u f, τ.vertices.card ≤ σ.vertices.card)
+    {g : RentCoordinates n →ᵃ[ℝ] RentCoordinates n}
+    (hg : ∀ x : RentSimplex n,
+      ((x : RentSimplex n) : RentCoordinates n) ∈ τ.realization → g x = f x)
+    {x : RentSimplex n}
+    (hxτ : ((x : RentSimplex n) : RentCoordinates n) ∈ τ.realization)
+    (hcard : 1 < τ.vertices.card)
+    (hvertex :
+      ∀ ⦃v : RentSimplex n⦄, v ∈ τ.vertices → v ∉ coordinateFace (prefixRooms n u.level) →
+        let ik : RoomIndex n := ⟨u.level, lt_of_lt_of_le (Nat.lt_succ_self u.level) hu.level_le⟩
+        g v = (((stdSimplex.vertex (S := ℝ) ik : RentSimplex n) : RentCoordinates n))) :
+    x ∈ coordinateFace (prefixRooms n u.level) := by
+  apply τ.mem_coordinateFace_of_mem_realization_of_vertices_mem_coordinateFace hxτ
+  apply minimal_section5SegmentSubface_vertices_mem_coordinateFace_of_erase_realization_map_segment
+    hfpl hu hτ hmin
+  intro v hv hvFace
+  rcases
+      hf.exists_erased_face_point_chart_mem_prefixBarycenterSegment_of_minimal_section5SegmentSubface_of_vertexImage_eq_stdSimplexVertex
+        hfpl hu hulevel hτ hmin hg hv hcard (hvertex hv hvFace) with
+    ⟨x0, x', c, hx0τ, _hgx0Seg, hx'erase, _hc0, _hc1, _hx0_line, _hgx0_line, hgx'Seg⟩
+  have hx'τ : ((x' : RentSimplex n) : RentCoordinates n) ∈ τ.realization :=
+    SimplexFacet.realization_mono_of_isSubface
+      (by intro w hw; exact Finset.mem_of_mem_erase hw) hx'erase
+  refine ⟨x', hx'erase, ?_⟩
+  simpa [hg x' hx'τ] using hgx'Seg
 
 theorem minimal_section5SegmentSubface_erase_realization_map_segment_of_mem_coordinateFace_point
     {n : ℕ} {f : SelfMapOnRentSimplex n} {u : Section5Node n} {τ : SimplexFacet n}
