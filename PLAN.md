@@ -226,15 +226,17 @@
   intersections with the barycenter chain. A later cleanup may still derive the remaining
   `Section5OneComplexGeometry` fields from the same input, but that is no longer the main blocker
   for the target-facet theorem. The support-shrinking half of the lower-step argument is now in
-  place: if a point of one Section 5 cell already lies in the lower prefix face and maps to
-  `b_k`, then the filtered subface `section5LowerPrefixVertices` already realizes that point and
-  its image hull contains `b_k`, giving a genuine predecessor `Section5Step` as soon as the
-  filtered subface has cardinality `k`. The new local obstruction theorem now also proves that if
-  this filtered lower subface already hits `b_k`, then every room in `prefixRooms n k` appears in
-  the support of some lower-prefix vertex, and any actual lower-face preimage of `b_k` has simplex
+  place: if a point of one Section 5 cell already lies in the lower prefix face and its image
+  still lies on `[b_k,b_{k+1}]`, the new endpoint lemma forces that image to be exactly `b_k`;
+  then the filtered subface `section5LowerPrefixVertices` already realizes that point and its
+  image hull contains `b_k`, giving a genuine predecessor `Section5Step` as soon as the filtered
+  subface has cardinality `k`. The new local obstruction theorem now also proves that if this
+  filtered lower subface already hits `b_k`, then every room in `prefixRooms n k` appears in the
+  support of some lower-prefix vertex, and any actual lower-face preimage of `b_k` has simplex
   support exactly `prefixRooms n k`. So the remaining lower-step work is even sharper: construct
-  the needed lower-face point mapping to `b_k`, and then upgrade the new room-coverage statement to
-  the exact cardinality equality `(section5LowerPrefixVertices u).card = u.level`.
+  the needed lower-face point whose image remains on `[b_k,b_{k+1}]`, and then upgrade the new
+  room-coverage statement to the exact cardinality equality
+  `(section5LowerPrefixVertices u).card = u.level`.
 - First prove the barycenter-specialized version if that is the easiest entry point.
 - Then generalize to arbitrary interior targets if Section 6 needs it.
 - If full surjectivity is still awkward, keep the theorem in the "target in interior" form first; that already covers the barycenter and the interior `y` used in the first Section 6 theorem.

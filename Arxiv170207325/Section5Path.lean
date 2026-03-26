@@ -283,6 +283,46 @@ theorem prefixBarycenterSegment_subset_ambientCoordinateFace {n k : ℕ} [NeZero
       (prefixBarycenter_mem_ambientCoordinateFace hk')
   · exact prefixBarycenter_mem_ambientCoordinateFace hk
 
+theorem eq_prefixBarycenter_of_mem_prefixBarycenterSegment_of_mem_ambientCoordinateFace
+    {n k : ℕ} [NeZero k] (hk : k + 1 ≤ n) {y : RentCoordinates n}
+    (hySeg : y ∈ prefixBarycenterSegment n k)
+    (hyFace : y ∈ ambientCoordinateFace (prefixRooms n k)) :
+    y = prefixBarycenter n k := by
+  let ik : RoomIndex n := ⟨k, lt_of_lt_of_le (Nat.lt_succ_self k) hk⟩
+  have hySeg' : y ∈ segment ℝ (prefixBarycenter n k) (prefixBarycenter n (k + 1)) := by
+    simpa [prefixBarycenterSegment] using hySeg
+  rw [segment_eq_image_lineMap ℝ (prefixBarycenter n k) (prefixBarycenter n (k + 1))] at hySeg'
+  rcases hySeg' with ⟨θ, _hθ, rfl⟩
+  have hik_notin : ik ∉ prefixRooms n k := by
+    simp [ik, prefixRooms]
+  have hcoord_zero :
+      AffineMap.lineMap (prefixBarycenter n k) (prefixBarycenter n (k + 1)) θ ik = 0 := by
+    exact (coordSupport_subset_iff.mp hyFace.2) ik hik_notin
+  have hcoord_eq :
+      AffineMap.lineMap (prefixBarycenter n k) (prefixBarycenter n (k + 1)) θ ik =
+        θ * ((k + 1 : ℝ)⁻¹) := by
+    simp [AffineMap.lineMap_apply_module, prefixBarycenter, ik]
+  have htheta_zero' : θ * ((k + 1 : ℝ)⁻¹) = 0 := by
+    rw [← hcoord_eq]
+    exact hcoord_zero
+  have htheta_zero : θ = 0 := by
+    rcases mul_eq_zero.mp htheta_zero' with hθ | hinv
+    · exact hθ
+    · exfalso
+      have hk1 : (↑k + 1 : ℝ) ≠ 0 := by
+        positivity
+      exact hk1 (inv_eq_zero.mp hinv)
+  simp [htheta_zero]
+
+theorem IsFaceRespecting.eq_prefixBarycenter_of_mem_coordinateFace_of_map_mem_prefixBarycenterSegment
+    {n k : ℕ} [NeZero k] {f : SelfMapOnRentSimplex n} (hf : IsFaceRespecting f)
+    (hk : k + 1 ≤ n) {x : RentSimplex n}
+    (hxFace : x ∈ coordinateFace (prefixRooms n k))
+    (hfxSeg : f x ∈ prefixBarycenterSegment n k) :
+    f x = prefixBarycenter n k := by
+  apply eq_prefixBarycenter_of_mem_prefixBarycenterSegment_of_mem_ambientCoordinateFace hk hfxSeg
+  exact hf.mapsTo_ambientCoordinateFace (prefixRooms n k) hxFace
+
 /-- The first barycenter `b_1`, viewed as a simplex vertex, is the Section 5 start point. -/
 def section5StartVertex (n : ℕ) [NeZero n] : RentSimplex n :=
   ⟨prefixBarycenter n 1, by
@@ -880,6 +920,21 @@ theorem IsPiecewiseAffineOn.facetImageContains_section5LowerPrefixVertices_of_me
     hfpl.facetImageContains_of_mem_realization hσFace hσreal
   simpa [hfx] using hhit
 
+theorem IsPiecewiseAffineOn.facetImageContains_section5LowerPrefixVertices_of_mem_realization_of_map_mem_segment
+    {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    (hf : IsFaceRespecting f) (hfpl : IsPiecewiseAffineOn T f) {u : Section5Node n}
+    (hu : IsSection5GraphNode T f u) (hulevel : 0 < u.level) {x : RentSimplex n}
+    (hxτ : ((x : RentSimplex n) : RentCoordinates n) ∈ u.cell.realization)
+    (hxFace : x ∈ coordinateFace (prefixRooms n u.level))
+    (hfxSeg : f x ∈ prefixBarycenterSegment n u.level) :
+    FacetImageContains f (⟨section5LowerPrefixVertices u⟩ : SimplexFacet n)
+      (prefixBarycenter n u.level) := by
+  haveI : NeZero u.level := ⟨Nat.ne_of_gt hulevel⟩
+  have hfx : f x = prefixBarycenter n u.level := by
+    exact hf.eq_prefixBarycenter_of_mem_coordinateFace_of_map_mem_prefixBarycenterSegment
+      hu.level_le hxFace hfxSeg
+  exact hfpl.facetImageContains_section5LowerPrefixVertices_of_mem_realization hu hxτ hxFace hfx
+
 theorem IsFaceRespecting.simplexSupport_eq_prefixRooms_of_mem_coordinateFace_of_map_prefixBarycenter
     {n k : ℕ} [NeZero k] {f : SelfMapOnRentSimplex n} (hf : IsFaceRespecting f)
     {x : RentSimplex n} (hxFace : x ∈ coordinateFace (prefixRooms n k))
@@ -1304,6 +1359,31 @@ theorem exists_section5StartComponentLowerStep_of_card_eq_and_mem_realization_ma
       (section5NodeGraph T f).Reachable (section5StartNodeInNodes hstart) vnode := by
     exact hu_reach.trans <| (SimpleGraph.reachable_comm.mp (SimpleGraph.Adj.reachable hv0_adj))
   refine ⟨⟨vnode, (mem_section5StartComponent_iff_reachable (hstart := hstart)).mpr hv_reach⟩, hv0_step⟩
+
+theorem exists_section5StartComponentLowerStep_of_card_eq_and_mem_realization_map_segment
+    {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    (hf : IsFaceRespecting f) (hfpl : IsPiecewiseAffineOn T f)
+    {hstart : IsSection5GraphNode T f (section5StartNode n)}
+    {u : section5StartComponent hstart}
+    (hu_ne : u ≠ section5StartVertexInComponent hstart) {x : RentSimplex n}
+    (hxτ : ((x : RentSimplex n) : RentCoordinates n) ∈ u.1.1.cell.realization)
+    (hxFace : x ∈ coordinateFace (prefixRooms n u.1.1.level))
+    (hfxSeg : f x ∈ prefixBarycenterSegment n u.1.1.level)
+    (hcard : (section5LowerPrefixVertices u.1.1).card = u.1.1.level) :
+    ∃ v : section5StartComponent hstart, Section5Step f v.1.1 u.1.1 := by
+  have hu_node : IsSection5GraphNode T f u.1.1 := (mem_section5Nodes_iff).mp u.1.2
+  have hulevel : 0 < u.1.1.level := by
+    by_contra hzero
+    have hu0 : u.1.1.level = 0 := Nat.eq_zero_of_not_pos hzero
+    have hu_eq_start : u.1.1 = section5StartNode n := section5_levelZero_eq_startNode hu_node hu0
+    apply hu_ne
+    exact Subtype.ext (Subtype.ext hu_eq_start)
+  have hfx : f x = prefixBarycenter n u.1.1.level := by
+    haveI : NeZero u.1.1.level := ⟨Nat.ne_of_gt hulevel⟩
+    exact hf.eq_prefixBarycenter_of_mem_coordinateFace_of_map_mem_prefixBarycenterSegment
+      hu_node.level_le hxFace hfxSeg
+  exact exists_section5StartComponentLowerStep_of_card_eq_and_mem_realization_map_prefixBarycenter
+    hfpl hu_ne hxτ hxFace hfx hcard
 
 theorem section5StartComponentGraph_lower_neighbor_unique {n : ℕ} [NeZero n]
     {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
