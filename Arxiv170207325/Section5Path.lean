@@ -1795,6 +1795,50 @@ theorem IsPiecewiseAffineOn.facetImageContains_section5LowerPrefixVertices_of_me
       hu.level_le hxFace hfxSeg
   exact hfpl.facetImageContains_section5LowerPrefixVertices_of_mem_realization hu hxτ hxFace hfx
 
+theorem IsPiecewiseAffineOn.exists_mem_section5CellSlice_and_mem_coordinateFace_of_facetImageContains_section5LowerPrefixVertices
+    {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    (hfpl : IsPiecewiseAffineOn T f) {u : Section5Node n}
+    (hu : IsSection5GraphNode T f u)
+    (hhit : FacetImageContains f (⟨section5LowerPrefixVertices u⟩ : SimplexFacet n)
+      (prefixBarycenter n u.level)) :
+    ∃ x : RentSimplex n,
+      x ∈ section5CellSlice u f ∧ x ∈ coordinateFace (prefixRooms n u.level) := by
+  classical
+  have hσFace : T.IsFace (⟨section5LowerPrefixVertices u⟩ : SimplexFacet n) := by
+    rcases hu.isFace with ⟨τ, hτ, hsub⟩
+    exact ⟨τ, hτ, (section5LowerPrefixVertices_isSubface u).trans hsub⟩
+  rcases hfpl.exists_point_in_realization_of_facetImageContains hσFace hhit with
+    ⟨x, hxσ, hfx⟩
+  have hxcell : ((x : RentSimplex n) : RentCoordinates n) ∈ u.cell.realization :=
+    SimplexFacet.realization_mono_of_isSubface (section5LowerPrefixVertices_isSubface u) hxσ
+  have hxFace : x ∈ coordinateFace (prefixRooms n u.level) := by
+    exact SimplexFacet.mem_coordinateFace_of_mem_realization_of_vertices_mem_coordinateFace
+      (τ := (⟨section5LowerPrefixVertices u⟩ : SimplexFacet n)) hxσ
+      (by
+        intro v hv
+        exact (Finset.mem_filter.mp hv).2)
+  have hxSeg : f x ∈ prefixBarycenterSegment n u.level := by
+    simpa [hfx, prefixBarycenterSegment] using
+      (left_mem_segment ℝ (prefixBarycenter n u.level) (prefixBarycenter n (u.level + 1)))
+  exact ⟨x, (mem_section5CellSlice_iff.mpr ⟨hxcell, hxSeg⟩), hxFace⟩
+
+theorem IsPiecewiseAffineOn.facetImageContains_section5LowerPrefixVertices_iff_exists_mem_section5CellSlice_and_mem_coordinateFace
+    {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    (hf : IsFaceRespecting f) (hfpl : IsPiecewiseAffineOn T f) {u : Section5Node n}
+    (hu : IsSection5GraphNode T f u) (hulevel : 0 < u.level) :
+    FacetImageContains f (⟨section5LowerPrefixVertices u⟩ : SimplexFacet n)
+      (prefixBarycenter n u.level) ↔
+        ∃ x : RentSimplex n,
+          x ∈ section5CellSlice u f ∧ x ∈ coordinateFace (prefixRooms n u.level) := by
+  constructor
+  · exact
+      hfpl.exists_mem_section5CellSlice_and_mem_coordinateFace_of_facetImageContains_section5LowerPrefixVertices
+        hu
+  · rintro ⟨x, hxSlice, hxFace⟩
+    exact hfpl.facetImageContains_section5LowerPrefixVertices_of_mem_realization_of_map_mem_segment
+      hf hu hulevel (mem_section5CellSlice_iff.mp hxSlice).1 hxFace
+      (mem_section5CellSlice_iff.mp hxSlice).2
+
 theorem IsFaceRespecting.simplexSupport_eq_prefixRooms_of_mem_coordinateFace_of_map_prefixBarycenter
     {n k : ℕ} [NeZero k] {f : SelfMapOnRentSimplex n} (hf : IsFaceRespecting f)
     {x : RentSimplex n} (hxFace : x ∈ coordinateFace (prefixRooms n k))

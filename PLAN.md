@@ -207,7 +207,12 @@
   `section5LowerEntryFaceData_nonempty_iff_card_eq_and_facetImageContains_lowerPrefixVertices`
   identifies lower-entry data with those two canonical facts on one cell, and
   `Section5EntryFaceGenericity.lower_entry_face_of_ne_start_canonical` exposes the same pair of
-  obligations for every non-start node in the start component.
+  obligations for every non-start node in the start component. The barycenter-hit half has now
+  been sharpened one step further: `FacetImageContains f (⟨section5LowerPrefixVertices u⟩ :
+  SimplexFacet n) (prefixBarycenter n u.level)` is equivalent to the existence of a point
+  `x ∈ section5CellSlice u f` that also lies in `coordinateFace (prefixRooms n u.level)`.
+  So the remaining honest geometry on `u.cell` is now: prove that the slice reaches the lower
+  prefix face, and prove that the canonical lower-prefix face has exactly `u.level` vertices.
   The older `Section5OneComplexGeometry` layer remains useful as cleanup, but it is no longer the
   main proof boundary.
   A first concrete fragment is already in place: level `0` is rigidly the start node, so any
