@@ -253,6 +253,12 @@
   lies in `coordinateFace (prefixRooms n u.level)`. Once that single geometric statement is
   available, `Section5MinimalSubfaceLowerBoundaryGenericity u f` follows immediately from any
   witness point of `ρ.realization` mapping into `[b_k,b_{k+1}]`.
+  The optimizer recovery route is now partially formalized too: `Section5Path.lean` has the
+  linear functional `outsideMass I y` measuring how far a point lies from a coordinate face, plus
+  the basic lemmas needed to use it on the slice (`outsideMass_nonneg`,
+  `outsideMass_eq_zero_iff_mem_coordinateFace`, `outsideMass_pos_of_not_mem_coordinateFace`, and
+  `outsideMass_lineMap`). This reduces the next experiment to a genuinely geometric one: prove
+  that an outside-prefix-mass minimizer on a minimal slice cannot retain positive outside mass.
   This support layer is now also named globally on the real start component:
   `Section5BoundaryFaceGenericity` asks for that exact lower-boundary-face datum on every
   non-start node, keeps the existing upper-step uniqueness and endpoint fields, and then compiles

@@ -61,6 +61,56 @@ theorem prefixRooms_eq_univ_iff {n k : ℕ} (hk : k ≤ n) :
     subst h
     simp [prefixRooms_self]
 
+/-- Sum of coordinates outside a prescribed face. This is the linear functional suggested by the
+stuck-recovery route for detecting when a point has left the lower prefix face. -/
+def outsideMass {n : ℕ} (I : Finset (RoomIndex n)) (y : RentCoordinates n) : ℝ :=
+  Finset.sum (Finset.univ.filter fun i : RoomIndex n => i ∉ I) fun i => y i
+
+theorem outsideMass_nonneg {n : ℕ} {I : Finset (RoomIndex n)} {x : RentSimplex n} :
+    0 ≤ outsideMass I (x : RentCoordinates n) := by
+  unfold outsideMass
+  exact Finset.sum_nonneg (by intro i _; exact x.2.1 i)
+
+@[simp]
+theorem outsideMass_eq_zero_iff_mem_coordinateFace {n : ℕ} {I : Finset (RoomIndex n)}
+    {x : RentSimplex n} :
+    outsideMass I (x : RentCoordinates n) = 0 ↔ x ∈ coordinateFace I := by
+  constructor
+  · intro hmass
+    rw [mem_coordinateFace_iff]
+    intro i hi
+    have hterms :
+        ∀ j ∈ Finset.univ.filter (fun j : RoomIndex n => j ∉ I),
+          ((x : RentCoordinates n) j) = 0 := by
+      simpa [outsideMass] using
+        (Finset.sum_eq_zero_iff_of_nonneg (by intro j _; exact x.2.1 j)).mp hmass
+    have hi' : i ∈ Finset.univ.filter (fun j : RoomIndex n => j ∉ I) := by
+      simp [hi]
+    exact hterms i hi'
+  · intro hx
+    unfold outsideMass
+    apply Finset.sum_eq_zero
+    intro i hi
+    exact (mem_coordinateFace_iff.mp hx) i (Finset.mem_filter.mp hi).2
+
+theorem outsideMass_pos_of_not_mem_coordinateFace {n : ℕ} {I : Finset (RoomIndex n)}
+    {x : RentSimplex n} (hx : x ∉ coordinateFace I) :
+    0 < outsideMass I (x : RentCoordinates n) := by
+  have hnonneg : 0 ≤ outsideMass I (x : RentCoordinates n) :=
+    outsideMass_nonneg (I := I) (x := x)
+  by_contra hnot
+  have hzero : outsideMass I (x : RentCoordinates n) = 0 := le_antisymm (le_of_not_gt hnot) hnonneg
+  exact hx ((outsideMass_eq_zero_iff_mem_coordinateFace (I := I) (x := x)).mp hzero)
+
+theorem outsideMass_lineMap {n : ℕ} {I : Finset (RoomIndex n)}
+    (x y : RentCoordinates n) (t : ℝ) :
+    outsideMass I (AffineMap.lineMap x y t) =
+      (1 - t) * outsideMass I x + t * outsideMass I y := by
+  unfold outsideMass
+  rw [AffineMap.lineMap_apply_module]
+  simp_rw [Pi.add_apply, Pi.smul_apply, smul_eq_mul]
+  rw [Finset.sum_add_distrib, ← Finset.mul_sum, ← Finset.mul_sum]
+
 /-- The standard simplex vertices spanning the prefix face `conv{e_1, ..., e_k}`. -/
 def prefixVertexPoints (n k : ℕ) : Finset (RentCoordinates n) :=
   (prefixRooms n k).image fun i : RoomIndex n =>
