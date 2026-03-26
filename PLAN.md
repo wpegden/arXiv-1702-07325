@@ -216,6 +216,20 @@
   `FacetImageHull f σ`. `Section5Path.lean` already specializes the extraction direction to
   Section 5 graph nodes via `IsPiecewiseAffineOn.exists_point_in_cell_realization_of_graphNode`,
   which is the new starting point for the remaining perturbation proof.
+- Current lower-side transversality status:
+  `Section5Path.lean` now isolates the exact missing codomain-side hypothesis as
+  `Section5LocalLowerTransversality u f`. This predicate formalizes the branch-local claim that if
+  a segment-hit point of one cell is written as `lineMap x' v c` with `0 < c < 1` and `v` outside
+  the lower prefix face, then the erased-face point `x'` already maps back to the same barycenter
+  segment. The support layer now proves that this hypothesis is enough to make the erased-face
+  construction usable: it turns
+  `IsPiecewiseAffineOn.exists_erased_face_point_of_minimal_section5SegmentSubface` into actual
+  erased-face membership in `section5SegmentSubfaces`, and therefore forces every vertex of a
+  minimal segment-hitting subface to lie in the lower prefix face whenever that minimal subface
+  has more than one vertex. The remaining obstruction is now fully explicit: add the missing
+  nondegeneracy/codimension-one boundary-face statement on top of this local transversality, or
+  finish the interval-endpoint route and extract the same codimension-one witnesses directly from
+  `section5HitParamLeft/Right`.
 - Current structural blocker:
   the present `SimplexTriangulation` wrapper does not yet expose the induced simplicial
   subdivision of the prefix faces, especially the boundary edge `[e_1,e_2]`, and it also does

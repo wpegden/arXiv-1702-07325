@@ -30,6 +30,16 @@
   perturbation/genericity sentence therefore has to be read as a stronger transversality claim on
   how the barycenter segment meets simplex images, not as something derivable from the current
   face-preserving + piecewise-affine API alone.
+- Section 5, exact local transversality now isolated in Lean: the support layer now names the
+  missing codomain-side hypothesis as `Section5LocalLowerTransversality u f`. It says that if a
+  segment-hit point of one cell is written as
+  `lineMap x' v c` with `0 < c < 1` and `v` outside the lower prefix face, then the erased-face
+  point `x'` already maps back to the same barycenter segment. This is exactly the extra input
+  needed to turn `IsPiecewiseAffineOn.exists_erased_face_point_of_minimal_section5SegmentSubface`
+  into an actual erased-face segment hit. What still does not follow automatically is the final
+  codimension-one boundary-face witness: even after isolating this transversality, one still needs
+  an additional genericity argument ruling out degenerate minimal hits (for example singleton or
+  otherwise too-small lower-face hits) before the predecessor/endpoint theorems can be recovered.
 - Section 5, current formalization status: this remaining manuscript sentence is now represented directly by the support-layer structure `Section5BoundarySegmentGenericity`. That package is already sufficient, together with the canonical start-successor theorem, to derive the paper-facing Section 5 target-facet conclusion; the unresolved work is therefore the actual geometric proof of `Section5BoundarySegmentGenericity`, not any further graph-theoretic packaging.
 - Section 5, current proof boundary: the Lean development now also has the more literal step-level perturbation package `Section5PerturbationGenericity`, whose fields say that a non-start cell is entered from a lower face, has at most one upper continuation as a `Section5Step`, and if there is no such continuation then it already contains the barycenter. This matches the manuscript's segment-intersection language more closely than the older neighbor-cardinality packaging, so the remaining work is best understood as proving `Section5PerturbationGenericity` from the paper's genericity/perturbation claim.
 - Section 6, first generalization theorem: when `y` is assumed not to lie in the convex hull of any `n` lattice points, the simplex `tau` containing `x` must actually be a facet. Otherwise `lambda(tau)` would lie in the convex hull of at most `n` lattice points, contradicting `lambda(x) = y`.
