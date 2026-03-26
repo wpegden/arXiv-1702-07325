@@ -156,19 +156,21 @@
 - Next local objective:
   discharge `Section5SegmentGeometry` from the actual Section 5 geometry:
   the start-successor problem is now solved in the interesting range `2 ≤ n`, so the next work is
-  to prove that every graph node in the canonical start component has at most two neighbors and
-  that every non-start degree-one node is a barycenter-hitting endpoint, all under the paper's
-  generic segment-intersection assumptions. The trivial `n = 1` bookkeeping is now separated by
-  direct one-dimensional target-facet lemmas, so the remaining nontrivial Section 5 path argument
-  can be organized under `2 ≤ n`.
+  to prove the manuscript's actual 1-dimensional continuation axioms on the canonical start
+  component, now packaged as `Section5OneComplexGeometry`: every non-start node is entered from a
+  unique lower-level neighbor, every node has at most one higher-level continuation, and the
+  absence of a higher-level continuation forces a barycenter endpoint. These local one-complex
+  axioms now mechanically imply the old degree/endpoint hypotheses and the target-facet theorem.
+  The trivial `n = 1` bookkeeping is already separated by direct one-dimensional target-facet
+  lemmas, so the remaining nontrivial Section 5 path argument can stay focused on `2 ≤ n`.
 - Current structural blocker:
   the present `SimplexTriangulation` wrapper does not yet expose the induced simplicial
   subdivision of the prefix faces, especially the boundary edge `[e_1,e_2]`, and it also does
   not formalize the perturbation/genericity argument that makes the barycenter-chain preimage a
   finite 1-dimensional cell complex. The start-successor existence claim has now been recovered
-  directly from boundary-edge geometry, but one of those two upgrades is still needed before the
-  remaining one-or-two-neighbor and non-start-endpoint claims can be proved on the real graph
-  rather than assumed via `Section5SegmentGeometry`.
+  directly from boundary-edge geometry, and the residual local graph obligations have been reduced
+  to `Section5OneComplexGeometry`; one of the two missing upgrades is still needed to prove that
+  structure from the actual Section 5 geometry rather than assume it.
 - First prove the barycenter-specialized version if that is the easiest entry point.
 - Then generalize to arbitrary interior targets if Section 6 needs it.
 - If full surjectivity is still awkward, keep the theorem in the "target in interior" form first; that already covers the barycenter and the interior `y` used in the first Section 6 theorem.

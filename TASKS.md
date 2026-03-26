@@ -33,8 +33,9 @@
 - [ ] Resolve the current Section 5 modeling gap: either strengthen the triangulation support layer to expose the induced boundary subdivisions of the prefix faces, or formalize the perturbation/genericity argument that turns the barycenter-chain preimage into a finite 1-dimensional cell complex.
 - [x] Prove the existence half of `Section5CanonicalBoundarySuccessorData` for the genuine boundary-edge regime `2 ≤ n`: extract a non-start triangulation vertex on `[e₁,e₂]`, use a maximal-boundary-vertex argument to force `e₁` into the support of a nearby covered point, and package the resulting level-1 start edge in the canonical start component.
 - [x] Isolate the remaining low-dimensional bookkeeping around the new start-successor theorem by proving direct `n = 1` target-facet lemmas, so the nontrivial Section 5 path work can now focus on `2 ≤ n`.
-- [ ] Prove the raw start-component hypotheses for `section5StartComponentGraph.exists_targetFacet_of_endpoint_rule`: the start vertex has one neighbor on the boundary chain, every node has at most two neighbors, and every non-start degree-one node is an endpoint hitting the barycenter.
-- [ ] Discharge `Section5SegmentGeometry` from actual Section 5 lemmas on the barycenter-chain preimage: prove the unique boundary successor, the at-most-two-neighbor bound, and the non-start endpoint characterization on the real start component.
+- [x] Repackage the remaining Section 5 local-degree work into a direct 1-dimensional-cell-complex interface on the actual start component: define `Section5OneComplexGeometry`, prove it yields the `≤ 2` degree bound and non-start endpoint rule, and bridge it to `Section5SegmentGeometry` and the canonical target-facet theorem.
+- [ ] Prove the actual `Section5OneComplexGeometry` axioms from the manuscript's generic segment-intersection picture on the barycenter-chain preimage.
+- [ ] Discharge `Section5SegmentGeometry` from actual Section 5 lemmas on the barycenter-chain preimage by combining the canonical start-successor theorem with the new one-complex geometry.
 
 ## Completed
 - [x] Read `repo/paper/arxiv-1702.07325.tex` from start to finish and mapped the proof structure.
