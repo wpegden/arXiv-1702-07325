@@ -239,6 +239,13 @@
   So if the current API still cannot derive the lower boundary face from first principles, this
   structure is now the exact honest hypothesis to target from the manuscript's quoted genericity
   sentence, rather than any further graph-translation wrapper.
+  The next sharper naming step is now checked too:
+  `Section5MinimalSubfaceLowerBoundaryGenericity u f` is the exact theorem on a minimal
+  `τ ∈ section5SegmentSubfaces u f` that the quoted sentence still has to supply. It says such a
+  minimal face has a codimension-one lower boundary face `ρ ≤ τ` in the lower prefix face that
+  still meets `[b_k,b_{k+1}]`, and it compiles immediately to
+  `Section5MinimalSliceLowerBoundaryFaceData u f` and then to
+  `Section5MinimalSliceLowerBoundaryGeometry u f`.
   This support layer is now also named globally on the real start component:
   `Section5BoundaryFaceGenericity` asks for that exact lower-boundary-face datum on every
   non-start node, keeps the existing upper-step uniqueness and endpoint fields, and then compiles

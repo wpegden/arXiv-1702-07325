@@ -1048,6 +1048,22 @@ theorem mem_section5SegmentSubfaces_of_mem_realization_map_segment {n : ℕ} [Ne
   exact (mem_section5SegmentSubfaces_iff (u := u) (f := f) (τ := τ)).mpr
     ⟨hτsub, hτne, hτhit⟩
 
+/-- Exact local theorem still missing from the manuscript's quoted genericity sentence: every
+minimal segment-hitting face meets the barycenter segment through a codimension-one lower face
+lying in the lower prefix face. -/
+def Section5MinimalSubfaceLowerBoundaryGenericity {n : ℕ} (u : Section5Node n)
+    (f : SelfMapOnRentSimplex n) : Prop :=
+  ∀ {τ : SimplexFacet n},
+    τ ∈ section5SegmentSubfaces u f →
+    (∀ σ ∈ section5SegmentSubfaces u f, τ.vertices.card ≤ σ.vertices.card) →
+      ∃ (ρ : SimplexFacet n) (x : RentSimplex n),
+        ρ.IsSubfaceOf τ ∧
+          ρ.vertices.card = u.level ∧
+          (∀ ⦃w : RentSimplex n⦄,
+            w ∈ ρ.vertices → w ∈ coordinateFace (prefixRooms n u.level)) ∧
+          ((x : RentSimplex n) : RentCoordinates n) ∈ ρ.realization ∧
+          f x ∈ prefixBarycenterSegment n u.level
+
 /-- Exact local support-layer data for the paper's remaining genericity sentence on one cell:
 a minimal segment-hitting face `τ` has a codimension-one lower face carrying a point whose image
 still lies on the barycenter segment. The existing Section 5 support API can already upgrade this
@@ -1069,6 +1085,34 @@ structure Section5MinimalSliceLowerBoundaryFaceData {n : ℕ} (u : Section5Node 
     ((lower_boundary_point : RentSimplex n) : RentCoordinates n) ∈ lower_boundary_face.realization
   lower_boundary_point_map_mem_segment :
     f lower_boundary_point ∈ prefixBarycenterSegment n u.level
+
+def Section5MinimalSubfaceLowerBoundaryGenericity.toLowerBoundaryFaceData
+    {n : ℕ} {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n} {u : Section5Node n}
+    (hu : IsSection5GraphNode T f u)
+    (hgeneric : Section5MinimalSubfaceLowerBoundaryGenericity u f) :
+    Section5MinimalSliceLowerBoundaryFaceData u f := by
+  classical
+  let hminExists := exists_minimal_section5SegmentSubface hu
+  let τ : SimplexFacet n := Classical.choose hminExists
+  have hτ : τ ∈ section5SegmentSubfaces u f := (Classical.choose_spec hminExists).1
+  have hmin : ∀ σ ∈ section5SegmentSubfaces u f, τ.vertices.card ≤ σ.vertices.card :=
+    (Classical.choose_spec hminExists).2
+  let hboundary := hgeneric hτ hmin
+  let ρ : SimplexFacet n := Classical.choose hboundary
+  let hxExists := Classical.choose_spec hboundary
+  let x : RentSimplex n := Classical.choose hxExists
+  have hxSpec := Classical.choose_spec hxExists
+  have hρsub : ρ.IsSubfaceOf τ := hxSpec.1
+  have hρrest := hxSpec.2
+  have hρcard : ρ.vertices.card = u.level := hρrest.1
+  have hρrest' := hρrest.2
+  have hρface :
+      ∀ ⦃w : RentSimplex n⦄,
+        w ∈ ρ.vertices → w ∈ coordinateFace (prefixRooms n u.level) :=
+    hρrest'.1
+  have hxρ : ((x : RentSimplex n) : RentCoordinates n) ∈ ρ.realization := hρrest'.2.1
+  have hfxSeg : f x ∈ prefixBarycenterSegment n u.level := hρrest'.2.2
+  exact ⟨τ, hτ, hmin, ρ, hρsub, hρcard, hρface, x, hxρ, hfxSeg⟩
 
 /-- A first local boundary-geometry package for one minimal segment-hitting face `τ`: a lower
 codimension-one boundary face carries an actual point of the slice. Minimality then forces `τ`
@@ -1669,6 +1713,14 @@ def Section5MinimalSliceLowerBoundaryFaceData.toLowerBoundaryGeometry
     hdata.lower_boundary_isSubface hdata.lower_boundary_card_eq
     hdata.lower_boundary_prefix_vertices hdata.lower_boundary_point_mem_realization
     hdata.lower_boundary_point_map_mem_segment
+
+def Section5MinimalSubfaceLowerBoundaryGenericity.toLowerBoundaryGeometry
+    {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    (hfpl : IsPiecewiseAffineOn T f) {u : Section5Node n} (hu : IsSection5GraphNode T f u)
+    (hulevel : 0 < u.level)
+    (hgeneric : Section5MinimalSubfaceLowerBoundaryGenericity u f) :
+    Section5MinimalSliceLowerBoundaryGeometry u f := by
+  exact (hgeneric.toLowerBoundaryFaceData hu).toLowerBoundaryGeometry hfpl hu hulevel
 
 theorem IsSection5GraphNode.vertex_mem_affineSpan_prefixVertexPoints {n : ℕ}
     {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n} {u : Section5Node n}
