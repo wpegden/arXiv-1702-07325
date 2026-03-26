@@ -235,10 +235,15 @@
   `section5PointHitSubfaces`, `section5HitParamLeftSubfaces`, and
   `section5HitParamRightSubfaces`. For the left/right endpoint images these families are nonempty,
   admit minimal-cardinality members, provide exact realization witnesses, and are known to lie
-  inside the older `section5SegmentSubfaces` family. This is the right interface for the next
-  step: prove that a minimal subface hitting the left endpoint image cannot be degenerate, extract
-  a codimension-one lower face from it, and do the analogous uniqueness/endpoint analysis on the
-  right endpoint family.
+  inside the older `section5SegmentSubfaces` family. The support layer now also carries the
+  point-hit analogues of the minimal-support/erased-face API:
+  `IsPiecewiseAffineOn.exists_point_with_nonzero_weights_of_minimal_section5PointHitSubface`,
+  `IsPiecewiseAffineOn.exists_erased_face_point_of_minimal_section5PointHitSubface`, and
+  `minimal_section5PointHitSubface_erase_not_mem`. This is now the right interface for the next
+  step: prove the endpoint-specific geometric implication that turns the erased-face witness for a
+  minimal left/right endpoint-hit subface back into an exact endpoint hit on the erased face when
+  appropriate, then extract a codimension-one lower face on the left and the corresponding
+  uniqueness/endpoint facts on the right.
 - Current structural blocker:
   the present `SimplexTriangulation` wrapper does not yet expose the induced simplicial
   subdivision of the prefix faces, especially the boundary edge `[e_1,e_2]`, and it also does
