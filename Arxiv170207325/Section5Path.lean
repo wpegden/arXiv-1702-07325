@@ -1586,6 +1586,24 @@ theorem IsPiecewiseAffineOn.isCompact_convex_nonempty_section5SubfaceSliceSet
   refine ⟨isCompact_section5SubfaceSliceSet u τ g, convex_section5SubfaceSliceSet u τ g, ?_⟩
   exact hfpl.section5SubfaceSliceSet_nonempty hu hτ hg
 
+theorem image_section5SubfaceSliceSet_subset_prefixBarycenterSegment {n : ℕ} (u : Section5Node n)
+    (τ : SimplexFacet n) (g : RentCoordinates n →ᵃ[ℝ] RentCoordinates n) :
+    g '' section5SubfaceSliceSet u τ g ⊆ prefixBarycenterSegment n u.level := by
+  intro y hy
+  rcases hy with ⟨x, hx, rfl⟩
+  exact hx.2
+
+theorem isCompact_convex_nonempty_image_section5SubfaceSliceSet {n : ℕ} (u : Section5Node n)
+    (τ : SimplexFacet n) (g : RentCoordinates n →ᵃ[ℝ] RentCoordinates n)
+    (hne : (section5SubfaceSliceSet u τ g).Nonempty) :
+    IsCompact (g '' section5SubfaceSliceSet u τ g) ∧
+      Convex ℝ (g '' section5SubfaceSliceSet u τ g) ∧
+      (g '' section5SubfaceSliceSet u τ g).Nonempty ∧
+      g '' section5SubfaceSliceSet u τ g ⊆ prefixBarycenterSegment n u.level := by
+  refine ⟨(isCompact_section5SubfaceSliceSet u τ g).image g.continuous_of_finiteDimensional, ?_⟩
+  refine ⟨(convex_section5SubfaceSliceSet u τ g).affine_image g, ?_⟩
+  refine ⟨hne.image g, image_section5SubfaceSliceSet_subset_prefixBarycenterSegment u τ g⟩
+
 theorem exists_isMinOn_outsideMass_section5SubfaceSliceSet {n : ℕ} (u : Section5Node n)
     (τ : SimplexFacet n) (g : RentCoordinates n →ᵃ[ℝ] RentCoordinates n)
     (hne : (section5SubfaceSliceSet u τ g).Nonempty) :
@@ -1605,6 +1623,18 @@ theorem exists_isMinOn_levelCoord_section5SubfaceSliceSet {n : ℕ} (u : Section
   have hcont : Continuous fun z : RentCoordinates n => (g z) ik := by
     exact (continuous_apply ik).comp g.continuous_of_finiteDimensional
   exact (isCompact_section5SubfaceSliceSet u τ g).exists_isMinOn hne hcont.continuousOn
+
+theorem exists_isMaxOn_levelCoord_section5SubfaceSliceSet {n : ℕ} (u : Section5Node n)
+    (hulevel : u.level + 1 ≤ n) (τ : SimplexFacet n)
+    (g : RentCoordinates n →ᵃ[ℝ] RentCoordinates n)
+    (hne : (section5SubfaceSliceSet u τ g).Nonempty) :
+    let ik : RoomIndex n := ⟨u.level, lt_of_lt_of_le (Nat.lt_succ_self u.level) hulevel⟩
+    ∃ y ∈ section5SubfaceSliceSet u τ g,
+      IsMaxOn (fun z : RentCoordinates n => (g z) ik) (section5SubfaceSliceSet u τ g) y := by
+  let ik : RoomIndex n := ⟨u.level, lt_of_lt_of_le (Nat.lt_succ_self u.level) hulevel⟩
+  have hcont : Continuous fun z : RentCoordinates n => (g z) ik := by
+    exact (continuous_apply ik).comp g.continuous_of_finiteDimensional
+  exact (isCompact_section5SubfaceSliceSet u τ g).exists_isMaxOn hne hcont.continuousOn
 
 theorem map_eq_prefixBarycenter_of_isMinOn_levelCoord_section5SubfaceSliceSet
     {n : ℕ} {u : Section5Node n} [NeZero u.level] (hulevel : u.level + 1 ≤ n)
