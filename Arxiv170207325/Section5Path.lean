@@ -239,6 +239,25 @@ theorem prefixBarycenter_mem_ambientCoordinateFace {n k : ℕ} [NeZero k] (hk : 
   refine ⟨prefixBarycenter_mem_scaledSimplex hk, ?_⟩
   simp [coordSupport_prefixBarycenter]
 
+theorem prefixBarycenter_mem_ambientCoordinateFace_iff {n k : ℕ} [NeZero k] (hk : k ≤ n)
+    {I : Finset (RoomIndex n)} :
+    prefixBarycenter n k ∈ ambientCoordinateFace I ↔ prefixRooms n k ⊆ I := by
+  constructor
+  · intro hy
+    simpa [coordSupport_prefixBarycenter] using hy.2
+  · intro hI
+    exact ambientCoordinateFace_mono hI
+      (prefixBarycenter_mem_ambientCoordinateFace (n := n) (k := k) hk)
+
+theorem prefixBarycenter_not_mem_ambientCoordinateFace_erase {n k : ℕ} [NeZero k] (hk : k ≤ n)
+    {i : RoomIndex n} (hi : i ∈ prefixRooms n k) :
+    prefixBarycenter n k ∉ ambientCoordinateFace (Finset.univ.erase i) := by
+  intro hy
+  have hsub :
+      prefixRooms n k ⊆ Finset.univ.erase i :=
+    (prefixBarycenter_mem_ambientCoordinateFace_iff (n := n) (k := k) hk).mp hy
+  exact (by simpa using hsub hi : False)
+
 theorem prefixBarycenter_isInteriorPointOfAmbientFace {n k : ℕ} [NeZero k] (hk : k ≤ n) :
     IsInteriorPointOfAmbientFace (prefixRooms n k) (prefixBarycenter n k) := by
   exact ⟨prefixBarycenter_mem_ambientCoordinateFace hk, coordSupport_prefixBarycenter⟩
@@ -860,6 +879,61 @@ theorem IsPiecewiseAffineOn.facetImageContains_section5LowerPrefixVertices_of_me
       FacetImageContains f (⟨section5LowerPrefixVertices u⟩ : SimplexFacet n) (f x) :=
     hfpl.facetImageContains_of_mem_realization hσFace hσreal
   simpa [hfx] using hhit
+
+theorem IsFaceRespecting.simplexSupport_eq_prefixRooms_of_mem_coordinateFace_of_map_prefixBarycenter
+    {n k : ℕ} [NeZero k] {f : SelfMapOnRentSimplex n} (hf : IsFaceRespecting f)
+    {x : RentSimplex n} (hxFace : x ∈ coordinateFace (prefixRooms n k))
+    (hfx : f x = prefixBarycenter n k) :
+    simplexSupport x = prefixRooms n k := by
+  apply Finset.Subset.antisymm hxFace
+  intro i hi
+  have hsupport :
+      coordSupport (prefixBarycenter n k) ⊆ simplexSupport x := by
+    simpa [hfx] using hf.coordSupport_subset x
+  have hi' : i ∈ coordSupport (prefixBarycenter n k) := by
+    simpa [coordSupport_prefixBarycenter] using hi
+  exact hsupport hi'
+
+theorem IsFaceRespecting.exists_vertex_support_of_facetImageContains_prefixBarycenter
+    {n k : ℕ} [NeZero k] {f : SelfMapOnRentSimplex n} (hf : IsFaceRespecting f)
+    {σ : SimplexFacet n} (hk : k ≤ n)
+    (hσ : FacetImageContains f σ (prefixBarycenter n k))
+    {i : RoomIndex n} (hi : i ∈ prefixRooms n k) :
+    ∃ v ∈ σ.vertices, i ∈ simplexSupport v := by
+  by_contra hno
+  have hverts :
+      ∀ ⦃v : RentSimplex n⦄, v ∈ σ.vertices → v ∈ coordinateFace (Finset.univ.erase i) := by
+    intro v hv
+    rw [mem_coordinateFace_iff]
+    intro j hj
+    have hj_eq : j = i := by
+      simpa using hj
+    have hi_notin : i ∉ simplexSupport v := by
+      intro hmem
+      exact hno ⟨v, hv, hmem⟩
+    simpa [hj_eq, mem_simplexSupport] using hi_notin
+  have himage :
+      FacetImageHull f σ ⊆ ambientCoordinateFace (Finset.univ.erase i) := by
+    refine facetImageHull_subset_ambientCoordinateFace ?_
+    intro v hv
+    exact hf.mapsTo_ambientCoordinateFace (Finset.univ.erase i) (hverts hv)
+  have hbad : prefixBarycenter n k ∈ ambientCoordinateFace (Finset.univ.erase i) := himage hσ
+  exact prefixBarycenter_not_mem_ambientCoordinateFace_erase (n := n) (k := k) hk hi hbad
+
+theorem IsFaceRespecting.exists_section5LowerPrefixVertex_support_of_facetImageContains
+    {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    (hf : IsFaceRespecting f) {u : Section5Node n} (hu : IsSection5GraphNode T f u)
+    (hσ : FacetImageContains f (⟨section5LowerPrefixVertices u⟩ : SimplexFacet n)
+      (prefixBarycenter n u.level))
+    {i : RoomIndex n} (hi : i ∈ prefixRooms n u.level) :
+    ∃ v ∈ section5LowerPrefixVertices u, i ∈ simplexSupport v := by
+  have hpos : 0 < u.level := by
+    have hlt : i.1 < u.level := mem_prefixRooms_iff.mp hi
+    exact lt_of_lt_of_le (Nat.zero_lt_succ i.1) (Nat.succ_le_of_lt hlt)
+  haveI : NeZero u.level := ⟨Nat.ne_of_gt hpos⟩
+  have hk : u.level ≤ n := le_trans (Nat.le_succ u.level) hu.level_le
+  simpa using hf.exists_vertex_support_of_facetImageContains_prefixBarycenter
+    (σ := (⟨section5LowerPrefixVertices u⟩ : SimplexFacet n)) hk hσ hi
 
 theorem IsSection5GraphNode.card_lowerPrefixVertices_le {n : ℕ}
     {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n} {u : Section5Node n}
