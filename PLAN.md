@@ -224,6 +224,13 @@
   `Section5SimplexSliceGenericity.card_eq_lowerPrefixVertices_and_exists_point` passes from the
   existing lower-step theorem to the predecessor-step bridge, so no further conversion work
   remains between the old slice package and the new canonical lower-entry route.
+  The same is now true for the current direct local boundary package itself:
+  `Section5MinimalSliceLowerBoundaryGeometry.card_eq_lowerPrefixVertices_and_exists_point`
+  extracts the canonical pair from one cell's codimension-one lower boundary face, and
+  `Section5SimplexSliceBoundaryGeometry.card_eq_lowerPrefixVertices_and_exists_point` exposes the
+  same result on the real start component. So the remaining gap is no longer to translate the
+  local boundary geometry into the canonical language; it is to actually construct that boundary
+  geometry from the manuscript's 1-dimensional slice picture on each non-start cell.
   So the remaining honest geometry on `u.cell` is now: prove that the slice reaches the lower
   prefix face, and prove that the canonical lower-prefix face has exactly `u.level` vertices.
   The older `Section5OneComplexGeometry` layer remains useful as cleanup, but it is no longer the

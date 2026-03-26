@@ -2460,6 +2460,38 @@ theorem section5LowerEntryFaceData_nonempty_iff_card_eq_and_facetImageContains_l
     intro w hw
     exact (Finset.mem_filter.mp hw).2
 
+theorem Section5MinimalSliceLowerBoundaryGeometry.card_eq_lowerPrefixVertices_and_exists_point
+    {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    (hf : IsFaceRespecting f) (hfpl : IsPiecewiseAffineOn T f)
+    {u : Section5Node n} (hu : IsSection5GraphNode T f u) (hulevel : 0 < u.level)
+    (hgeom : Section5MinimalSliceLowerBoundaryGeometry u f) :
+    (section5LowerPrefixVertices u).card = u.level ∧
+      ∃ x : RentSimplex n,
+        x ∈ section5CellSlice u f ∧ x ∈ coordinateFace (prefixRooms n u.level) := by
+  have hτsubu : hgeom.minimal_face.IsSubfaceOf u.cell :=
+    (mem_section5SegmentSubfaces_iff
+      (u := u) (f := f) (τ := hgeom.minimal_face)).mp hgeom.mem_segmentSubfaces |>.1
+  have hρsubu : hgeom.lower_boundary_face.IsSubfaceOf u.cell :=
+    hgeom.lower_boundary_isSubface.trans hτsubu
+  have hxFace :
+      hgeom.lower_boundary_point ∈ coordinateFace (prefixRooms n u.level) := by
+    exact hgeom.lower_boundary_face.mem_coordinateFace_of_mem_realization_of_vertices_mem_coordinateFace
+      hgeom.lower_boundary_point_mem_realization hgeom.lower_boundary_prefix_vertices
+  have hρface : T.IsFace hgeom.lower_boundary_face := by
+    rcases hu.isFace with ⟨σ, hσ, hσsub⟩
+    exact ⟨σ, hσ, hρsubu.trans hσsub⟩
+  have hhit :
+      FacetImageContains f hgeom.lower_boundary_face (prefixBarycenter n u.level) := by
+    haveI : NeZero u.level := ⟨Nat.ne_of_gt hulevel⟩
+    exact hfpl.facetImageContains_of_mem_realization_of_vertices_mem_coordinateFace
+      hf hρface hu.level_le hgeom.lower_boundary_point_mem_realization
+      hgeom.lower_boundary_prefix_vertices hgeom.lower_boundary_point_mem_slice.2
+  let hentry : Section5LowerEntryFaceData u f :=
+    ⟨hgeom.lower_boundary_face, hρsubu, hgeom.lower_boundary_card_eq,
+      hgeom.lower_boundary_prefix_vertices, hhit⟩
+  refine ⟨hentry.card_eq_lowerPrefixVertices hu, ?_⟩
+  exact ⟨hgeom.lower_boundary_point, hgeom.lower_boundary_point_mem_slice, hxFace⟩
+
 def section5LowerEntryFaceData_of_card_eq_and_facetImageContains {n : ℕ}
     {f : SelfMapOnRentSimplex n} (u : Section5Node n)
     (hcard : (section5LowerPrefixVertices u).card = u.level)
@@ -3649,6 +3681,23 @@ theorem Section5SimplexSliceGenericity.card_eq_lowerPrefixVertices_and_exists_po
     (hslice.lower_minimal_slice_face_of_ne_start v hv).exists_startComponentLowerStep hf hfpl hv
   have hu_node : IsSection5GraphNode T f u.1.1 := (mem_section5Nodes_iff).mp u.1.2
   exact hfpl.section5Step_card_eq_lowerPrefixVertices_and_exists_point hv_node hu_node huStep
+
+theorem Section5SimplexSliceBoundaryGeometry.card_eq_lowerPrefixVertices_and_exists_point
+    {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    {hstart : IsSection5GraphNode T f (section5StartNode n)}
+    (hgeom : Section5SimplexSliceBoundaryGeometry T f hstart)
+    (hf : IsFaceRespecting f) (hfpl : IsPiecewiseAffineOn T f)
+    (v : section5StartComponent hstart)
+    (hv : v ≠ section5StartVertexInComponent hstart) :
+    (section5LowerPrefixVertices v.1.1).card = v.1.1.level ∧
+      ∃ x : RentSimplex n,
+        x ∈ section5CellSlice v.1.1 f ∧
+          x ∈ coordinateFace (prefixRooms n v.1.1.level) := by
+  have hv_node : IsSection5GraphNode T f v.1.1 := (mem_section5Nodes_iff).mp v.1.2
+  have hv_level : 0 < v.1.1.level := section5StartComponent_pos_level_of_ne_start hv
+  exact
+    (hgeom.lower_boundary_geometry_of_ne_start v hv).card_eq_lowerPrefixVertices_and_exists_point
+      hf hfpl hv_node hv_level
 
 def Section5SimplexSliceBoundaryGeometry.toSimplexSliceGenericity {n : ℕ} [NeZero n]
     {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
