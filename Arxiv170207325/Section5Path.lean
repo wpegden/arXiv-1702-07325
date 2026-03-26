@@ -60,6 +60,88 @@ theorem prefixRooms_eq_univ_iff {n k : ℕ} (hk : k ≤ n) :
     subst h
     simp [prefixRooms_self]
 
+/-- The standard simplex vertices spanning the prefix face `conv{e_1, ..., e_k}`. -/
+def prefixVertexPoints (n k : ℕ) : Finset (RentCoordinates n) :=
+  (prefixRooms n k).image fun i : RoomIndex n =>
+    ((stdSimplex.vertex (S := ℝ) i : RentSimplex n) : RentCoordinates n)
+
+theorem prefixVertexPoints_card {n k : ℕ} (hk : k ≤ n) :
+    (prefixVertexPoints n k).card = k := by
+  classical
+  unfold prefixVertexPoints
+  rw [Finset.card_image_of_injective]
+  · simpa using prefixRooms_card (n := n) (k := k) hk
+  · intro i j hij
+    exact stdSimplex.vertex_injective (Subtype.ext hij)
+
+theorem mem_convexHull_prefixVertexPoints_of_mem_coordinateFace {n k : ℕ}
+    {x : RentSimplex n} (hx : x ∈ coordinateFace (prefixRooms n k)) :
+    ((x : RentSimplex n) : RentCoordinates n) ∈
+      convexHull ℝ ((prefixVertexPoints n k : Finset (RentCoordinates n)) :
+        Set (RentCoordinates n)) := by
+  classical
+  rw [mem_coordinateFace_iff] at hx
+  have hsum_prefix : ∑ i ∈ prefixRooms n k, x i = 1 := by
+    rw [prefixRooms, Finset.sum_filter]
+    calc
+      (∑ i : RoomIndex n, if i.1 < k then x i else 0) = ∑ i : RoomIndex n, x i := by
+        refine Finset.sum_congr rfl ?_
+        intro i hi
+        by_cases hi' : i.1 < k
+        · simp [hi']
+        · have hxi0 : x i = 0 := hx i (by simpa [mem_prefixRooms_iff] using hi')
+          simp [hi', hxi0]
+      _ = 1 := stdSimplex.sum_eq_one x
+  have hx_eq_center :
+      (prefixRooms n k).centerMass (fun i : RoomIndex n => x i)
+        (fun i : RoomIndex n =>
+          ((stdSimplex.vertex (S := ℝ) i : RentSimplex n) : RentCoordinates n)) =
+        ((x : RentSimplex n) : RentCoordinates n) := by
+    rw [Finset.centerMass_eq_of_sum_1 _ _ hsum_prefix]
+    ext j
+    rw [Finset.sum_apply]
+    by_cases hj : j ∈ prefixRooms n k
+    · rw [Finset.sum_eq_single j]
+      · simp
+      · intro i hi hij
+        change x i * (((stdSimplex.vertex (S := ℝ) i : RentSimplex n) : RentCoordinates n) j) = 0
+        have hji : j ≠ i := by simpa using hij.symm
+        simp [stdSimplex_vertex_apply, hji]
+      · simp [hj]
+    · have hxj0 : x j = 0 := hx j hj
+      rw [hxj0]
+      refine Finset.sum_eq_zero ?_
+      intro i hi
+      change x i * (((stdSimplex.vertex (S := ℝ) i : RentSimplex n) : RentCoordinates n) j) = 0
+      have hji : j ≠ i := by
+        intro hji
+        apply hj
+        simpa [hji] using hi
+      simp [stdSimplex_vertex_apply, hji]
+  refine hx_eq_center ▸ Finset.centerMass_mem_convexHull (t := prefixRooms n k)
+    (s := ((prefixVertexPoints n k : Finset (RentCoordinates n)) :
+      Set (RentCoordinates n))) ?_ ?_ ?_
+  · intro i hi
+    exact x.2.1 i
+  · rw [hsum_prefix]
+    norm_num
+  · intro i hi
+    unfold prefixVertexPoints
+    change (((stdSimplex.vertex (S := ℝ) i : RentSimplex n) : RentCoordinates n)) ∈
+      Finset.image (fun i : RoomIndex n =>
+        ((stdSimplex.vertex (S := ℝ) i : RentSimplex n) : RentCoordinates n))
+        (prefixRooms n k)
+    exact Finset.mem_image.mpr ⟨i, hi, rfl⟩
+
+theorem mem_affineSpan_prefixVertexPoints_of_mem_coordinateFace {n k : ℕ}
+    {x : RentSimplex n} (hx : x ∈ coordinateFace (prefixRooms n k)) :
+    ((x : RentSimplex n) : RentCoordinates n) ∈
+      affineSpan ℝ ((prefixVertexPoints n k : Finset (RentCoordinates n)) :
+        Set (RentCoordinates n)) :=
+  convexHull_subset_affineSpan
+    ((prefixVertexPoints n k : Finset (RentCoordinates n)) : Set (RentCoordinates n))
+    (mem_convexHull_prefixVertexPoints_of_mem_coordinateFace hx)
+
 /-- The barycenter `b_k` of the prefix face `conv{e_1, ..., e_k}` from Section 5. -/
 def prefixBarycenter (n k : ℕ) : RentCoordinates n :=
   fun i => if i.1 < k then (k : ℝ)⁻¹ else 0
@@ -613,6 +695,14 @@ theorem IsSection5GraphNode.level_eq_card_pred {n : ℕ} {T : SimplexTriangulati
     u.level = u.cell.vertices.card - 1 := by
   rw [hu.card_eq]
   omega
+
+theorem IsSection5GraphNode.vertex_mem_affineSpan_prefixVertexPoints {n : ℕ}
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n} {u : Section5Node n}
+    (hu : IsSection5GraphNode T f u) {v : RentSimplex n} (hv : v ∈ u.cell.vertices) :
+    ((v : RentSimplex n) : RentCoordinates n) ∈
+      affineSpan ℝ ((prefixVertexPoints n (u.level + 1) : Finset (RentCoordinates n)) :
+        Set (RentCoordinates n)) := by
+  exact mem_affineSpan_prefixVertexPoints_of_mem_coordinateFace (hu.prefix_vertices hv)
 
 /-- One step in the Section 5 graph: a codimension-one incidence at the next barycenter of the
 chain. -/

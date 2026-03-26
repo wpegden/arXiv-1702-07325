@@ -165,6 +165,13 @@
   lower neighbor of a level-`1` node is automatically and uniquely the start vertex.
   The trivial `n = 1` bookkeeping is already separated by direct one-dimensional target-facet
   lemmas, so the remaining nontrivial Section 5 path argument can stay focused on `2 ≤ n`.
+  The new reusable local tool is `prefixVertexPoints`: `Section5Path.lean` now proves that every
+  point in `coordinateFace (prefixRooms n k)` lies in the convex hull, hence the affine span, of
+  the first `k` standard simplex vertices, and every Section 5 graph-node vertex inherits this
+  affine-span membership at level `u.level + 1`. The intended next use is to combine these span
+  lemmas with `SimplexTriangulation.facet_affineIndependent` to bound how many lower-prefix
+  vertices can occur in one higher-level cell, giving the missing uniqueness of lower and upper
+  continuation.
 - Current structural blocker:
   the present `SimplexTriangulation` wrapper does not yet expose the induced simplicial
   subdivision of the prefix faces, especially the boundary edge `[e_1,e_2]`, and it also does
