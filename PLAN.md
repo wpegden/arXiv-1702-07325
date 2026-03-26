@@ -261,8 +261,14 @@
   forces all vertices of `τ` into the lower prefix face, and
   `minimal_section5SegmentSubface_lowerBoundaryGeometry_of_card_eq_of_erase_realization_map_segment`
   then packages the result as `Section5MinimalSliceLowerBoundaryGeometry`. So the unresolved
-  content is now precisely the genuinely geometric production of those erased-face slice witnesses
-  and the cardinality statement `τ.vertices.card = u.level`.
+  content is now even more local: the new theorem
+  `mem_erase_realization_of_mem_realization_of_mem_coordinateFace_of_not_mem_coordinateFace`
+  shows that one slice point of `τ` already lying in the lower prefix face automatically belongs
+  to every erased face `τ.erase v` for a bad vertex `v`, hence
+  `minimal_section5SegmentSubface_erase_realization_map_segment_of_mem_coordinateFace_point`
+  supplies all erased-face witnesses at once. So the unresolved geometric content is now
+  precisely to produce one such lower-prefix slice point in a minimal face and to prove the
+  cardinality statement `τ.vertices.card = u.level`.
   bridge removes even that final `b_k ∈ λ(τ)` packaging step: if the geometry gives a point of
   `τ.realization` whose image stays on `[b_k,b_{k+1}]`, convexity forces that whole face to lie in
   the lower prefix face, the endpoint lemma turns the image into `b_k`, and the direct theorem
