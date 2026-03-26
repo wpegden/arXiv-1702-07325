@@ -170,7 +170,10 @@
   now no longer abstract either: `prefixSegmentCollapseMap n k` explicitly kills the direction of
   `prefixBarycenterSegment n k`, sends both endpoints to `0`, and the node cell inside any
   incident facet is now identified with the honest induced prefix face via
-  `IsSection5GraphNode.cell_eq_prefixFace_of_incidentFacet`.
+  `IsSection5GraphNode.cell_eq_prefixFace_of_incidentFacet`. Finally,
+  `IsSection5GraphNode.exists_point_in_incidentPrefixFace_zeroFiber_of_piecewiseAffineOn`
+  formulates the actual local object inside one incident facet: a point of the induced prefix face
+  lying in the zero fiber of `prefixSegmentCollapseMap n k ∘ g`.
 - Next local objective:
   discharge `Section5SegmentGeometry` from the actual Section 5 geometry:
   prove that every graph node in the actual start component has at most two neighbors while every
@@ -180,11 +183,10 @@
   lower-neighbor uniqueness and lower-neighbor existence sides are now formal. The remaining work
   should therefore proceed by proving the facet-local collapsed-fiber theorem behind
   `section5LocalOneComplexGeometry_of_uniqueUpperOrEndpoint`: for a start-component node `v`,
-  apply `IsSection5GraphNode.exists_faceHitWitness_eq_under_prefixSegmentCollapse_of_piecewiseAffineOn`
-  and `IsSection5GraphNode.cell_eq_prefixFace_of_incidentFacet`, then prove that the zero fiber of
-  `prefixSegmentCollapseMap n v.level ∘ g` inside the induced prefix face has at most one upper
-  codimension-one continuation and that the no-upper-continuation case already forces the
-  barycenter endpoint.
+  apply `IsSection5GraphNode.exists_point_in_incidentPrefixFace_zeroFiber_of_piecewiseAffineOn`,
+  then prove that the zero fiber of `prefixSegmentCollapseMap n v.level ∘ g` inside the induced
+  prefix face has at most one upper codimension-one continuation and that the
+  no-upper-continuation case already forces the barycenter endpoint.
 - Current structural blocker:
   the present `SimplexTriangulation` wrapper now exposes induced prefix faces and their induced
   realizations, but it still does not expose the full simplicial-subdivision combinatorics of

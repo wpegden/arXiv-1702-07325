@@ -1321,6 +1321,20 @@ theorem IsSection5GraphNode.cell_eq_prefixFace_of_incidentFacet {n : ℕ}
     simpa [huCell, SimplexFacet.section5PrefixFace] using
       hu.cell_eq_prefixVertices_of_incidentFacet hτ huτ
 
+theorem IsSection5GraphNode.exists_point_in_incidentPrefixFace_zeroFiber_of_piecewiseAffineOn
+    {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    {u : Section5Node n} (hu : IsSection5GraphNode T f u) (hpa : IsPiecewiseAffineOn T f) :
+    ∃ τ ∈ T.facets,
+      ∃ g : RentCoordinates n →ᵃ[ℝ] RentCoordinates n,
+        (∀ v ∈ (τ.vertices : Set (RentSimplex n)), g v = f v) ∧
+        ∃ x ∈ (τ.section5PrefixFace u.level).realization,
+          prefixSegmentCollapseMap n u.level (g x) = 0 := by
+  rcases hu.exists_faceHitWitness_eq_under_prefixSegmentCollapse_of_piecewiseAffineOn hpa with
+    ⟨y, _hySeg, hw, hzero⟩
+  refine ⟨hw.facet, hw.facet_mem, hw.affineMap, hw.agrees, hw.point, ?_, hzero⟩
+  rw [← hu.cell_eq_prefixFace_of_incidentFacet hw.facet_mem hw.subface]
+  exact hw.point_mem
+
 theorem IsSection5GraphNode.levelOne_cell_eq_boundaryVertices_of_incidentFacet {n : ℕ}
     [NeZero n] (hn : 2 ≤ n) {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
     {u : Section5Node n} (hu : IsSection5GraphNode T f u) (hu1 : u.level = 1)
