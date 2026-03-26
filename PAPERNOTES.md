@@ -49,6 +49,13 @@
   `Section5PerturbationGenericity`; so the unresolved manuscript work is precisely to derive this
   hypothesis from the paper's generic segment-intersection picture, together with the analogous
   right-side uniqueness/endpoint claims.
+- Section 5, higher-level left-side remainder now isolated further: for cells with `u.level > 1`,
+  Lean now names the bare numeric part as `Section5LocalLeftCodimensionGenericity u f`. The
+  existing `Section5LocalLowerTransversality` theorem already proves the lower-face membership once
+  this cardinality statement is available, so in the nondegenerate regime the only unresolved
+  lower-side input is exactly the codimension/cardinality claim itself. The extra geometry still
+  needed is therefore concentrated in the degenerate exact-endpoint cases, especially the level-1
+  situation, plus the right-side uniqueness/endpoint claims.
 - Section 5, current formalization status: this remaining manuscript sentence is now represented directly by the support-layer structure `Section5BoundarySegmentGenericity`. That package is already sufficient, together with the canonical start-successor theorem, to derive the paper-facing Section 5 target-facet conclusion; the unresolved work is therefore the actual geometric proof of `Section5BoundarySegmentGenericity`, not any further graph-theoretic packaging.
 - Section 5, current proof boundary: the Lean development now also has the more literal step-level perturbation package `Section5PerturbationGenericity`, whose fields say that a non-start cell is entered from a lower face, has at most one upper continuation as a `Section5Step`, and if there is no such continuation then it already contains the barycenter. This matches the manuscript's segment-intersection language more closely than the older neighbor-cardinality packaging, so the remaining work is best understood as proving `Section5PerturbationGenericity` from the paper's genericity/perturbation claim.
 - Section 6, first generalization theorem: when `y` is assumed not to lie in the convex hull of any `n` lattice points, the simplex `tau` containing `x` must actually be a facet. Otherwise `lambda(tau)` would lie in the convex hull of at most `n` lattice points, contradicting `lambda(x) = y`.

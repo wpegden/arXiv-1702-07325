@@ -258,6 +258,13 @@
   placeholder; it is specifically the proof of `Section5LocalLeftBoundaryFaceGenericity` from the
   existing exact-point/transversality geometry, together with the still-separate right-side upper
   uniqueness and endpoint hypotheses.
+  The latest refinement narrows the higher-level portion further: the support layer now names the
+  bare numeric remainder as `Section5LocalLeftCodimensionGenericity u f`, and proves that for
+  `1 < u.level` this cardinality statement plus `Section5LocalLowerTransversality u f` already
+  upgrades to the full `Section5LocalLeftBoundaryFaceGenericity u f` and hence to the lower
+  predecessor theorem. So for higher-level cells the left-side proof boundary is now purely the
+  codimension/cardinality claim; only the degenerate exact-endpoint cases (notably the level-1
+  regime) still require additional geometry beyond that.
 - Current structural blocker:
   the present `SimplexTriangulation` wrapper does not yet expose the induced simplicial
   subdivision of the prefix faces, especially the boundary edge `[e_1,e_2]`, and it also does

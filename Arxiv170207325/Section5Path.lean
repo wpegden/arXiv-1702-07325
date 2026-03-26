@@ -2943,6 +2943,30 @@ def Section5LocalLeftBoundaryFaceGenericity {n : ℕ} (u : Section5Node n)
         ∀ ⦃w : RentSimplex n⦄, w ∈ τ.vertices →
           w ∈ coordinateFace (prefixRooms n u.level)
 
+/-- The purely numeric remainder of the exact left-endpoint argument: a minimal exact left hit has
+the same number of vertices as the lower codimension-one face expected by the Section 5 picture. -/
+def Section5LocalLeftCodimensionGenericity {n : ℕ} (u : Section5Node n)
+    (f : SelfMapOnRentSimplex n) : Prop :=
+  ∀ {τ : SimplexFacet n},
+    τ ∈ section5HitParamLeftSubfaces u f →
+    (∀ σ ∈ section5HitParamLeftSubfaces u f, τ.vertices.card ≤ σ.vertices.card) →
+      τ.vertices.card = u.level
+
+theorem Section5LocalLowerTransversality.leftBoundaryFaceGenericity_of_leftCodimensionGenericity
+    {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    {u : Section5Node n} (htrans : Section5LocalLowerTransversality u f)
+    (hcodim : Section5LocalLeftCodimensionGenericity u f)
+    (hf : IsFaceRespecting f) (hfpl : IsPiecewiseAffineOn T f)
+    (hu : IsSection5GraphNode T f u) (hulevel : 1 < u.level) :
+    Section5LocalLeftBoundaryFaceGenericity u f := by
+  intro τ hτ hmin
+  have hτcard : τ.vertices.card = u.level := hcodim hτ hmin
+  have hcard : 1 < τ.vertices.card := by simpa [hτcard] using hulevel
+  refine ⟨hτcard, ?_⟩
+  intro w hw
+  exact htrans.vertex_mem_coordinateFace_of_minimal_section5HitParamLeftSubface
+    hf hfpl hu hτ hmin hcard hw
+
 theorem Section5LocalLeftBoundaryFaceGenericity.exists_section5LowerStep
     {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
     {u : Section5Node n} (hleft : Section5LocalLeftBoundaryFaceGenericity u f)
@@ -2988,6 +3012,34 @@ theorem Section5LocalLeftBoundaryFaceGenericity.exists_section5StartComponentLow
     ⟨x, hxτ, hfx⟩
   exact exists_section5StartComponentLowerStep_of_subface_card_eq_and_map_eq_hitParamLeft
     hf hfpl hu_ne hτsub hτcard hτface hxτ hfx
+
+theorem Section5LocalLowerTransversality.exists_section5LowerStep_of_leftCodimensionGenericity
+    {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    {u : Section5Node n} (htrans : Section5LocalLowerTransversality u f)
+    (hcodim : Section5LocalLeftCodimensionGenericity u f)
+    (hf : IsFaceRespecting f) (hfpl : IsPiecewiseAffineOn T f)
+    (hu : IsSection5GraphNode T f u) (hulevel : 1 < u.level) :
+    ∃ v : Section5Node n, IsSection5GraphNode T f v ∧ Section5Step f v u := by
+  have hupos : 0 < u.level := by omega
+  exact Section5LocalLeftBoundaryFaceGenericity.exists_section5LowerStep
+    (u := u)
+    (hleft := htrans.leftBoundaryFaceGenericity_of_leftCodimensionGenericity
+      hcodim hf hfpl hu hulevel)
+    hf hfpl hu hupos
+
+theorem Section5LocalLowerTransversality.exists_section5StartComponentLowerStep_of_leftCodimensionGenericity
+    {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    {hstart : IsSection5GraphNode T f (section5StartNode n)}
+    {u : section5StartComponent hstart} (htrans : Section5LocalLowerTransversality u.1.1 f)
+    (hcodim : Section5LocalLeftCodimensionGenericity u.1.1 f)
+    (hf : IsFaceRespecting f) (hfpl : IsPiecewiseAffineOn T f)
+    (hu_ne : u ≠ section5StartVertexInComponent hstart) (hulevel : 1 < u.1.1.level) :
+    ∃ v : section5StartComponent hstart, Section5Step f v.1.1 u.1.1 := by
+  exact Section5LocalLeftBoundaryFaceGenericity.exists_section5StartComponentLowerStep
+    (u := u)
+    (hleft := htrans.leftBoundaryFaceGenericity_of_leftCodimensionGenericity
+      hcodim hf hfpl ((mem_section5Nodes_iff).mp u.1.2) hulevel)
+    hf hfpl hu_ne
 
 theorem section5StartComponentGraph_lower_neighbor_unique {n : ℕ} [NeZero n]
     {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
