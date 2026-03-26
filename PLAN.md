@@ -197,7 +197,13 @@
   `IsFaceRespecting.exists_barycenter_targetFacet_of_upperCardLeOneAndEndpointRule`, so once the
   manuscript's perturbation argument is formalized strongly enough to show
   `(section5UpperNeighbors v).card ≤ 1` and the corresponding endpoint rule, the final Section 5
-  target-facet theorem follows immediately without any further graph packaging.
+  target-facet theorem follows immediately without any further graph packaging. In addition,
+  `Section5Path.lean` now has an even closer bridge to the manuscript's segment language:
+  uniqueness of upper `Section5Step` continuations implies `(section5UpperNeighbors v).card ≤ 1`,
+  and step-level lower/upper/endpoint hypotheses assemble directly into
+  `Section5OneComplexGeometry` and the canonical target-facet theorem. So the remaining proof
+  boundary can now be stated entirely in terms of the barycenter-chain segment hitting the
+  codimension-one faces of one simplex cell.
 - Current structural blocker:
   the present `SimplexTriangulation` wrapper does not yet expose the induced simplicial
   subdivision of the prefix faces, especially the boundary edge `[e_1,e_2]`, and it also does

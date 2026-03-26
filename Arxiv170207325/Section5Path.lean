@@ -2075,6 +2075,41 @@ theorem section5BoundaryNeighbors_card_le_two_of_upper_card_le_one {n : ℕ} [Ne
   have hlower : (section5LowerNeighbors v).card ≤ 1 := section5LowerNeighbors_card_le_one v
   omega
 
+theorem section5UpperNeighbors_card_le_one_of_step_unique {n : ℕ} [NeZero n]
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    {hstart : IsSection5GraphNode T f (section5StartNode n)}
+    (hupper :
+      ∀ {v u w : section5StartComponent hstart},
+        Section5Step f v.1.1 u.1.1 →
+        Section5Step f v.1.1 w.1.1 →
+          u = w)
+    (v : section5StartComponent hstart) :
+    (section5UpperNeighbors v).card ≤ 1 := by
+  classical
+  rw [Finset.card_le_one]
+  intro u hu w hw
+  have huAdj : (section5StartComponentGraph hstart).Adj v u :=
+    (mem_section5UpperNeighbors_iff.mp hu).1
+  have huLevel : v.1.1.level + 1 = u.1.1.level :=
+    (mem_section5UpperNeighbors_iff.mp hu).2
+  have hwAdj : (section5StartComponentGraph hstart).Adj v w :=
+    (mem_section5UpperNeighbors_iff.mp hw).1
+  have hwLevel : v.1.1.level + 1 = w.1.1.level :=
+    (mem_section5UpperNeighbors_iff.mp hw).2
+  have huStep : Section5Step f v.1.1 u.1.1 := by
+    rcases (section5StartComponentGraph_adj_iff hstart).mp huAdj with huStep | huuStep
+    · exact huStep
+    · have hcontra : v.1.1.level + 1 + 1 = v.1.1.level := by
+        simpa [huLevel, Nat.add_assoc] using huuStep.1
+      omega
+  have hwStep : Section5Step f v.1.1 w.1.1 := by
+    rcases (section5StartComponentGraph_adj_iff hstart).mp hwAdj with hwStep | hwwStep
+    · exact hwStep
+    · have hcontra : v.1.1.level + 1 + 1 = v.1.1.level := by
+        simpa [hwLevel, Nat.add_assoc] using hwwStep.1
+      omega
+  exact hupper huStep hwStep
+
 /-- A local 1-dimensional-cell-complex package for the real Section 5 start component.
 It records that every non-start node is entered from a unique lower-level neighbor, each node has
 at most one higher-level continuation, and a node with no higher-level continuation already hits
@@ -2135,6 +2170,48 @@ theorem section5OneComplexGeometry_of_remainingFields {n : ℕ} [NeZero n]
   refine ⟨hlower, ?_, hupper, hendpoint⟩
   intro u w v huv huLevel hwv hwLevel
   exact section5StartComponentGraph_lower_neighbor_unique huv huLevel hwv hwLevel
+
+theorem section5OneComplexGeometry_of_stepGenericity {n : ℕ} [NeZero n]
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    {hstart : IsSection5GraphNode T f (section5StartNode n)}
+    (hlower :
+      ∀ v : section5StartComponent hstart,
+        v ≠ section5StartVertexInComponent hstart →
+          ∃ u : section5StartComponent hstart, Section5Step f u.1.1 v.1.1)
+    (hupper :
+      ∀ {v u w : section5StartComponent hstart},
+        Section5Step f v.1.1 u.1.1 →
+        Section5Step f v.1.1 w.1.1 →
+          u = w)
+    (hendpoint :
+      ∀ v : section5StartComponent hstart,
+        (¬ ∃ w : section5StartComponent hstart, Section5Step f v.1.1 w.1.1) →
+          IsSection5Endpoint T f v.1.1) :
+    Section5OneComplexGeometry T f hstart := by
+  refine section5OneComplexGeometry_of_remainingFields ?_ ?_ ?_
+  · intro v hv
+    rcases hlower v hv with ⟨u, huStep⟩
+    refine ⟨u, ?_, huStep.1⟩
+    exact (section5StartComponentGraph_adj_iff hstart).mpr (Or.inl huStep)
+  · intro v u w huAdj huLevel hwAdj hwLevel
+    have huStep : Section5Step f v.1.1 u.1.1 := by
+      rcases (section5StartComponentGraph_adj_iff hstart).mp huAdj with huStep | huuStep
+      · exact huStep
+      · have hcontra : v.1.1.level + 1 + 1 = v.1.1.level := by
+          simpa [huLevel, Nat.add_assoc] using huuStep.1
+        omega
+    have hwStep : Section5Step f v.1.1 w.1.1 := by
+      rcases (section5StartComponentGraph_adj_iff hstart).mp hwAdj with hwStep | hwwStep
+      · exact hwStep
+      · have hcontra : v.1.1.level + 1 + 1 = v.1.1.level := by
+          simpa [hwLevel, Nat.add_assoc] using hwwStep.1
+        omega
+    exact hupper huStep hwStep
+  · intro v hno
+    apply hendpoint v
+    intro hstep
+    rcases hstep with ⟨w, hwStep⟩
+    exact hno ⟨w, (section5StartComponentGraph_adj_iff hstart).mpr (Or.inl hwStep), hwStep.1⟩
 
 theorem Section5OneComplexGeometry.degree_le_two {n : ℕ} [NeZero n]
     {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
@@ -2417,6 +2494,29 @@ theorem Section5CanonicalBoundarySuccessorData.exists_targetFacet_of_boundarySeg
     (T := T) (f := f) (hstart := hf.section5StartNode_isGraphNode)
     (hsucc.toStartBoundaryGeometry hf) hseg).exists_targetFacet hf
 
+theorem Section5CanonicalBoundarySuccessorData.exists_targetFacet_of_stepGenericity
+    {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    (hf : IsFaceRespecting f) (hsucc : Section5CanonicalBoundarySuccessorData T f hf)
+    (hlower :
+      ∀ v : section5CanonicalStartComponent (T := T) (f := f) hf,
+        v ≠ section5CanonicalStartVertexInComponent (T := T) (f := f) hf →
+          ∃ u : section5CanonicalStartComponent (T := T) (f := f) hf, Section5Step f u.1.1 v.1.1)
+    (hupper :
+      ∀ {v u w : section5CanonicalStartComponent (T := T) (f := f) hf},
+        Section5Step f v.1.1 u.1.1 →
+        Section5Step f v.1.1 w.1.1 →
+          u = w)
+    (hendpoint :
+      ∀ v : section5CanonicalStartComponent (T := T) (f := f) hf,
+        (¬ ∃ w : section5CanonicalStartComponent (T := T) (f := f) hf,
+          Section5Step f v.1.1 w.1.1) →
+          IsSection5Endpoint T f v.1.1) :
+    ∃ τ ∈ T.facets,
+      FacetImageContains f τ ((rentBarycenter n : RentSimplex n) : RentCoordinates n) := by
+  exact hsucc.exists_targetFacet_of_oneComplexGeometry hf <|
+    section5OneComplexGeometry_of_stepGenericity
+      (T := T) (f := f) (hstart := hf.section5StartNode_isGraphNode) hlower hupper hendpoint
+
 theorem IsFaceRespecting.exists_barycenter_targetFacet_of_two_le_and_boundarySegmentGenericity
     {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
     (hn : 2 ≤ n) (hf : IsFaceRespecting f)
@@ -2425,6 +2525,29 @@ theorem IsFaceRespecting.exists_barycenter_targetFacet_of_two_le_and_boundarySeg
       FacetImageContains f τ ((rentBarycenter n : RentSimplex n) : RentCoordinates n) := by
   exact Section5CanonicalBoundarySuccessorData.exists_targetFacet_of_boundarySegmentGenericity
     (T := T) (f := f) hf (hf.section5CanonicalBoundarySuccessorData_of_two_le hn) hseg
+
+theorem IsFaceRespecting.exists_barycenter_targetFacet_of_two_le_and_stepGenericity
+    {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    (hn : 2 ≤ n) (hf : IsFaceRespecting f)
+    (hlower :
+      ∀ v : section5CanonicalStartComponent (T := T) (f := f) hf,
+        v ≠ section5CanonicalStartVertexInComponent (T := T) (f := f) hf →
+          ∃ u : section5CanonicalStartComponent (T := T) (f := f) hf, Section5Step f u.1.1 v.1.1)
+    (hupper :
+      ∀ {v u w : section5CanonicalStartComponent (T := T) (f := f) hf},
+        Section5Step f v.1.1 u.1.1 →
+        Section5Step f v.1.1 w.1.1 →
+          u = w)
+    (hendpoint :
+      ∀ v : section5CanonicalStartComponent (T := T) (f := f) hf,
+        (¬ ∃ w : section5CanonicalStartComponent (T := T) (f := f) hf,
+          Section5Step f v.1.1 w.1.1) →
+          IsSection5Endpoint T f v.1.1) :
+    ∃ τ ∈ T.facets,
+      FacetImageContains f τ ((rentBarycenter n : RentSimplex n) : RentCoordinates n) := by
+  exact Section5CanonicalBoundarySuccessorData.exists_targetFacet_of_stepGenericity
+    (T := T) (f := f) hf (hf.section5CanonicalBoundarySuccessorData_of_two_le hn)
+    hlower hupper hendpoint
 
 theorem IsFaceRespecting.exists_barycenter_targetFacet_of_boundarySegmentGenericity
     {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}

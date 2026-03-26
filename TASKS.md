@@ -41,6 +41,7 @@
 - [x] Add the final `IsFaceRespecting`-level Section 5 wrapper: the trivial `n = 1` case and the `2 ≤ n` canonical-start case are now combined into `IsFaceRespecting.exists_barycenter_targetFacet_of_boundarySegmentGenericity`, so the remaining obstruction is exactly the proof of `Section5BoundarySegmentGenericity`.
 - [x] Make the lower-side boundary-neighbor combinatorics explicit in `Section5Path.lean`: prove `(section5LowerNeighbors v).card ≤ 1`, disjointness of lower and upper neighbor finsets, and the resulting cardinality decomposition reducing `boundaryNeighbors_card_le_two` to an upper-neighbor bound.
 - [x] Collapse the remaining Section 5 wrapper gap to the true upper-side geometric hypotheses by proving `IsFaceRespecting.exists_barycenter_targetFacet_of_upperCardLeOneAndEndpointRule`.
+- [x] Add a step-level Section 5 bridge closer to the manuscript: prove upper-neighbor cardinality from uniqueness of `Section5Step` continuations, build `Section5OneComplexGeometry` from step-level lower/upper/endpoint hypotheses, and expose the resulting canonical target-facet theorem.
 - [ ] Prove the actual `Section5BoundarySegmentGenericity` fields from the manuscript's perturbation / segment-intersection picture on the barycenter-chain preimage.
 - [ ] If needed for cleanup rather than the main proof path, finish the remaining `Section5OneComplexGeometry` fields by deriving upper-continuation uniqueness and the no-upper-neighbor endpoint rule from the same geometric input.
 
