@@ -2316,6 +2316,45 @@ theorem Section5LowerEntryFaceData.exists_startComponentLowerStep {n : ℕ} [NeZ
     hu_ne hentry.isSubface hentry.card_eq hentry.lower_prefix_vertices
     hentry.hits_barycenter
 
+def section5LowerEntryFaceData_of_card_eq_and_facetImageContains {n : ℕ}
+    {f : SelfMapOnRentSimplex n} (u : Section5Node n)
+    (hcard : (section5LowerPrefixVertices u).card = u.level)
+    (hhit :
+      FacetImageContains f (⟨section5LowerPrefixVertices u⟩ : SimplexFacet n)
+        (prefixBarycenter n u.level)) :
+    Section5LowerEntryFaceData u f := by
+  classical
+  refine ⟨⟨section5LowerPrefixVertices u⟩, section5LowerPrefixVertices_isSubface u, hcard, ?_,
+    hhit⟩
+  intro w hw
+  exact (Finset.mem_filter.mp hw).2
+
+def section5LowerEntryFaceData_of_card_eq_and_mem_realization_map_prefixBarycenter
+    {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    (hfpl : IsPiecewiseAffineOn T f) {u : Section5Node n} (hu : IsSection5GraphNode T f u)
+    {x : RentSimplex n}
+    (hxτ : ((x : RentSimplex n) : RentCoordinates n) ∈ u.cell.realization)
+    (hxFace : x ∈ coordinateFace (prefixRooms n u.level))
+    (hfx : f x = prefixBarycenter n u.level)
+    (hcard : (section5LowerPrefixVertices u).card = u.level) :
+    Section5LowerEntryFaceData u f := by
+  exact section5LowerEntryFaceData_of_card_eq_and_facetImageContains u hcard
+    (hfpl.facetImageContains_section5LowerPrefixVertices_of_mem_realization hu hxτ hxFace hfx)
+
+def section5LowerEntryFaceData_of_card_eq_and_mem_realization_map_segment
+    {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    (hf : IsFaceRespecting f) (hfpl : IsPiecewiseAffineOn T f)
+    {u : Section5Node n} (hu : IsSection5GraphNode T f u) (hulevel : 0 < u.level)
+    {x : RentSimplex n}
+    (hxτ : ((x : RentSimplex n) : RentCoordinates n) ∈ u.cell.realization)
+    (hxFace : x ∈ coordinateFace (prefixRooms n u.level))
+    (hfxSeg : f x ∈ prefixBarycenterSegment n u.level)
+    (hcard : (section5LowerPrefixVertices u).card = u.level) :
+    Section5LowerEntryFaceData u f := by
+  exact section5LowerEntryFaceData_of_card_eq_and_facetImageContains u hcard
+    (hfpl.facetImageContains_section5LowerPrefixVertices_of_mem_realization_of_map_mem_segment
+      hf hu hulevel hxτ hxFace hfxSeg)
+
 theorem exists_section5LowerStep_of_card_eq_and_mem_realization_map_prefixBarycenter
     {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
     (hfpl : IsPiecewiseAffineOn T f) {u : Section5Node n} (hu : IsSection5GraphNode T f u)

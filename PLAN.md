@@ -197,6 +197,12 @@
   1-dimensional slice picture, with `ρ.vertices.card = u.level`, every vertex of `ρ` in
   `coordinateFace (prefixRooms n u.level)`, and `FacetImageContains f ρ
   (prefixBarycenter n u.level)`.
+  The newest cleanup makes this canonical rather than existential: the filtered face
+  `⟨section5LowerPrefixVertices u⟩` is now packaged directly as `Section5LowerEntryFaceData u f`
+  as soon as one proves its cardinality is `u.level` and its image contains
+  `prefixBarycenter n u.level` (or equivalently exhibits one lower-prefix slice point mapping
+  there). So the remaining local geometry has been reduced to exactly those two cell-level facts
+  on the canonical lower-prefix face, rather than to a search for an unnamed subface `ρ`.
   The older `Section5OneComplexGeometry` layer remains useful as cleanup, but it is no longer the
   main proof boundary.
   A first concrete fragment is already in place: level `0` is rigidly the start node, so any
