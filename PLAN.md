@@ -188,6 +188,11 @@
   `IsFaceRespecting.exists_barycenter_targetFacet_of_boundarySegmentGenericity`, which combines the
   trivial `n = 1` base case with the `2 ≤ n` canonical-start theorem, so the only missing input
   at the Section 5 theorem boundary is a proof of `Section5BoundarySegmentGenericity` itself.
+  The lower-side part of that package is now completely explicit: `Section5Path.lean` proves
+  `(section5LowerNeighbors v).card ≤ 1`, that lower and upper neighbor finsets are disjoint, and
+  that `section5BoundaryNeighbors v` has cardinality equal to the sum of the lower and upper
+  cardinalities. So the remaining geometric input has been narrowed further to the upper-side
+  bound and the endpoint rule when no upper continuation exists.
 - Current structural blocker:
   the present `SimplexTriangulation` wrapper does not yet expose the induced simplicial
   subdivision of the prefix faces, especially the boundary edge `[e_1,e_2]`, and it also does

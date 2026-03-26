@@ -2025,6 +2025,56 @@ theorem section5UpperNeighbors_eq_empty_of_noUpper {n : ℕ} [NeZero n]
   intro w hw
   exact hno ⟨w, (mem_section5UpperNeighbors_iff).mp hw⟩
 
+theorem section5LowerNeighbors_card_le_one {n : ℕ} [NeZero n]
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    {hstart : IsSection5GraphNode T f (section5StartNode n)}
+    (v : section5StartComponent hstart) :
+    (section5LowerNeighbors v).card ≤ 1 := by
+  classical
+  rw [Finset.card_le_one]
+  intro u hu w hw
+  exact section5StartComponentGraph_lower_neighbor_unique
+    (mem_section5LowerNeighbors_iff.mp hu).1
+    (mem_section5LowerNeighbors_iff.mp hu).2
+    (mem_section5LowerNeighbors_iff.mp hw).1
+    (mem_section5LowerNeighbors_iff.mp hw).2
+
+theorem section5LowerUpperNeighbors_disjoint {n : ℕ} [NeZero n]
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    {hstart : IsSection5GraphNode T f (section5StartNode n)}
+    (v : section5StartComponent hstart) :
+    Disjoint (section5LowerNeighbors v) (section5UpperNeighbors v) := by
+  classical
+  rw [Finset.disjoint_left]
+  intro u hu hu'
+  have huLevel : u.1.1.level + 1 = v.1.1.level :=
+    (mem_section5LowerNeighbors_iff.mp hu).2
+  have huLevel' : v.1.1.level + 1 = u.1.1.level :=
+    (mem_section5UpperNeighbors_iff.mp hu').2
+  have : u.1.1.level + 1 + 1 = u.1.1.level := by
+    simpa [huLevel, Nat.add_assoc] using huLevel'
+  omega
+
+theorem section5BoundaryNeighbors_card_eq_lower_add_upper {n : ℕ} [NeZero n]
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    {hstart : IsSection5GraphNode T f (section5StartNode n)}
+    (v : section5StartComponent hstart) :
+    (section5BoundaryNeighbors v).card =
+      (section5LowerNeighbors v).card + (section5UpperNeighbors v).card := by
+  classical
+  rw [section5BoundaryNeighbors, Finset.card_union_of_disjoint]
+  exact section5LowerUpperNeighbors_disjoint v
+
+theorem section5BoundaryNeighbors_card_le_two_of_upper_card_le_one {n : ℕ} [NeZero n]
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    {hstart : IsSection5GraphNode T f (section5StartNode n)}
+    {v : section5StartComponent hstart}
+    (hupper : (section5UpperNeighbors v).card ≤ 1) :
+    (section5BoundaryNeighbors v).card ≤ 2 := by
+  rw [section5BoundaryNeighbors_card_eq_lower_add_upper]
+  have hlower : (section5LowerNeighbors v).card ≤ 1 := section5LowerNeighbors_card_le_one v
+  omega
+
 /-- A local 1-dimensional-cell-complex package for the real Section 5 start component.
 It records that every non-start node is entered from a unique lower-level neighbor, each node has
 at most one higher-level continuation, and a node with no higher-level continuation already hits
