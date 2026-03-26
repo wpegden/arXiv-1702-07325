@@ -2440,4 +2440,25 @@ theorem IsFaceRespecting.exists_barycenter_targetFacet_of_boundarySegmentGeneric
     have hn : 2 ≤ n := by omega
     exact hf.exists_barycenter_targetFacet_of_two_le_and_boundarySegmentGenericity hn (hseg hn)
 
+theorem IsFaceRespecting.exists_barycenter_targetFacet_of_upperCardLeOneAndEndpointRule
+    {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    (hf : IsFaceRespecting f)
+    (hupper :
+      ∀ v : section5CanonicalStartComponent (T := T) (f := f) hf,
+        (section5UpperNeighbors v).card ≤ 1)
+    (hendpoint :
+      ∀ v : section5CanonicalStartComponent (T := T) (f := f) hf,
+        v ≠ section5CanonicalStartVertexInComponent (T := T) (f := f) hf →
+          (section5BoundaryNeighbors v).card = 1 →
+            IsSection5Endpoint T f v.1.1) :
+    ∃ τ ∈ T.facets,
+      FacetImageContains f τ ((rentBarycenter n : RentSimplex n) : RentCoordinates n) := by
+  refine hf.exists_barycenter_targetFacet_of_boundarySegmentGenericity ?_
+  intro hn
+  refine ⟨?_, ?_⟩
+  · intro v
+    exact section5BoundaryNeighbors_card_le_two_of_upper_card_le_one (hupper v)
+  · intro v hv hcard
+    exact hendpoint v hv hcard
+
 end Arxiv170207325

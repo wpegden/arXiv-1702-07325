@@ -192,7 +192,12 @@
   `(section5LowerNeighbors v).card ≤ 1`, that lower and upper neighbor finsets are disjoint, and
   that `section5BoundaryNeighbors v` has cardinality equal to the sum of the lower and upper
   cardinalities. So the remaining geometric input has been narrowed further to the upper-side
-  bound and the endpoint rule when no upper continuation exists.
+  bound and the endpoint rule when no upper continuation exists. The last proof-theoretic wrapper
+  has now also been removed: `Section5Path.lean` exposes
+  `IsFaceRespecting.exists_barycenter_targetFacet_of_upperCardLeOneAndEndpointRule`, so once the
+  manuscript's perturbation argument is formalized strongly enough to show
+  `(section5UpperNeighbors v).card ≤ 1` and the corresponding endpoint rule, the final Section 5
+  target-facet theorem follows immediately without any further graph packaging.
 - Current structural blocker:
   the present `SimplexTriangulation` wrapper does not yet expose the induced simplicial
   subdivision of the prefix faces, especially the boundary edge `[e_1,e_2]`, and it also does
