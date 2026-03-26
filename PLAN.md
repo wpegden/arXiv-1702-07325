@@ -255,11 +255,13 @@
   `IsPiecewiseAffineOn.exists_erased_face_point_of_minimal_section5SegmentSubface` now packages
   the domain-side part of this erasure completely: after choosing `v`, it builds a point `x'` in
   the erased face realization and a coefficient `0 < c < 1` such that the original witness point
-  is `lineMap x' v c` and its image is `lineMap (f x') (f v) c`. So the remaining obstruction is
-  now an explicit codomain lemma: prove that when `v` lies outside the lower prefix face, this
-  affine image formula still forces `f x' ∈ [b_k,b_{k+1}]`, which is exactly the erased-face
-  membership needed for the minimality contradiction. The older `section5LowerPrefixVertices`
-  route remains
+  is `lineMap x' v c` and its image is `lineMap (f x') (f v) c`. However, a direct codomain lemma
+  saying that `lineMap (f x') (f v) c ∈ [b_k,b_{k+1}]` forces `f x' ∈ [b_k,b_{k+1}]` is false
+  under the current ambient-face hypotheses alone; a concrete counterexample now appears in
+  `PAPERNOTES.md`. So the next move is not to keep pushing that bare erased-face lemma, but to
+  encode the extra transversality/genericity input the manuscript is actually using on one cell,
+  or else to return to `Section5BoundarySegmentGenericity` as the honest statement of the missing
+  geometric content. The older `section5LowerPrefixVertices` route remains
   available as a fallback, and the new local
   obstruction theorem still records that if the
   filtered lower subface already hits `b_k`, then every room in `prefixRooms n k` appears in the
