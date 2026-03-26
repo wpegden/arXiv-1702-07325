@@ -239,6 +239,13 @@
   So if the current API still cannot derive the lower boundary face from first principles, this
   structure is now the exact honest hypothesis to target from the manuscript's quoted genericity
   sentence, rather than any further graph-translation wrapper.
+  This support layer is now also named globally on the real start component:
+  `Section5BoundaryFaceGenericity` asks for that exact lower-boundary-face datum on every
+  non-start node, keeps the existing upper-step uniqueness and endpoint fields, and then compiles
+  directly to `Section5SimplexSliceBoundaryGeometry`, `Section5PerturbationGenericity`, and
+  `Section5BoundarySegmentGenericity`. So the outstanding geometric frontier is now sharply
+  phrased: prove the lower field of `Section5BoundaryFaceGenericity` from the manuscript's
+  1-dimensional slice picture, rather than discovering any new graph infrastructure.
   So the remaining honest geometry on `u.cell` is now: prove that the slice reaches the lower
   prefix face, and prove that the canonical lower-prefix face has exactly `u.level` vertices.
   The older `Section5OneComplexGeometry` layer remains useful as cleanup, but it is no longer the

@@ -3648,6 +3648,27 @@ structure Section5SimplexSliceBoundaryGeometry {n : ℕ} [NeZero n]
       (¬ ∃ w : section5StartComponent hstart, Section5Step f v.1.1 w.1.1) →
         IsSection5Endpoint T f v.1.1
 
+/-- Exact support-layer version of the paper's quoted genericity sentence in lower-boundary-face
+language: every non-start cell has minimal segment-hitting data with one codimension-one lower
+entry face carrying a point on the barycenter segment, while the upper continuation and endpoint
+fields remain in the step language. -/
+structure Section5BoundaryFaceGenericity {n : ℕ} [NeZero n]
+    (T : SimplexTriangulation n) (f : SelfMapOnRentSimplex n)
+    (hstart : IsSection5GraphNode T f (section5StartNode n)) where
+  lower_boundary_face_data_of_ne_start :
+    ∀ v : section5StartComponent hstart,
+      v ≠ section5StartVertexInComponent hstart →
+        Section5MinimalSliceLowerBoundaryFaceData v.1.1 f
+  upper_step_unique :
+    ∀ {v u w : section5StartComponent hstart},
+      Section5Step f v.1.1 u.1.1 →
+      Section5Step f v.1.1 w.1.1 →
+        u = w
+  no_upper_step_is_endpoint :
+    ∀ v : section5StartComponent hstart,
+      (¬ ∃ w : section5StartComponent hstart, Section5Step f v.1.1 w.1.1) →
+        IsSection5Endpoint T f v.1.1
+
 /-- Direct global genericity in the manuscript's lower-entry-face language: every non-start cell
 is entered through a lower codimension-one face whose image contains the next prefix barycenter,
 while the upper continuation and endpoint fields remain in step language. -/
@@ -3731,6 +3752,19 @@ theorem Section5SimplexSliceBoundaryGeometry.card_eq_lowerPrefixVertices_and_exi
   exact
     (hgeom.lower_boundary_geometry_of_ne_start v hv).card_eq_lowerPrefixVertices_and_exists_point
       hf hfpl hv_node hv_level
+
+def Section5BoundaryFaceGenericity.toSimplexSliceBoundaryGeometry {n : ℕ} [NeZero n]
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    (hfpl : IsPiecewiseAffineOn T f)
+    {hstart : IsSection5GraphNode T f (section5StartNode n)}
+    (hface : Section5BoundaryFaceGenericity T f hstart) :
+    Section5SimplexSliceBoundaryGeometry T f hstart := by
+  refine ⟨?_, hface.upper_step_unique, hface.no_upper_step_is_endpoint⟩
+  intro v hv
+  have hv_node : IsSection5GraphNode T f v.1.1 := (mem_section5Nodes_iff).mp v.1.2
+  have hv_level : 0 < v.1.1.level := section5StartComponent_pos_level_of_ne_start hv
+  exact (hface.lower_boundary_face_data_of_ne_start v hv).toLowerBoundaryGeometry
+    hfpl hv_node hv_level
 
 def Section5SimplexSliceBoundaryGeometry.toSimplexSliceGenericity {n : ℕ} [NeZero n]
     {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
@@ -4019,6 +4053,14 @@ theorem Section5SimplexSliceBoundaryGeometry.toPerturbationGenericity {n : ℕ} 
   exact ((hgeom.lower_boundary_geometry_of_ne_start v hv).toMinimalSliceFaceData
     hfpl hv_node hv_level).exists_startComponentLowerStep hf hfpl hv
 
+theorem Section5BoundaryFaceGenericity.toPerturbationGenericity {n : ℕ} [NeZero n]
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    (hf : IsFaceRespecting f) (hfpl : IsPiecewiseAffineOn T f)
+    {hstart : IsSection5GraphNode T f (section5StartNode n)}
+    (hface : Section5BoundaryFaceGenericity T f hstart) :
+    Section5PerturbationGenericity T f hstart := by
+  exact (hface.toSimplexSliceBoundaryGeometry hfpl).toPerturbationGenericity hf hfpl
+
 theorem Section5EntryFaceGenericity.toPerturbationGenericity {n : ℕ} [NeZero n]
     {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
     {hstart : IsSection5GraphNode T f (section5StartNode n)}
@@ -4075,6 +4117,14 @@ theorem Section5EntryFaceGenericity.toBoundarySegmentGenericity {n : ℕ} [NeZer
     (hentry : Section5EntryFaceGenericity T f hstart) :
     Section5BoundarySegmentGenericity T f hstart := by
   exact hentry.toPerturbationGenericity.toBoundarySegmentGenericity
+
+theorem Section5BoundaryFaceGenericity.toBoundarySegmentGenericity {n : ℕ} [NeZero n]
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    (hf : IsFaceRespecting f) (hfpl : IsPiecewiseAffineOn T f)
+    {hstart : IsSection5GraphNode T f (section5StartNode n)}
+    (hface : Section5BoundaryFaceGenericity T f hstart) :
+    Section5BoundarySegmentGenericity T f hstart := by
+  exact (hface.toPerturbationGenericity hf hfpl).toBoundarySegmentGenericity
 
 theorem Section5SimplexSliceGenericity.toBoundarySegmentGenericity {n : ℕ} [NeZero n]
     {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
