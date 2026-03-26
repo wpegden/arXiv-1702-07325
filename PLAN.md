@@ -314,14 +314,19 @@
   `section5Step_vertices_eq_lowerPrefixVertices` already gives
   `u.cell.vertices = section5LowerPrefixVertices v = section5LowerPrefixVertices w`, so the
   remaining theorem is purely triangulation-side for `0 < u.level`. The newest Lean reduction now
-  sharpens it once more: if two upper-step cells from the same source are subfaces of one common
-  ambient triangulation facet, then affine-independence plus the prefix-face cardinality bound
-  already force those upper cells to have the same full vertex set. So the actual unresolved
+  sharpens it twice more. First, any graph node `u` and any upper step `v -> u` are identified
+  with the exact prefix-face vertex filter cut out inside an ambient facet:
+  `u.cell.vertices = facetPrefixVertices τ (u.level + 1)` for every facet `τ` containing `u.cell`,
+  and `v.cell.vertices = facetPrefixVertices τ u.level` for every such `τ`. Second, same-source
+  upper-step uniqueness is now reduced to equality of those next-prefix filters:
+  if two ambient facets `τu, τw` containing the two target cells satisfy
+  `facetPrefixVertices τu (u.level + 1) = facetPrefixVertices τw (w.level + 1)`, then the two
+  upper cells are already equal. The older common-ambient-facet theorem is therefore only one
+  sufficient corollary of this sharper filter-equality reduction. So the actual unresolved
   structural lemma is now a boundary-star statement: for any full-dimensional boundary cell `σ` in
-  `coordinateFace (prefixRooms n (k + 1))`, any two `(k+1)`-faces of the triangulation inside
-  `coordinateFace (prefixRooms n (k + 2))` that have lower-prefix vertex set `σ` must in fact lie
-  in a common ambient facet, equivalently `σ` has at most one incident `(k+1)`-cell on that upper
-  side.
+  `coordinateFace (prefixRooms n (k + 1))`, any two incident facets on the
+  `coordinateFace (prefixRooms n (k + 2))` side cut out the same `facetPrefixVertices` filter,
+  equivalently determine the same `(k+1)`-cell above `σ`.
   On the packaging side, the remaining graph-theoretic conversion gap is now gone: the support
   layer proves `Section5PerturbationGenericity.toBoundarySegmentGenericity`, and the existing
   local-left/upper-endpoint wrapper is rerouted through

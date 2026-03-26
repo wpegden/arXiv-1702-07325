@@ -2395,6 +2395,78 @@ theorem section5Step_vertex_not_mem_source_not_mem_coordinateFace {n : ℕ}
   rw [← section5Step_vertices_eq_lowerPrefixVertices hv hu huv] at ha_lower
   exact ha_not ha_lower
 
+/-- The vertices of one facet that lie in the prefix face `coordinateFace (prefixRooms n k)`. -/
+def facetPrefixVertices {n : ℕ} (τ : SimplexFacet n) (k : ℕ) : Finset (RentSimplex n) := by
+  classical
+  exact τ.vertices.filter fun x => x ∈ coordinateFace (prefixRooms n k)
+
+@[simp]
+theorem mem_facetPrefixVertices {n : ℕ} {τ : SimplexFacet n} {k : ℕ} {x : RentSimplex n} :
+    x ∈ facetPrefixVertices τ k ↔
+      x ∈ τ.vertices ∧ x ∈ coordinateFace (prefixRooms n k) := by
+  classical
+  simp [facetPrefixVertices]
+
+theorem IsSection5GraphNode.cell_vertices_eq_filter_prefix_vertices_of_subface_facet {n : ℕ}
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n} {u : Section5Node n}
+    (hu : IsSection5GraphNode T f u) {τ : SimplexFacet n}
+    (hτ : τ ∈ T.facets) (huτ : u.cell.IsSubfaceOf τ) :
+    u.cell.vertices = facetPrefixVertices τ (u.level + 1) := by
+  classical
+  refine Finset.eq_of_subset_of_card_le ?_ ?_
+  · intro x hx
+    exact mem_facetPrefixVertices.mpr ⟨huτ hx, hu.prefix_vertices hx⟩
+  · have hcard :=
+        T.card_le_prefixVertexPoints_of_subset_coordinateFace hτ
+          (show facetPrefixVertices τ (u.level + 1) ⊆ τ.vertices by
+            intro x hx
+            exact (mem_facetPrefixVertices.mp hx).1)
+          (by
+          intro x hx
+          exact (mem_facetPrefixVertices.mp hx).2)
+    rw [prefixVertexPoints_card hu.level_le] at hcard
+    simpa [hu.card_eq] using hcard
+
+theorem section5Step_source_cell_vertices_eq_filter_lower_prefix_of_subface_facet {n : ℕ}
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n} {v u : Section5Node n}
+    (hv : IsSection5GraphNode T f v) (hu : IsSection5GraphNode T f u)
+    (huv : Section5Step f v u) {τ : SimplexFacet n}
+    (hτ : τ ∈ T.facets) (huτ : u.cell.IsSubfaceOf τ) :
+    v.cell.vertices = facetPrefixVertices τ u.level := by
+  classical
+  refine Finset.eq_of_subset_of_card_le ?_ ?_
+  · intro x hx
+    refine mem_facetPrefixVertices.mpr ⟨huτ (huv.2.1 hx), ?_⟩
+    simpa [← huv.1] using hv.prefix_vertices hx
+  · have hcard :=
+      T.card_le_prefixVertexPoints_of_subset_coordinateFace hτ
+        (show facetPrefixVertices τ u.level ⊆ τ.vertices by
+          intro x hx
+          exact (mem_facetPrefixVertices.mp hx).1)
+        (by
+          intro x hx
+          exact (mem_facetPrefixVertices.mp hx).2)
+    have hulevel_le : u.level ≤ n := Nat.le_trans (Nat.le_succ u.level) hu.level_le
+    rw [prefixVertexPoints_card hulevel_le] at hcard
+    simpa [hv.card_eq, ← huv.1] using hcard
+
+theorem section5Step_same_source_eq_of_facetPrefixVertices_eq {n : ℕ}
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n} {v u w : Section5Node n}
+    (hu : IsSection5GraphNode T f u) (hw : IsSection5GraphNode T f w)
+    (huv : Section5Step f v u) (hvw : Section5Step f v w)
+    {τu τw : SimplexFacet n} (hτu : τu ∈ T.facets) (hτw : τw ∈ T.facets)
+    (huτu : u.cell.IsSubfaceOf τu) (hwτw : w.cell.IsSubfaceOf τw)
+    (hprefix :
+      facetPrefixVertices τu (u.level + 1) = facetPrefixVertices τw (w.level + 1)) :
+    u = w := by
+  apply section5Step_same_source_eq_of_cell_vertices_eq huv hvw
+  calc
+    u.cell.vertices = facetPrefixVertices τu (u.level + 1) :=
+      hu.cell_vertices_eq_filter_prefix_vertices_of_subface_facet hτu huτu
+    _ = facetPrefixVertices τw (w.level + 1) := hprefix
+    _ = w.cell.vertices :=
+      (hw.cell_vertices_eq_filter_prefix_vertices_of_subface_facet hτw hwτw).symm
+
 theorem section5Step_same_source_cell_vertices_eq_of_subfaces_same_facet {n : ℕ}
     {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n} {v u w : Section5Node n}
     (hv : IsSection5GraphNode T f v) (hu : IsSection5GraphNode T f u)
@@ -3578,15 +3650,22 @@ theorem section5StartComponent_upper_step_unique_of_pos_level_common_ambientFace
       Section5Step f v.1.1 u.1.1 →
       Section5Step f v.1.1 w.1.1 →
         u = w := by
-  refine section5StartComponent_upper_step_unique_of_pos_level_cell_vertices_eq ?_
-  intro v u w hvpos huv hvw
-  obtain ⟨τ, hτ, huτ, hwτ⟩ := hfacet hvpos huv hvw
-  have hv_node : IsSection5GraphNode T f v.1.1 := (mem_section5Nodes_iff.mp v.1.2)
-  have hu_node : IsSection5GraphNode T f u.1.1 := (mem_section5Nodes_iff.mp u.1.2)
-  have hw_node : IsSection5GraphNode T f w.1.1 := (mem_section5Nodes_iff.mp w.1.2)
-  exact
-    section5Step_same_source_cell_vertices_eq_of_subfaces_same_facet
-      hv_node hu_node hw_node huv hvw hτ huτ hwτ
+  intro v u w huv hvw
+  by_cases hvzero : v.1.1.level = 0
+  · exact section5StartComponent_upper_step_unique_of_levelZero hvzero huv hvw
+  · obtain ⟨τ, hτ, huτ, hwτ⟩ := hfacet (Nat.pos_of_ne_zero hvzero) huv hvw
+    have hsame_level : u.1.1.level = w.1.1.level := by
+      have huv_level : v.1.1.level + 1 = u.1.1.level := huv.1
+      have hvw_level : v.1.1.level + 1 = w.1.1.level := hvw.1
+      omega
+    have hu_node : IsSection5GraphNode T f u.1.1 := (mem_section5Nodes_iff.mp u.1.2)
+    have hw_node : IsSection5GraphNode T f w.1.1 := (mem_section5Nodes_iff.mp w.1.2)
+    apply Subtype.ext
+    apply Subtype.ext
+    exact
+      section5Step_same_source_eq_of_facetPrefixVertices_eq
+        hu_node hw_node huv hvw hτ hτ huτ hwτ <|
+          by simpa [hsame_level]
 
 theorem existsUnique_section5_levelOne_start_subface_of_exists {n : ℕ} [NeZero n]
     {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
