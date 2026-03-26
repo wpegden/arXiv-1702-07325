@@ -258,8 +258,10 @@
   `section5SubfaceSliceSet u τ g`, compactness/nonemptiness of that slice, and the bundled
   minimizer existence theorem
   `IsPiecewiseAffineOn.exists_outsideMass_minimizer_on_section5SegmentSubface`. Together with the
-  earlier erased-face line-map decomposition, this reduces the next experiment to one genuinely
-  geometric contradiction: prove
+  earlier erased-face line-map decomposition, the development now also checks the exact
+  contradiction interface: an erased-face point with the same `f`-image, or merely the same
+  affine-chart image on one face, already forces the chosen minimal slice point into the lower
+  prefix face. This reduces the next experiment to one genuinely geometric contradiction: prove
   that a minimizer with positive outside-prefix mass can be moved to an erased face without
   leaving the slice. Concretely, on a minimal `τ` and a minimizer `x`, the remaining missing
   lemma is: if an outside-prefix vertex has positive barycentric weight at `x`, there exists

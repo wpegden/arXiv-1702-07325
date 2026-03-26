@@ -1648,6 +1648,79 @@ theorem minimal_section5SegmentSubface_vertices_mem_coordinateFace_of_erase_real
   exact mem_section5SegmentSubfaces_of_mem_realization_map_segment
     hfpl hu (herase_subτ.trans hτsubu) herase_ne hxerase hfxSeg
 
+theorem minimal_section5SegmentSubface_vertices_mem_coordinateFace_of_erase_same_image
+    {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    (hfpl : IsPiecewiseAffineOn T f) {u : Section5Node n} (hu : IsSection5GraphNode T f u)
+    {τ : SimplexFacet n} (hτ : τ ∈ section5SegmentSubfaces u f)
+    (hmin : ∀ σ ∈ section5SegmentSubfaces u f, τ.vertices.card ≤ σ.vertices.card)
+    {x : RentSimplex n}
+    (hfxSeg : f x ∈ prefixBarycenterSegment n u.level)
+    (herase :
+      ∀ ⦃v : RentSimplex n⦄, v ∈ τ.vertices →
+        v ∉ coordinateFace (prefixRooms n u.level) →
+          ∃ x' : RentSimplex n,
+            ((x' : RentSimplex n) : RentCoordinates n) ∈
+              (⟨τ.vertices.erase v⟩ : SimplexFacet n).realization ∧
+            f x' = f x) :
+    ∀ ⦃v : RentSimplex n⦄, v ∈ τ.vertices → v ∈ coordinateFace (prefixRooms n u.level) := by
+  apply minimal_section5SegmentSubface_vertices_mem_coordinateFace_of_erase_realization_map_segment
+    hfpl hu hτ hmin
+  intro v hv hvFace
+  rcases herase hv hvFace with ⟨x', hx'erase, hx'eq⟩
+  refine ⟨x', hx'erase, ?_⟩
+  simpa [hx'eq] using hfxSeg
+
+theorem minimal_section5SegmentSubface_mem_coordinateFace_of_erase_same_image
+    {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    (hfpl : IsPiecewiseAffineOn T f) {u : Section5Node n} (hu : IsSection5GraphNode T f u)
+    {τ : SimplexFacet n} (hτ : τ ∈ section5SegmentSubfaces u f)
+    (hmin : ∀ σ ∈ section5SegmentSubfaces u f, τ.vertices.card ≤ σ.vertices.card)
+    {x : RentSimplex n}
+    (hxτ : ((x : RentSimplex n) : RentCoordinates n) ∈ τ.realization)
+    (hfxSeg : f x ∈ prefixBarycenterSegment n u.level)
+    (herase :
+      ∀ ⦃v : RentSimplex n⦄, v ∈ τ.vertices →
+        v ∉ coordinateFace (prefixRooms n u.level) →
+          ∃ x' : RentSimplex n,
+            ((x' : RentSimplex n) : RentCoordinates n) ∈
+              (⟨τ.vertices.erase v⟩ : SimplexFacet n).realization ∧
+            f x' = f x) :
+    x ∈ coordinateFace (prefixRooms n u.level) := by
+  exact τ.mem_coordinateFace_of_mem_realization_of_vertices_mem_coordinateFace hxτ
+    (minimal_section5SegmentSubface_vertices_mem_coordinateFace_of_erase_same_image
+      hfpl hu hτ hmin hfxSeg herase)
+
+theorem IsPiecewiseAffineOn.minimal_section5SegmentSubface_mem_coordinateFace_of_erase_same_chartImage
+    {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    (hfpl : IsPiecewiseAffineOn T f) {u : Section5Node n} (hu : IsSection5GraphNode T f u)
+    {τ : SimplexFacet n} (hτ : τ ∈ section5SegmentSubfaces u f)
+    (hmin : ∀ σ ∈ section5SegmentSubfaces u f, τ.vertices.card ≤ σ.vertices.card)
+    {g : RentCoordinates n →ᵃ[ℝ] RentCoordinates n}
+    (hg : ∀ x : RentSimplex n,
+      ((x : RentSimplex n) : RentCoordinates n) ∈ τ.realization → g x = f x)
+    {x : RentSimplex n}
+    (hxτ : ((x : RentSimplex n) : RentCoordinates n) ∈ τ.realization)
+    (hgxSeg : g x ∈ prefixBarycenterSegment n u.level)
+    (herase :
+      ∀ ⦃v : RentSimplex n⦄, v ∈ τ.vertices →
+        v ∉ coordinateFace (prefixRooms n u.level) →
+          ∃ x' : RentSimplex n,
+            ((x' : RentSimplex n) : RentCoordinates n) ∈
+              (⟨τ.vertices.erase v⟩ : SimplexFacet n).realization ∧
+            g x' = g x) :
+    x ∈ coordinateFace (prefixRooms n u.level) := by
+  apply minimal_section5SegmentSubface_mem_coordinateFace_of_erase_same_image
+    hfpl hu hτ hmin hxτ
+  · simpa [hg x hxτ] using hgxSeg
+  · intro v hv hvFace
+    rcases herase hv hvFace with ⟨x', hx'erase, hx'eq⟩
+    refine ⟨x', hx'erase, ?_⟩
+    have hx'τ : ((x' : RentSimplex n) : RentCoordinates n) ∈ τ.realization :=
+      SimplexFacet.realization_mono_of_isSubface
+        (by intro w hw; exact Finset.mem_of_mem_erase hw) hx'erase
+    rw [← hg x' hx'τ, ← hg x hxτ]
+    exact hx'eq
+
 theorem minimal_section5SegmentSubface_erase_realization_map_segment_of_mem_coordinateFace_point
     {n : ℕ} {f : SelfMapOnRentSimplex n} {u : Section5Node n} {τ : SimplexFacet n}
     {x : RentSimplex n}
