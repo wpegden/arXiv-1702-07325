@@ -808,6 +808,53 @@ theorem point_mem_ambientCoordinateFace_prefixRooms_two_of_nonzero_weight {n : �
   exact point_mem_ambientCoordinateFace_of_nonzero_weight hxτ hxFace hw_nonneg hw_sum hw_center
     hy hwy
 
+theorem SimplexFacet.exists_vertex_mem_coordinateFace_not_mem_of_mem_realization
+    {n : ℕ} {τ : SimplexFacet n} {I J : Finset (RoomIndex n)} {x : RentCoordinates n}
+    (hxτ : x ∈ τ.realization) (hxJ : x ∈ ambientCoordinateFace J)
+    (hxI : x ∉ ambientCoordinateFace I) :
+    ∃ v ∈ τ.vertices, v ∈ coordinateFace J ∧ v ∉ coordinateFace I := by
+  classical
+  let s : Finset (RentCoordinates n) :=
+    τ.vertices.image fun v : RentSimplex n => ((v : RentSimplex n) : RentCoordinates n)
+  have hxconv : x ∈ convexHull ℝ (s : Set (RentCoordinates n)) := by
+    simpa [s, SimplexFacet.realization, SimplexFacet.pointSet] using hxτ
+  obtain ⟨w, hw_nonneg, hw_sum, hw_center⟩ := (Finset.mem_convexHull).mp hxconv
+  let supp : Finset (RentCoordinates n) := s.filter fun y => w y ≠ 0
+  have hsupp_sum : ∑ y ∈ supp, w y = 1 := by
+    calc
+      ∑ y ∈ supp, w y = ∑ y ∈ s, w y := by
+        simpa [supp] using (Finset.sum_filter_ne_zero (s := s) (f := w))
+      _ = 1 := hw_sum
+  have hsupp_center : supp.centerMass w id = x := by
+    calc
+      supp.centerMass w id = s.centerMass w id := by
+        simpa [supp] using (Finset.centerMass_filter_ne_zero (t := s) (w := w) (z := id))
+      _ = x := hw_center
+  have hsupp_conv : x ∈ convexHull ℝ (supp : Set (RentCoordinates n)) := by
+    rw [← hsupp_center]
+    refine Finset.centerMass_id_mem_convexHull supp ?_ ?_
+    · intro y hy
+      exact hw_nonneg _ (Finset.mem_filter.mp hy).1
+    · rw [hsupp_sum]
+      norm_num
+  have hsupp_J : ∀ y ∈ supp, y ∈ ambientCoordinateFace J := by
+    intro y hy
+    exact point_mem_ambientCoordinateFace_of_nonzero_weight hxτ hxJ hw_nonneg hw_sum hw_center
+      (Finset.mem_filter.mp hy).1 (Finset.mem_filter.mp hy).2
+  by_contra hno
+  have hsupp_I :
+      ∀ y ∈ supp, y ∈ ambientCoordinateFace I := by
+    intro y hy
+    rcases Finset.mem_image.mp (Finset.mem_filter.mp hy).1 with ⟨v, hv, rfl⟩
+    have hvI : v ∈ coordinateFace I := by
+      by_contra hvI
+      exact hno ⟨v, hv, (mem_coordinateFace_of_mem_ambientCoordinateFace (hsupp_J _ hy)), hvI⟩
+    exact mem_ambientCoordinateFace_of_mem_coordinateFace hvI
+  have hsupp_subset_I : (supp : Set (RentCoordinates n)) ⊆ ambientCoordinateFace I := by
+    intro y hy
+    exact hsupp_I y hy
+  exact hxI (convexHull_min hsupp_subset_I (convex_ambientCoordinateFace I) hsupp_conv)
+
 theorem exists_boundaryEdgeVertex_ne_start {n : ℕ} [NeZero n] (hn : 2 ≤ n)
     (T : SimplexTriangulation n) :
     ∃ v ∈ T.vertices, v ∈ coordinateFace (prefixRooms n 2) ∧ v ≠ section5StartVertex n := by
@@ -2545,6 +2592,47 @@ theorem section5Step_same_source_eq_of_facetPrefixVertices_eq {n : ℕ}
     _ = facetPrefixVertices τw (w.level + 1) := hprefix
     _ = w.cell.vertices :=
       (hw.cell_vertices_eq_filter_prefix_vertices_of_subface_facet hτw hwτw).symm
+
+theorem section5Step_same_source_eq_of_commonFace_overlap {n : ℕ} [NeZero n]
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n} {v u w : Section5Node n}
+    (hv : IsSection5GraphNode T f v) (hu : IsSection5GraphNode T f u)
+    (hw : IsSection5GraphNode T f w)
+    (huv : Section5Step f v u) (hvw : Section5Step f v w)
+    {τu τw : SimplexFacet n} (hτu : τu ∈ T.facets) (hτw : τw ∈ T.facets)
+    (huτu : u.cell.IsSubfaceOf τu) (hwτw : w.cell.IsSubfaceOf τw)
+    {x : RentCoordinates n}
+    (hx : x ∈ (τu.commonFace τw).realization)
+    (hx_upper : x ∈ ambientCoordinateFace (prefixRooms n (u.level + 1)))
+    (hx_not_lower : x ∉ ambientCoordinateFace (prefixRooms n u.level)) :
+    u = w := by
+  have hsame_level : u.level = w.level := by
+    have huv_level : v.level + 1 = u.level := huv.1
+    have hvw_level : v.level + 1 = w.level := hvw.1
+    omega
+  obtain ⟨c, hc_common, hc_upper, hc_not_lower⟩ :=
+    (τu.commonFace τw).exists_vertex_mem_coordinateFace_not_mem_of_mem_realization
+      hx hx_upper hx_not_lower
+  have hc_τu : c ∈ τu.vertices := (τu.commonFace_isSubfaceLeft τw) hc_common
+  have hc_τw : c ∈ τw.vertices := (τu.commonFace_isSubfaceRight τw) hc_common
+  have hc_u : c ∈ u.cell.vertices := by
+    rw [hu.cell_vertices_eq_filter_prefix_vertices_of_subface_facet hτu huτu]
+    exact mem_facetPrefixVertices.mpr ⟨hc_τu, hc_upper⟩
+  have hc_w : c ∈ w.cell.vertices := by
+    rw [hw.cell_vertices_eq_filter_prefix_vertices_of_subface_facet hτw hwτw]
+    exact mem_facetPrefixVertices.mpr ⟨hc_τw, by simpa [hsame_level] using hc_upper⟩
+  have hc_not_v : c ∉ v.cell.vertices := by
+    intro hc_v
+    have hc_lower : c ∈ coordinateFace (prefixRooms n u.level) := by
+      have hc_face : c ∈ coordinateFace (prefixRooms n (v.level + 1)) := hv.prefix_vertices hc_v
+      simpa [← huv.1] using hc_face
+    exact hc_not_lower hc_lower
+  apply section5Step_same_source_eq_of_cell_vertices_eq huv hvw
+  calc
+    u.cell.vertices = insert c v.cell.vertices :=
+      section5Step_cell_vertices_eq_insert_vertex hv hu huv hc_u hc_not_v
+    _ = w.cell.vertices := by
+      symm
+      exact section5Step_cell_vertices_eq_insert_vertex hv hw hvw hc_w hc_not_v
 
 theorem section5Step_same_source_cell_vertices_eq_of_subfaces_same_facet {n : ℕ}
     {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n} {v u w : Section5Node n}

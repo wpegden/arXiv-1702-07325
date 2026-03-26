@@ -330,8 +330,12 @@
   geometric statement is now in place: if `u` is a Section 5 graph node, then the vertices of
   `u.cell` already span exactly the same affine subspace as `prefixVertexPoints n (u.level + 1)`.
   So the remaining proof burden is no longer to show that the source cell is full-dimensional in
-  the lower prefix face, but to exploit that full-dimensionality to build an actual overlap point
-  when two distinct upper simplices lie on the same side of the shared boundary face.
+  the lower prefix face. `Section5Path.lean` now also proves the exact next reduction:
+  an overlap point in the realization of `τu.commonFace τw` which lies in the upper prefix face
+  `coordinateFace (prefixRooms n (k + 2))` but not in the lower one already yields a shared extra
+  vertex, hence equality of the two upper Section 5 steps. The only live right-side construction
+  problem is therefore to produce that overlap point from the affine-coordinate data of the two
+  upper simplices.
   On the packaging side, the remaining graph-theoretic conversion gap is now gone: the support
   layer proves `Section5PerturbationGenericity.toBoundarySegmentGenericity`, and the existing
   local-left/upper-endpoint wrapper is rerouted through

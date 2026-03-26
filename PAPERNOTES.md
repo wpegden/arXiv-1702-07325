@@ -105,9 +105,12 @@
   structural lemma saying such a boundary simplex has at most one incident `(k+1)`-cell on the
   prefix-face side, rather than another extra perturbation hypothesis. The Lean support layer now
   formalizes that full-dimensionality exactly as an affine-span equality: the source cell vertices
-  span the same affine subspace as the standard prefix-face vertices. So the remaining right-side
-  issue is the genuine same-side overlap argument for two upper simplices over one boundary cell,
-  not the lower-face span computation itself.
+  span the same affine subspace as the standard prefix-face vertices. It also now proves the next
+  reduction: once one has an actual overlap point in the common-face realization of two upper
+  ambient facets, lying in the upper prefix face but outside the lower one, the two upper Section 5
+  cells must already share the same extra vertex and hence coincide. So the remaining right-side
+  issue is now exactly the construction of that overlap point, not the lower-face span computation
+  or the common-vertex extraction step.
 - Section 5, current formalization status: this remaining manuscript sentence is now represented directly by the support-layer structure `Section5BoundarySegmentGenericity`. That package is already sufficient, together with the canonical start-successor theorem, to derive the paper-facing Section 5 target-facet conclusion; the unresolved work is therefore the actual geometric proof of `Section5BoundarySegmentGenericity`, not any further graph-theoretic packaging.
 - Section 5, current proof boundary: the Lean development now also has the more literal step-level perturbation package `Section5PerturbationGenericity`, whose fields say that a non-start cell is entered from a lower face, has at most one upper continuation as a `Section5Step`, and if there is no such continuation then it already contains the barycenter. This matches the manuscript's segment-intersection language more closely than the older neighbor-cardinality packaging, so the remaining work is best understood as proving `Section5PerturbationGenericity` from the paper's genericity/perturbation claim.
 - Section 5, interface status after the latest cleanup: the step-level and boundary-segment
