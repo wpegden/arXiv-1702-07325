@@ -115,7 +115,14 @@
   with strictly positive coefficient on the other step's extra vertex. So the only missing
   right-side geometry is the small-parameter convexity argument that mixes those affine weights
   with a source-cell interior barycentric vector while keeping all merged source coefficients
-  nonnegative, thereby creating the required overlap point beyond the lower prefix face.
+  nonnegative, thereby creating the required overlap point beyond the lower prefix face. A direct
+  Lean proof attempt now isolates that final step as a clean standalone convex-weight lemma:
+  if `α` are the upper-cell affine weights with `α(extra) > 0`, and `λ` are the uniform source
+  weights extended by `0` on the extra upper vertex, then one needs `t ∈ Ioo (0 : ℝ) 1` such that
+  `β := (1 - t) • λ + t • α` is pointwise nonnegative and still has `β(extra) > 0`. The explicit
+  formula `t = c / (2 * (c + ∑ i, |α i|))` works mathematically, with `c` the uniform source
+  weight. What remains blocked in Lean is not the geometry but the bookkeeping needed to realize
+  this formula through subtype-indexed sums and `centerMass` identities.
 - Section 5, current formalization status: this remaining manuscript sentence is now represented directly by the support-layer structure `Section5BoundarySegmentGenericity`. That package is already sufficient, together with the canonical start-successor theorem, to derive the paper-facing Section 5 target-facet conclusion; the unresolved work is therefore the actual geometric proof of `Section5BoundarySegmentGenericity`, not any further graph-theoretic packaging.
 - Section 5, current proof boundary: the Lean development now also has the more literal step-level perturbation package `Section5PerturbationGenericity`, whose fields say that a non-start cell is entered from a lower face, has at most one upper continuation as a `Section5Step`, and if there is no such continuation then it already contains the barycenter. This matches the manuscript's segment-intersection language more closely than the older neighbor-cardinality packaging, so the remaining work is best understood as proving `Section5PerturbationGenericity` from the paper's genericity/perturbation claim.
 - Section 5, interface status after the latest cleanup: the step-level and boundary-segment

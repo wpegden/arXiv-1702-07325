@@ -429,7 +429,15 @@
   strictly positive coefficient on that other step's extra vertex. So the only remaining live
   positive-level `upper_step_unique` task is the explicit small-parameter convexity argument that
   mixes those affine weights with a source-cell interior barycentric vector to keep all merged
-  source weights nonnegative and thereby produce the required overlap point.
+  source weights nonnegative and thereby produce the required overlap point. The latest direct
+  Lean attempt now identifies the exact standalone lemma to package if the final proof is split
+  one more time: let `α` be the affine-combination weights on the upper cell with
+  `α(extra) > 0`, let `λ` be the uniform source-cell weights extended by `0` on the extra upper
+  vertex, and prove there exists `t ∈ Ioo (0 : ℝ) 1` such that
+  `β := (1 - t) • λ + t • α` is pointwise nonnegative while `β(extra)` stays positive. The
+  explicit choice `t = c / (2 * (c + ∑ i, |α i|))`, where `c` is the uniform source weight, is
+  sufficient mathematically; the current blocker is Lean's subtype-sum / `centerMass` bookkeeping
+  rather than any new geometric uncertainty.
 - First prove the barycenter-specialized version if that is the easiest entry point.
 - Then generalize to arbitrary interior targets if Section 6 needs it.
 - If full surjectivity is still awkward, keep the theorem in the "target in interior" form first; that already covers the barycenter and the interior `y` used in the first Section 6 theorem.
