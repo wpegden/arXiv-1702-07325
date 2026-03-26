@@ -2568,6 +2568,63 @@ structure Section5LocalOneComplexGeometry {n : ℕ} [NeZero n]
         FaceHitWitness T f v.1.1.cell
           ((rentBarycenter n : RentSimplex n) : RentCoordinates n)
 
+noncomputable def section5LocalOneComplexGeometry_of_uniqueUpperOrEndpoint {n : ℕ} [NeZero n]
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    (hf : IsFaceRespecting f) (hpa : IsPiecewiseAffineOn T f)
+    {hstart : IsSection5GraphNode T f (section5StartNode n)}
+    (hlocal :
+      ∀ v : section5StartComponent hstart,
+        IsSection5Endpoint T f v.1.1 ∨
+          ∃! w : section5StartComponent hstart,
+            (section5StartComponentGraph hstart).Adj v w ∧
+              v.1.1.level + 1 = w.1.1.level) :
+    Section5LocalOneComplexGeometry T f hstart := by
+  classical
+  refine ⟨hpa, ?_, ?_⟩
+  · intro v
+    by_cases hvEndpoint : IsSection5Endpoint T f v.1.1
+    · let α := {w : section5StartComponent hstart //
+          (section5StartComponentGraph hstart).Adj v w ∧
+            v.1.1.level + 1 = w.1.1.level}
+      have hEmpty : IsEmpty α := by
+        refine ⟨?_⟩
+        intro a
+        have hvLast : v.1.1.level + 1 = n :=
+          hvEndpoint.1.level_eq_last_of_hitsBarycenter hf hvEndpoint.2
+        have haNode : IsSection5GraphNode T f a.1.1.1 := mem_section5Nodes_iff.mp a.1.1.2
+        have haLevel : v.1.1.level + 1 = a.1.1.1.level := a.2.2
+        have : a.1.1.1.level + 1 ≤ n := haNode.level_le
+        omega
+      letI : IsEmpty α := hEmpty
+      infer_instance
+    · have hUnique :
+          ∃! w : section5StartComponent hstart,
+            (section5StartComponentGraph hstart).Adj v w ∧
+              v.1.1.level + 1 = w.1.1.level := by
+        rcases hlocal v with hEnd | hUnique
+        · exact False.elim (hvEndpoint hEnd)
+        · exact hUnique
+      rcases hUnique with ⟨w, hw, huniq⟩
+      refine ⟨?_⟩
+      intro a b
+      apply Subtype.ext
+      exact (huniq a.1 a.2).trans (huniq b.1 b.2).symm
+  · intro v hEmpty
+    by_cases hvEndpoint : IsSection5Endpoint T f v.1.1
+    · exact T.faceHitWitnessOfFacetImageContains hvEndpoint.1.isFace hpa hvEndpoint.2
+    · have hUnique :
+          ∃! w : section5StartComponent hstart,
+            (section5StartComponentGraph hstart).Adj v w ∧
+              v.1.1.level + 1 = w.1.1.level := by
+        rcases hlocal v with hEnd | hUnique
+        · exact False.elim (hvEndpoint hEnd)
+        · exact hUnique
+      let hex : ∃ w : section5StartComponent hstart,
+          (section5StartComponentGraph hstart).Adj v w ∧
+            v.1.1.level + 1 = w.1.1.level := ExistsUnique.exists hUnique
+      exact False.elim <|
+        hEmpty.false ⟨Classical.choose hex, Classical.choose_spec hex⟩
+
 def Section5LocalOneComplexGeometry.toPointwiseGenericity {n : ℕ} [NeZero n]
     {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
     {hstart : IsSection5GraphNode T f (section5StartNode n)}

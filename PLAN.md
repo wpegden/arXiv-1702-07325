@@ -160,7 +160,8 @@
   face-realization hit witnesses supplied by `PiecewiseAffine.lean`. The minimal fallback support
   theorem has also now been isolated as `Section5LocalOneComplexGeometry`, matching the paper's
   perturbation-to-a-local-1-complex language and feeding directly into
-  `Section5PointwiseGenericity`.
+  `Section5PointwiseGenericity`; the exact Lean bridge is now
+  `section5LocalOneComplexGeometry_of_uniqueUpperOrEndpoint`.
 - Next local objective:
   discharge `Section5SegmentGeometry` from the actual Section 5 geometry:
   prove that every graph node in the actual start component has at most two neighbors while every
@@ -168,9 +169,9 @@
   segment-intersection assumptions. The start-boundary entrance geometry is now complete, the
   prefix-face infrastructure is no longer tied to the first boundary edge, and both the
   lower-neighbor uniqueness and lower-neighbor existence sides are now formal. The remaining work
-  should therefore proceed by proving the two fields of `Section5LocalOneComplexGeometry`: that
-  the upper-neighbor fiber over each start-component node is a subsingleton, and that an empty
-  upper-neighbor fiber forces a barycenter hit witness when the node is not the start.
+  should therefore proceed by proving the hypothesis of
+  `section5LocalOneComplexGeometry_of_uniqueUpperOrEndpoint`: every start-component node is either
+  already a Section 5 endpoint or has a unique upper neighbor in the graph.
 - Current structural blocker:
   the present `SimplexTriangulation` wrapper now exposes induced prefix faces and their induced
   realizations, but it still does not expose the full simplicial-subdivision combinatorics of
