@@ -526,6 +526,28 @@ theorem IsFaceRespecting.startCell_hits_prefixBarycenter {n : ℕ} [NeZero n]
   rw [facetImageContains_section5StartCell_iff]
   exact (hf.map_section5StartVertex_eq_prefixBarycenter).symm
 
+theorem IsFaceRespecting.exists_targetFacet_of_eq_one
+    {T : SimplexTriangulation 1} {f : SelfMapOnRentSimplex 1} (hf : IsFaceRespecting f)
+    {y : RentCoordinates 1} (hy : IsInteriorSimplexPoint y) :
+    ∃ τ ∈ T.facets, FacetImageContains f τ y := by
+  have hfacet : section5StartCell 1 ∈ T.facets := by
+    refine SimplexTriangulation.mem_facets_of_isFace_of_card (T := T) (section5StartCell_isFace T) ?_
+    simpa using section5StartCell_card 1
+  have hy_face : y ∈ ambientCoordinateFace (prefixRooms 1 1) := by
+    simpa [prefixRooms_self] using (interiorPoint_mem_ambientCoordinateFace_iff hy).2 rfl
+  have hy_eq : y = prefixBarycenter 1 1 :=
+    eq_prefixBarycenter_one_of_mem_ambientCoordinateFace hy_face
+  refine ⟨section5StartCell 1, hfacet, ?_⟩
+  simpa [hy_eq] using (hf.startCell_hits_prefixBarycenter (n := 1))
+
+theorem IsFaceRespecting.exists_barycenter_targetFacet_of_eq_one
+    {T : SimplexTriangulation 1} {f : SelfMapOnRentSimplex 1} (hf : IsFaceRespecting f) :
+    ∃ τ ∈ T.facets,
+      FacetImageContains f τ ((rentBarycenter 1 : RentSimplex 1) : RentCoordinates 1) := by
+  simpa [prefixBarycenter_self_eq_rentBarycenter] using
+    (hf.exists_targetFacet_of_eq_one (y := ((rentBarycenter 1 : RentSimplex 1) : RentCoordinates 1))
+      (rentBarycenter_isInteriorSimplexPoint 1))
+
 /-- A vertex of the Section 5 graph: a simplex cell together with its level in the barycenter
 chain. -/
 structure Section5Node (n : ℕ) where

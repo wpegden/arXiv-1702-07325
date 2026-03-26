@@ -158,9 +158,9 @@
   the start-successor problem is now solved in the interesting range `2 ≤ n`, so the next work is
   to prove that every graph node in the canonical start component has at most two neighbors and
   that every non-start degree-one node is a barycenter-hitting endpoint, all under the paper's
-  generic segment-intersection assumptions. In parallel, decide whether the final paper-facing
-  theorem should isolate the trivial `n = 1` case instead of passing it through the Section 5
-  path machinery.
+  generic segment-intersection assumptions. The trivial `n = 1` bookkeeping is now separated by
+  direct one-dimensional target-facet lemmas, so the remaining nontrivial Section 5 path argument
+  can be organized under `2 ≤ n`.
 - Current structural blocker:
   the present `SimplexTriangulation` wrapper does not yet expose the induced simplicial
   subdivision of the prefix faces, especially the boundary edge `[e_1,e_2]`, and it also does
