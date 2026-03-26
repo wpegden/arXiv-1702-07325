@@ -447,6 +447,79 @@ theorem mem_prefixBarycenterSegment_iff_mem_ambientCoordinateFace_and_eq_levelCo
         simp [AffineMap.lineMap_apply_module, prefixBarycenter, hi,
           show ¬ i.1 < k + 1 by simpa [mem_prefixRooms_iff] using hik_notin]
 
+theorem segment_prefixBarycenter_stdSimplexVertex_subset_ambientCoordinateFace
+    {n k : ℕ} [NeZero k] (hk : k + 1 ≤ n) :
+    segment ℝ (prefixBarycenter n k)
+        (((stdSimplex.vertex (S := ℝ)
+            (⟨k, lt_of_lt_of_le (Nat.lt_succ_self k) hk⟩ : RoomIndex n) : RentSimplex n) :
+              RentCoordinates n)) ⊆
+      ambientCoordinateFace (prefixRooms n (k + 1)) := by
+  let ik : RoomIndex n := ⟨k, lt_of_lt_of_le (Nat.lt_succ_self k) hk⟩
+  have hk' : k ≤ n := Nat.le_trans (Nat.le_succ k) hk
+  refine (convex_ambientCoordinateFace (prefixRooms n (k + 1))).segment_subset ?_ ?_
+  · exact ambientCoordinateFace_mono (prefixRooms_mono (Nat.le_succ k))
+      (prefixBarycenter_mem_ambientCoordinateFace hk')
+  · exact mem_ambientCoordinateFace_of_mem_coordinateFace <| by
+      rw [mem_coordinateFace_iff]
+      intro i hi
+      have hi_ne_ik : i ≠ ik := by
+        intro hii
+        have hi_lt : i.1 < k + 1 := by simp [hii, ik]
+        exact hi (by simpa [mem_prefixRooms_iff] using hi_lt)
+      change (stdSimplex.vertex (S := ℝ) ik : RentSimplex n) i = 0
+      simp [stdSimplex_vertex_apply, hi_ne_ik]
+
+theorem mem_segment_prefixBarycenter_stdSimplexVertex_apply_of_lt
+    {n k : ℕ} [NeZero k] (hk : k + 1 ≤ n) {y : RentCoordinates n}
+    (hySeg : y ∈ segment ℝ (prefixBarycenter n k)
+      (((stdSimplex.vertex (S := ℝ)
+          (⟨k, lt_of_lt_of_le (Nat.lt_succ_self k) hk⟩ : RoomIndex n) : RentSimplex n) :
+            RentCoordinates n))) {i : RoomIndex n} (hi : i.1 < k) :
+    let ik : RoomIndex n := ⟨k, lt_of_lt_of_le (Nat.lt_succ_self k) hk⟩
+    y i = (k : ℝ)⁻¹ - y ik / k := by
+  let ik : RoomIndex n := ⟨k, lt_of_lt_of_le (Nat.lt_succ_self k) hk⟩
+  rw [segment_eq_image_lineMap ℝ (prefixBarycenter n k)
+    (((stdSimplex.vertex (S := ℝ) ik : RentSimplex n) : RentCoordinates n))] at hySeg
+  rcases hySeg with ⟨θ, _hθ, rfl⟩
+  have hkR : (k : ℝ) ≠ 0 := by exact_mod_cast (NeZero.ne k)
+  have hi_ne_ik : i ≠ ik := by
+    intro hii
+    have : i.1 = k := by simpa [ik] using congrArg Fin.val hii
+    exact (Nat.ne_of_lt hi) this
+  have hyi :
+      AffineMap.lineMap (prefixBarycenter n k)
+          (((stdSimplex.vertex (S := ℝ) ik : RentSimplex n) : RentCoordinates n)) θ i =
+        (1 - θ) * (k : ℝ)⁻¹ := by
+    simp [AffineMap.lineMap_apply_module, prefixBarycenter, hi, hi_ne_ik]
+  have hyk :
+      AffineMap.lineMap (prefixBarycenter n k)
+          (((stdSimplex.vertex (S := ℝ) ik : RentSimplex n) : RentCoordinates n)) θ ik = θ := by
+    simp [AffineMap.lineMap_apply_module, prefixBarycenter, ik]
+  rw [hyi]
+  change
+    (1 - θ) * (k : ℝ)⁻¹ =
+      (k : ℝ)⁻¹ -
+        (AffineMap.lineMap (prefixBarycenter n k)
+          (((stdSimplex.vertex (S := ℝ) ik : RentSimplex n) : RentCoordinates n)) θ ik) / k
+  rw [hyk]
+  field_simp [hkR]
+
+theorem
+    mem_prefixBarycenterSegment_of_mem_segment_prefixBarycenter_stdSimplexVertex_and_levelCoord_le
+    {n k : ℕ} [NeZero k] (hk : k + 1 ≤ n) {y : RentCoordinates n}
+    (hySeg : y ∈ segment ℝ (prefixBarycenter n k)
+      (((stdSimplex.vertex (S := ℝ)
+          (⟨k, lt_of_lt_of_le (Nat.lt_succ_self k) hk⟩ : RoomIndex n) : RentSimplex n) :
+            RentCoordinates n)))
+    (hyk_le :
+      let ik : RoomIndex n := ⟨k, lt_of_lt_of_le (Nat.lt_succ_self k) hk⟩
+      y ik ≤ ((k + 1 : ℝ)⁻¹)) :
+    y ∈ prefixBarycenterSegment n k := by
+  refine (mem_prefixBarycenterSegment_iff_mem_ambientCoordinateFace_and_eq_levelCoord hk).2 ?_
+  refine ⟨segment_prefixBarycenter_stdSimplexVertex_subset_ambientCoordinateFace hk hySeg, ?_⟩
+  exact ⟨hyk_le, fun hi =>
+    mem_segment_prefixBarycenter_stdSimplexVertex_apply_of_lt hk hySeg hi⟩
+
 theorem ambientCoordinateFace_pair_of_lineMap_mem
     {n : ℕ} {I : Finset (RoomIndex n)} {x y : RentCoordinates n} {c : ℝ}
     (hxSimplex : x ∈ scaledSimplex 1 n) (hySimplex : y ∈ scaledSimplex 1 n)
