@@ -339,6 +339,12 @@ theorem isCompact_prefixBarycenterSegment {n k : ℕ} :
   have hg : Continuous g := g.continuous_of_finiteDimensional
   simpa [g] using isCompact_Icc.image hg
 
+theorem convex_prefixBarycenterSegment {n k : ℕ} :
+    Convex ℝ (prefixBarycenterSegment n k) := by
+  simpa [prefixBarycenterSegment] using
+    (convex_segment (𝕜 := ℝ) (x := prefixBarycenter n k)
+      (y := prefixBarycenter n (k + 1)))
+
 theorem prefixBarycenterSegment_subset_ambientCoordinateFace {n k : ℕ} [NeZero k]
     (hk : k + 1 ≤ n) :
     prefixBarycenterSegment n k ⊆ ambientCoordinateFace (prefixRooms n (k + 1)) := by
@@ -1507,6 +1513,11 @@ def section5SubfaceSliceSet {n : ℕ} (u : Section5Node n) (τ : SimplexFacet n)
     (g : RentCoordinates n →ᵃ[ℝ] RentCoordinates n) : Set (RentCoordinates n) :=
   τ.realization ∩ g ⁻¹' prefixBarycenterSegment n u.level
 
+theorem SimplexFacet.convex_realization {n : ℕ} (τ : SimplexFacet n) :
+    Convex ℝ τ.realization := by
+  simpa [SimplexFacet.realization] using
+    (convex_convexHull ℝ (τ.pointSet : Set (RentCoordinates n)))
+
 theorem isCompact_section5SubfaceSliceSet {n : ℕ} (u : Section5Node n) (τ : SimplexFacet n)
     (g : RentCoordinates n →ᵃ[ℝ] RentCoordinates n) :
     IsCompact (section5SubfaceSliceSet u τ g) := by
@@ -1514,6 +1525,13 @@ theorem isCompact_section5SubfaceSliceSet {n : ℕ} (u : Section5Node n) (τ : S
   refine τ.isCompact_realization.inter_right ?_
   have hg : Continuous g := g.continuous_of_finiteDimensional
   exact (isCompact_prefixBarycenterSegment (n := n) (k := u.level)).isClosed.preimage hg
+
+theorem convex_section5SubfaceSliceSet {n : ℕ} (u : Section5Node n) (τ : SimplexFacet n)
+    (g : RentCoordinates n →ᵃ[ℝ] RentCoordinates n) :
+    Convex ℝ (section5SubfaceSliceSet u τ g) := by
+  unfold section5SubfaceSliceSet
+  exact τ.convex_realization.inter <|
+    (convex_prefixBarycenterSegment (n := n) (k := u.level)).affine_preimage g
 
 theorem IsPiecewiseAffineOn.section5SubfaceSliceSet_nonempty
     {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
@@ -1527,6 +1545,19 @@ theorem IsPiecewiseAffineOn.section5SubfaceSliceSet_nonempty
     ⟨x, hxτ, hfxSeg⟩
   refine ⟨(x : RentCoordinates n), hxτ, ?_⟩
   simpa [hg x hxτ] using hfxSeg
+
+theorem IsPiecewiseAffineOn.isCompact_convex_nonempty_section5SubfaceSliceSet
+    {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    (hfpl : IsPiecewiseAffineOn T f) {u : Section5Node n} (hu : IsSection5GraphNode T f u)
+    {τ : SimplexFacet n} (hτ : τ ∈ section5SegmentSubfaces u f)
+    {g : RentCoordinates n →ᵃ[ℝ] RentCoordinates n}
+    (hg : ∀ x : RentSimplex n,
+      ((x : RentSimplex n) : RentCoordinates n) ∈ τ.realization → g x = f x) :
+    IsCompact (section5SubfaceSliceSet u τ g) ∧
+      Convex ℝ (section5SubfaceSliceSet u τ g) ∧
+      (section5SubfaceSliceSet u τ g).Nonempty := by
+  refine ⟨isCompact_section5SubfaceSliceSet u τ g, convex_section5SubfaceSliceSet u τ g, ?_⟩
+  exact hfpl.section5SubfaceSliceSet_nonempty hu hτ hg
 
 theorem exists_isMinOn_outsideMass_section5SubfaceSliceSet {n : ℕ} (u : Section5Node n)
     (τ : SimplexFacet n) (g : RentCoordinates n →ᵃ[ℝ] RentCoordinates n)

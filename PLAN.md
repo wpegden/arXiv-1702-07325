@@ -252,6 +252,12 @@
   `coordinateFace (prefixRooms n k)`. Any witness point of `ρ.realization` on the segment then
   supplies `Section5MinimalSliceLowerBoundaryFaceData u f`, hence the canonical lower-entry pair
   and the rest of the Section 5 target-facet pipeline.
+  The first direct endpoint ingredients are now formalized on the chart-level slice itself:
+  for any affine chart `g` on a segment-hitting face `τ`,
+  `section5SubfaceSliceSet u τ g = τ.realization ∩ g⁻¹([b_k,b_{k+1}])` is compact, convex, and
+  nonempty. This is exactly the right object for the manuscript's "preimage segment inside one
+  simplex" picture. The next proof step is to extract an actual endpoint mapping to `b_k` and
+  identify the minimal face of `τ` containing that endpoint.
   The next sharper naming step is now checked too:
   `Section5MinimalSubfaceLowerBoundaryGenericity u f` is the exact theorem on a minimal
   `τ ∈ section5SegmentSubfaces u f` that the quoted sentence still has to supply. It says such a
