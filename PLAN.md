@@ -187,6 +187,16 @@
   `minimal_section5SegmentSubface_exists_mem_coordinateFace_point_of_vertices_mem_coordinateFace`
   now makes the lower-prefix slice point automatic from the vertex condition, so one no longer
   has to construct that point separately once the face-in-lower-prefix statement is known.
+  The current recovery route moves the lower-step proof boundary back onto `u.cell` itself.
+  `Section5Path.lean` now has the direct local package `Section5LowerEntryFaceData` and the
+  global wrapper `Section5EntryFaceGenericity`, and
+  `Section5EntryFaceGenericity.toPerturbationGenericity` feeds that data directly into
+  `exists_section5StartComponentLowerStep_of_subface_card_eq_and_facetImageContains`. So the
+  next honest geometric theorem is no longer "a chosen minimal `τ` contains the lower face";
+  instead it is to construct the lower entry face `ρ ≤ u.cell` from the manuscript's
+  1-dimensional slice picture, with `ρ.vertices.card = u.level`, every vertex of `ρ` in
+  `coordinateFace (prefixRooms n u.level)`, and `FacetImageContains f ρ
+  (prefixBarycenter n u.level)`.
   The older `Section5OneComplexGeometry` layer remains useful as cleanup, but it is no longer the
   main proof boundary.
   A first concrete fragment is already in place: level `0` is rigidly the start node, so any

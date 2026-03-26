@@ -2284,6 +2284,38 @@ theorem exists_section5StartComponentLowerStep_of_subface_card_eq_and_mem_realiz
     exact hu_reach.trans <| (SimpleGraph.reachable_comm.mp (SimpleGraph.Adj.reachable hv0_adj))
   refine ⟨⟨vnode, (mem_section5StartComponent_iff_reachable (hstart := hstart)).mpr hv_reach⟩, hv0_step⟩
 
+/-- Direct lower-entry data on one Section 5 cell: a codimension-one lower face of `u.cell`
+already hits the lower prefix barycenter. This packages the manuscript's "entry through a lower
+face" picture before introducing any minimal segment-hitting carrier face. -/
+structure Section5LowerEntryFaceData {n : ℕ} (u : Section5Node n)
+    (f : SelfMapOnRentSimplex n) where
+  face : SimplexFacet n
+  isSubface : face.IsSubfaceOf u.cell
+  card_eq : face.vertices.card = u.level
+  lower_prefix_vertices :
+    ∀ ⦃w : RentSimplex n⦄, w ∈ face.vertices → w ∈ coordinateFace (prefixRooms n u.level)
+  hits_barycenter : FacetImageContains f face (prefixBarycenter n u.level)
+
+theorem Section5LowerEntryFaceData.exists_lowerStep {n : ℕ} [NeZero n]
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n} {u : Section5Node n}
+    (hu : IsSection5GraphNode T f u) (hulevel : 0 < u.level)
+    (hentry : Section5LowerEntryFaceData u f) :
+    ∃ v : Section5Node n, IsSection5GraphNode T f v ∧ Section5Step f v u := by
+  exact exists_section5LowerStep_of_subface_card_eq_and_facetImageContains
+    hu hulevel hentry.isSubface hentry.card_eq hentry.lower_prefix_vertices
+    hentry.hits_barycenter
+
+theorem Section5LowerEntryFaceData.exists_startComponentLowerStep {n : ℕ} [NeZero n]
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    {hstart : IsSection5GraphNode T f (section5StartNode n)}
+    {u : section5StartComponent hstart}
+    (hu_ne : u ≠ section5StartVertexInComponent hstart)
+    (hentry : Section5LowerEntryFaceData u.1.1 f) :
+    ∃ v : section5StartComponent hstart, Section5Step f v.1.1 u.1.1 := by
+  exact exists_section5StartComponentLowerStep_of_subface_card_eq_and_facetImageContains
+    hu_ne hentry.isSubface hentry.card_eq hentry.lower_prefix_vertices
+    hentry.hits_barycenter
+
 theorem exists_section5LowerStep_of_card_eq_and_mem_realization_map_prefixBarycenter
     {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
     (hfpl : IsPiecewiseAffineOn T f) {u : Section5Node n} (hu : IsSection5GraphNode T f u)
@@ -3368,6 +3400,26 @@ structure Section5SimplexSliceBoundaryGeometry {n : ℕ} [NeZero n]
       (¬ ∃ w : section5StartComponent hstart, Section5Step f v.1.1 w.1.1) →
         IsSection5Endpoint T f v.1.1
 
+/-- Direct global genericity in the manuscript's lower-entry-face language: every non-start cell
+is entered through a lower codimension-one face whose image contains the next prefix barycenter,
+while the upper continuation and endpoint fields remain in step language. -/
+structure Section5EntryFaceGenericity {n : ℕ} [NeZero n]
+    (T : SimplexTriangulation n) (f : SelfMapOnRentSimplex n)
+    (hstart : IsSection5GraphNode T f (section5StartNode n)) where
+  lower_entry_face_of_ne_start :
+    ∀ v : section5StartComponent hstart,
+      v ≠ section5StartVertexInComponent hstart →
+        Section5LowerEntryFaceData v.1.1 f
+  upper_step_unique :
+    ∀ {v u w : section5StartComponent hstart},
+      Section5Step f v.1.1 u.1.1 →
+      Section5Step f v.1.1 w.1.1 →
+        u = w
+  no_upper_step_is_endpoint :
+    ∀ v : section5StartComponent hstart,
+      (¬ ∃ w : section5StartComponent hstart, Section5Step f v.1.1 w.1.1) →
+        IsSection5Endpoint T f v.1.1
+
 def Section5SimplexSliceBoundaryGeometry.toSimplexSliceGenericity {n : ℕ} [NeZero n]
     {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
     (hfpl : IsPiecewiseAffineOn T f)
@@ -3655,6 +3707,15 @@ theorem Section5SimplexSliceBoundaryGeometry.toPerturbationGenericity {n : ℕ} 
   exact ((hgeom.lower_boundary_geometry_of_ne_start v hv).toMinimalSliceFaceData
     hfpl hv_node hv_level).exists_startComponentLowerStep hf hfpl hv
 
+theorem Section5EntryFaceGenericity.toPerturbationGenericity {n : ℕ} [NeZero n]
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    {hstart : IsSection5GraphNode T f (section5StartNode n)}
+    (hentry : Section5EntryFaceGenericity T f hstart) :
+    Section5PerturbationGenericity T f hstart := by
+  refine ⟨?_, hentry.upper_step_unique, hentry.no_upper_step_is_endpoint⟩
+  intro v hv
+  exact (hentry.lower_entry_face_of_ne_start v hv).exists_startComponentLowerStep hv
+
 theorem Section5SimplexSliceGenericity.toPerturbationGenericity {n : ℕ} [NeZero n]
     {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
     (hf : IsFaceRespecting f) (hfpl : IsPiecewiseAffineOn T f)
@@ -3695,6 +3756,13 @@ theorem Section5PerturbationGenericity.toBoundarySegmentGenericity {n : ℕ} [Ne
         ⟨(section5StartComponentGraph_adj_iff hstart).mpr (Or.inl hwStep), hwStep.1⟩
     have hupper_pos : 0 < (section5UpperNeighbors v).card := Finset.card_pos.mpr ⟨w, hwMem⟩
     omega
+
+theorem Section5EntryFaceGenericity.toBoundarySegmentGenericity {n : ℕ} [NeZero n]
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    {hstart : IsSection5GraphNode T f (section5StartNode n)}
+    (hentry : Section5EntryFaceGenericity T f hstart) :
+    Section5BoundarySegmentGenericity T f hstart := by
+  exact hentry.toPerturbationGenericity.toBoundarySegmentGenericity
 
 theorem Section5SimplexSliceGenericity.toBoundarySegmentGenericity {n : ℕ} [NeZero n]
     {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
