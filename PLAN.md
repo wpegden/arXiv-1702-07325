@@ -331,6 +331,13 @@
   `Section5CanonicalLowerEntryData` / `Section5CanonicalLowerEntryGenericity`, and hence already
   inherit the canonical target-facet theorem. So no further package translation remains between
   the boundary-face language and the new canonical branch.
+  More sharply still, the exact local boundary-face datum
+  `Section5MinimalSliceLowerBoundaryFaceData u f` now collapses directly to the canonical pair
+  `(section5LowerPrefixVertices u).card = u.level` plus
+  `FacetImageContains f (⟨section5LowerPrefixVertices u⟩ : SimplexFacet n)
+    (prefixBarycenter n u.level)`. So the remaining local proof can target either that canonical
+  pair itself or any local theorem that already packages it in the manuscript's lower-boundary
+  language.
   So the remaining honest geometry on `u.cell` is now: prove that the slice reaches the lower
   prefix face, and prove that the canonical lower-prefix face has exactly `u.level` vertices.
   The older `Section5OneComplexGeometry` layer remains useful as cleanup, but it is no longer the
