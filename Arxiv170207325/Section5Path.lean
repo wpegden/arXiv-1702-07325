@@ -678,6 +678,52 @@ abbrev section5StartComponentNodeDegree {n : ℕ} [NeZero n] {T : SimplexTriangu
   exact (Finset.univ.filter fun w : section5StartComponent hstart =>
     (section5StartComponentGraph hstart).Adj v w).card
 
+/-- The actual start component, now canonically available from face preservation. -/
+abbrev section5CanonicalStartComponent {n : ℕ} [NeZero n] {T : SimplexTriangulation n}
+    {f : SelfMapOnRentSimplex n} (hf : IsFaceRespecting f) :=
+  section5StartComponent (T := T) (f := f) hf.section5StartNode_isGraphNode
+
+/-- The Section 5 graph on the canonical start component. -/
+abbrev section5CanonicalStartComponentGraph {n : ℕ} [NeZero n] {T : SimplexTriangulation n}
+    {f : SelfMapOnRentSimplex n} (hf : IsFaceRespecting f) :=
+  section5StartComponentGraph (T := T) (f := f) (hstart := hf.section5StartNode_isGraphNode)
+
+/-- The start node, viewed in the canonical start component attached to a face-respecting map. -/
+abbrev section5CanonicalStartVertexInComponent {n : ℕ} [NeZero n] {T : SimplexTriangulation n}
+    {f : SelfMapOnRentSimplex n} (hf : IsFaceRespecting f) :=
+  section5StartVertexInComponent (T := T) (f := f) (hstart := hf.section5StartNode_isGraphNode)
+
+/-- The degree function on the canonical start component. -/
+abbrev section5CanonicalStartComponentNodeDegree {n : ℕ} [NeZero n]
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n} (hf : IsFaceRespecting f)
+    (v : section5CanonicalStartComponent (T := T) (f := f) hf) : ℕ :=
+  section5StartComponentNodeDegree (hstart := hf.section5StartNode_isGraphNode) v
+
+theorem IsFaceRespecting.section5CanonicalStartGraph_adj_iff {n : ℕ} [NeZero n]
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n} (hf : IsFaceRespecting f)
+    {v : section5CanonicalStartComponent (T := T) (f := f) hf} :
+    (section5CanonicalStartComponentGraph (T := T) (f := f) hf).Adj
+        (section5CanonicalStartVertexInComponent (T := T) (f := f) hf) v ↔
+      v.1.1.level = 1 ∧ (section5StartCell n).IsSubfaceOf v.1.1.cell := by
+  constructor
+  · intro hv
+    rcases (section5StartComponentGraph_adj_start_iff
+      (hstart := hf.section5StartNode_isGraphNode)).mp hv with ⟨hlevel, hsub, _⟩
+    exact ⟨hlevel, hsub⟩
+  · rintro ⟨hlevel, hsub⟩
+    exact (section5StartComponentGraph_adj_start_iff
+      (hstart := hf.section5StartNode_isGraphNode)).mpr
+        ⟨hlevel, hsub, hf.startCell_hits_prefixBarycenter⟩
+
+/-- The remaining start-boundary input can now be phrased canonically from face preservation:
+there is a unique level-1 graph node in the actual start component whose cell contains `e₁`. -/
+structure Section5CanonicalBoundarySuccessorData {n : ℕ} [NeZero n]
+    (T : SimplexTriangulation n) (f : SelfMapOnRentSimplex n)
+    (hf : IsFaceRespecting f) : Prop where
+  exists_unique_levelOne_successor :
+    ∃! v : section5CanonicalStartComponent (T := T) (f := f) hf,
+      v.1.1.level = 1 ∧ (section5StartCell n).IsSubfaceOf v.1.1.cell
+
 /-- The graph-theoretic form of the paper's generic segment-intersection claims on the connected
 component of the Section 5 graph that starts at `e₁`. -/
 structure Section5StartComponentGenericity {n : ℕ} [NeZero n]
@@ -879,6 +925,33 @@ theorem section5SegmentGeometry_of_startBoundaryGeometry {n : ℕ} [NeZero n]
   intro v hv hne
   exact hendpoint v hv hne
 
+theorem Section5CanonicalBoundarySuccessorData.toStartBoundaryGeometry {n : ℕ} [NeZero n]
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n} (hf : IsFaceRespecting f)
+    (hsucc : Section5CanonicalBoundarySuccessorData T f hf) :
+    Section5StartBoundaryGeometry T f hf.section5StartNode_isGraphNode := by
+  refine section5StartBoundaryGeometry_of_faceRespectingAndSuccessorData
+    (T := T) (f := f) (hstart := hf.section5StartNode_isGraphNode) hf ?_
+  exact hsucc.exists_unique_levelOne_successor
+
+theorem Section5CanonicalBoundarySuccessorData.start_unique_neighbor {n : ℕ} [NeZero n]
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n} (hf : IsFaceRespecting f)
+    (hsucc : Section5CanonicalBoundarySuccessorData T f hf) :
+    ∃! v : section5CanonicalStartComponent (T := T) (f := f) hf,
+      (section5CanonicalStartComponentGraph (T := T) (f := f) hf).Adj
+        (section5CanonicalStartVertexInComponent (T := T) (f := f) hf) v := by
+  rcases hsucc.exists_unique_levelOne_successor with ⟨v, hv, huniq⟩
+  refine ⟨v, (hf.section5CanonicalStartGraph_adj_iff).2 hv, ?_⟩
+  intro w hw
+  exact huniq w ((hf.section5CanonicalStartGraph_adj_iff).1 hw)
+
+theorem Section5CanonicalBoundarySuccessorData.start_degreeOne {n : ℕ} [NeZero n]
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n} (hf : IsFaceRespecting f)
+    (hsucc : Section5CanonicalBoundarySuccessorData T f hf) :
+    section5CanonicalStartComponentNodeDegree (T := T) (f := f) hf
+      (section5CanonicalStartVertexInComponent (T := T) (f := f) hf) = 1 := by
+  simpa [section5CanonicalStartComponentNodeDegree, section5CanonicalStartVertexInComponent] using
+    (hsucc.toStartBoundaryGeometry hf).start_degree_one
+
 theorem Section5StartBoundaryGeometry.exists_targetFacet_of_localDegreeData {n : ℕ} [NeZero n]
     {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
     (hf : IsFaceRespecting f)
@@ -911,5 +984,25 @@ theorem exists_targetFacet_of_faceRespectingAndSuccessorLocalDegreeData {n : ℕ
   exact (section5StartBoundaryGeometry_of_faceRespectingAndSuccessorData
     (T := T) (f := f) (hstart := hstart) hf hsucc).exists_targetFacet_of_localDegreeData
       hf hdeg hendpoint
+
+theorem Section5CanonicalBoundarySuccessorData.exists_targetFacet_of_localDegreeData {n : ℕ}
+    [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    (hf : IsFaceRespecting f) (hsucc : Section5CanonicalBoundarySuccessorData T f hf)
+    (hdeg :
+      ∀ v : section5CanonicalStartComponent (T := T) (f := f) hf,
+        section5CanonicalStartComponentNodeDegree (T := T) (f := f) hf v ≤ 2)
+    (hendpoint :
+      ∀ v : section5CanonicalStartComponent (T := T) (f := f) hf,
+        section5CanonicalStartComponentNodeDegree (T := T) (f := f) hf v = 1 →
+          v ≠ section5CanonicalStartVertexInComponent (T := T) (f := f) hf →
+            IsSection5Endpoint T f v.1.1) :
+    ∃ τ ∈ T.facets,
+      FacetImageContains f τ ((rentBarycenter n : RentSimplex n) : RentCoordinates n) := by
+  exact (hsucc.toStartBoundaryGeometry hf).exists_targetFacet_of_localDegreeData hf
+    (by simpa [section5CanonicalStartComponentNodeDegree] using hdeg)
+    (by
+      intro v hv hne
+      exact hendpoint v (by simpa [section5CanonicalStartComponentNodeDegree] using hv)
+        (by simpa [section5CanonicalStartVertexInComponent] using hne))
 
 end Arxiv170207325

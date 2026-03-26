@@ -139,16 +139,21 @@
   singleton start cell `e_1` to hit `b_1`; in addition, the triangulation API now proves that any
   facet realization containing the original simplex vertex `e_1` must actually have `e_1` as a
   vertex, so `section5StartNode` is automatically a genuine Section 5 graph node under face
-  preservation; the remaining wrappers are now collapsed into a
+  preservation; the boundary-start interface has now also been repackaged canonically into
+  `Section5CanonicalBoundarySuccessorData`, so the remaining local goal is precisely to prove the
+  existence/uniqueness of the level-1 successor on the real start component from actual boundary
+  geometry rather than to keep threading an auxiliary `hstart` witness; the remaining wrappers are
+  now collapsed into a
   direct theorem saying that face preservation, a concrete unique start successor, and the
   two local-degree hypotheses already imply a target-containing facet.
 - Next local objective:
   discharge `Section5SegmentGeometry` from the actual Section 5 geometry:
-  first identify the unique level-1 successor of the now-canonical start node and prove the start
-  degree-one statement on the real start component, then prove that every graph node in that
-  component has at most two neighbors and every non-start degree-one node is a barycenter-hitting
-  endpoint, all under the paper's generic segment-intersection assumptions; the `e_1 ↦ b_1`
-  portion and the fact that `e_1` is an actual graph node are now already discharged.
+  first prove `Section5CanonicalBoundarySuccessorData` from actual geometry on the boundary edge
+  `[e_1,e_2]`, which will immediately give the start degree-one statement on the canonical start
+  component, then prove that every graph node in that component has at most two neighbors and
+  every non-start degree-one node is a barycenter-hitting endpoint, all under the paper's generic
+  segment-intersection assumptions; the `e_1 ↦ b_1` portion and the fact that `e_1` is an actual
+  graph node are now already discharged.
 - Current structural blocker:
   the present `SimplexTriangulation` wrapper does not yet expose the induced simplicial
   subdivision of the prefix faces, especially the boundary edge `[e_1,e_2]`, and it also does
