@@ -180,6 +180,25 @@ theorem SimplexTriangulation.card_le_prefixVertexPoints_of_subset_coordinateFace
     (s := S.map e) (t := prefixVertexPoints n k) hS_aff hsubset_span
   simpa [e] using hcard
 
+theorem SimplexTriangulation.affineIndependent_map_of_subset_facet {n : ℕ}
+    {T : SimplexTriangulation n} {τ : SimplexFacet n} (hτ : τ ∈ T.facets)
+    {S : Finset (RentSimplex n)} (hS : S ⊆ τ.vertices) :
+    AffineIndependent ℝ ((↑) : (S.map (simplexCoordEmbedding n)) → RentCoordinates n) := by
+  classical
+  let e := simplexCoordEmbedding n
+  let pτ : τ.vertices → RentCoordinates n := fun v => ((v : RentSimplex n) : RentCoordinates n)
+  let pS : S.map e → RentCoordinates n := fun v => (v : RentCoordinates n)
+  have hτ_aff_range : AffineIndependent ℝ (fun x : Set.range pτ => (x : RentCoordinates n)) := by
+    exact AffineIndependent.range (T.facet_affineIndependent τ hτ)
+  have hS_range_subset : Set.range pS ⊆ Set.range pτ := by
+    rintro y ⟨v, rfl⟩
+    rcases Finset.mem_map.mp v.2 with ⟨w, hw, hw_eq⟩
+    refine ⟨⟨w, hS hw⟩, ?_⟩
+    simpa [pτ, pS, e] using hw_eq
+  have hS_aff_range : AffineIndependent ℝ (fun x : Set.range pS => (x : RentCoordinates n)) := by
+    exact hτ_aff_range.mono hS_range_subset
+  exact AffineIndependent.of_set_of_injective hS_aff_range Subtype.val_injective
+
 /-- The barycenter `b_k` of the prefix face `conv{e_1, ..., e_k}` from Section 5. -/
 def prefixBarycenter (n k : ℕ) : RentCoordinates n :=
   fun i => if i.1 < k then (k : ℝ)⁻¹ else 0
@@ -2092,6 +2111,66 @@ theorem IsSection5GraphNode.vertex_mem_affineSpan_prefixVertexPoints {n : ℕ}
       affineSpan ℝ ((prefixVertexPoints n (u.level + 1) : Finset (RentCoordinates n)) :
         Set (RentCoordinates n)) := by
   exact mem_affineSpan_prefixVertexPoints_of_mem_coordinateFace (hu.prefix_vertices hv)
+
+theorem IsSection5GraphNode.cell_vertices_affineSpan_eq_prefixVertexPoints {n : ℕ}
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n} {u : Section5Node n}
+    (hu : IsSection5GraphNode T f u) :
+    affineSpan ℝ (((u.cell.vertices.map (simplexCoordEmbedding n)) :
+      Finset (RentCoordinates n)) : Set (RentCoordinates n)) =
+      affineSpan ℝ ((prefixVertexPoints n (u.level + 1) : Finset (RentCoordinates n)) :
+        Set (RentCoordinates n)) := by
+  classical
+  let e := simplexCoordEmbedding n
+  have hsubset :
+      (((u.cell.vertices.map e : Finset (RentCoordinates n)) : Set (RentCoordinates n)) ⊆
+        affineSpan ℝ ((prefixVertexPoints n (u.level + 1) : Finset (RentCoordinates n)) :
+          Set (RentCoordinates n))) := by
+    intro y hy
+    rcases Finset.mem_map.mp hy with ⟨v, hv, rfl⟩
+    exact mem_affineSpan_prefixVertexPoints_of_mem_coordinateFace (hu.prefix_vertices hv)
+  have hle :
+      affineSpan ℝ (((u.cell.vertices.map e : Finset (RentCoordinates n)) :
+        Set (RentCoordinates n))) ≤
+        affineSpan ℝ ((prefixVertexPoints n (u.level + 1) : Finset (RentCoordinates n)) :
+          Set (RentCoordinates n)) := by
+    exact affineSpan_le_of_subset_coe hsubset
+  apply le_antisymm hle
+  by_contra hnot
+  have hne :
+      affineSpan ℝ (((u.cell.vertices.map e : Finset (RentCoordinates n)) :
+        Set (RentCoordinates n))) ≠
+        affineSpan ℝ ((prefixVertexPoints n (u.level + 1) : Finset (RentCoordinates n)) :
+          Set (RentCoordinates n)) := by
+    intro hEq
+    exact hnot (hEq.symm ▸ le_rfl)
+  have hlt :
+      affineSpan ℝ (((u.cell.vertices.map e : Finset (RentCoordinates n)) :
+        Set (RentCoordinates n))) <
+        affineSpan ℝ ((prefixVertexPoints n (u.level + 1) : Finset (RentCoordinates n)) :
+          Set (RentCoordinates n)) :=
+    lt_of_le_of_ne hle hne
+  obtain ⟨τ, hτ, huτ⟩ := hu.isFace
+  have hAffine :
+      AffineIndependent ℝ ((↑) : (u.cell.vertices.map e) → RentCoordinates n) :=
+    T.affineIndependent_map_of_subset_facet hτ huτ
+  have hcard_lt :
+      (u.cell.vertices.map e).card < (prefixVertexPoints n (u.level + 1)).card :=
+    hAffine.card_lt_card_of_affineSpan_lt_affineSpan hlt
+  have hcard_cell : (u.cell.vertices.map e).card = u.level + 1 := by
+    simpa [e] using hu.card_eq
+  have hcard_prefix : (prefixVertexPoints n (u.level + 1)).card = u.level + 1 :=
+    prefixVertexPoints_card hu.level_le
+  omega
+
+theorem IsSection5GraphNode.mem_affineSpan_cell_vertices_of_mem_coordinateFace {n : ℕ}
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n} {u : Section5Node n}
+    (hu : IsSection5GraphNode T f u) {x : RentSimplex n}
+    (hx : x ∈ coordinateFace (prefixRooms n (u.level + 1))) :
+    ((x : RentSimplex n) : RentCoordinates n) ∈
+      affineSpan ℝ (((u.cell.vertices.map (simplexCoordEmbedding n)) :
+        Finset (RentCoordinates n)) : Set (RentCoordinates n)) := by
+  rw [hu.cell_vertices_affineSpan_eq_prefixVertexPoints]
+  exact mem_affineSpan_prefixVertexPoints_of_mem_coordinateFace hx
 
 def section5LowerPrefixVertices {n : ℕ} (u : Section5Node n) : Finset (RentSimplex n) := by
   classical

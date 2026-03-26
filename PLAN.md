@@ -326,7 +326,12 @@
   structural lemma is now a boundary-star statement: for any full-dimensional boundary cell `σ` in
   `coordinateFace (prefixRooms n (k + 1))`, any two incident facets on the
   `coordinateFace (prefixRooms n (k + 2))` side cut out the same `facetPrefixVertices` filter,
-  equivalently determine the same `(k+1)`-cell above `σ`.
+  equivalently determine the same `(k+1)`-cell above `σ`. The newest Lean step toward that
+  geometric statement is now in place: if `u` is a Section 5 graph node, then the vertices of
+  `u.cell` already span exactly the same affine subspace as `prefixVertexPoints n (u.level + 1)`.
+  So the remaining proof burden is no longer to show that the source cell is full-dimensional in
+  the lower prefix face, but to exploit that full-dimensionality to build an actual overlap point
+  when two distinct upper simplices lie on the same side of the shared boundary face.
   On the packaging side, the remaining graph-theoretic conversion gap is now gone: the support
   layer proves `Section5PerturbationGenericity.toBoundarySegmentGenericity`, and the existing
   local-left/upper-endpoint wrapper is rerouted through
