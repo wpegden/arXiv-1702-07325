@@ -1906,6 +1906,125 @@ theorem section5StartComponentGraph_adj_levels {n : ℕ} [NeZero n]
   · exact Or.inl huv.1
   · exact Or.inr huv.1
 
+def section5LowerNeighbors {n : ℕ} [NeZero n] {T : SimplexTriangulation n}
+    {f : SelfMapOnRentSimplex n}
+    {hstart : IsSection5GraphNode T f (section5StartNode n)}
+    (v : section5StartComponent hstart) : Finset (section5StartComponent hstart) := by
+  classical
+  exact Finset.univ.filter fun u : section5StartComponent hstart =>
+    (section5StartComponentGraph hstart).Adj u v ∧ u.1.1.level + 1 = v.1.1.level
+
+def section5UpperNeighbors {n : ℕ} [NeZero n] {T : SimplexTriangulation n}
+    {f : SelfMapOnRentSimplex n}
+    {hstart : IsSection5GraphNode T f (section5StartNode n)}
+    (v : section5StartComponent hstart) : Finset (section5StartComponent hstart) := by
+  classical
+  exact Finset.univ.filter fun w : section5StartComponent hstart =>
+    (section5StartComponentGraph hstart).Adj v w ∧ v.1.1.level + 1 = w.1.1.level
+
+def section5BoundaryNeighbors {n : ℕ} [NeZero n] {T : SimplexTriangulation n}
+    {f : SelfMapOnRentSimplex n}
+    {hstart : IsSection5GraphNode T f (section5StartNode n)}
+    (v : section5StartComponent hstart) : Finset (section5StartComponent hstart) := by
+  classical
+  exact section5LowerNeighbors v ∪ section5UpperNeighbors v
+
+@[simp]
+theorem mem_section5LowerNeighbors_iff {n : ℕ} [NeZero n] {T : SimplexTriangulation n}
+    {f : SelfMapOnRentSimplex n}
+    {hstart : IsSection5GraphNode T f (section5StartNode n)}
+    {u v : section5StartComponent hstart} :
+    u ∈ section5LowerNeighbors v ↔
+      (section5StartComponentGraph hstart).Adj u v ∧ u.1.1.level + 1 = v.1.1.level := by
+  classical
+  simp [section5LowerNeighbors]
+
+@[simp]
+theorem mem_section5UpperNeighbors_iff {n : ℕ} [NeZero n] {T : SimplexTriangulation n}
+    {f : SelfMapOnRentSimplex n}
+    {hstart : IsSection5GraphNode T f (section5StartNode n)}
+    {v w : section5StartComponent hstart} :
+    w ∈ section5UpperNeighbors v ↔
+      (section5StartComponentGraph hstart).Adj v w ∧ v.1.1.level + 1 = w.1.1.level := by
+  classical
+  simp [section5UpperNeighbors]
+
+@[simp]
+theorem mem_section5BoundaryNeighbors_iff {n : ℕ} [NeZero n]
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    {hstart : IsSection5GraphNode T f (section5StartNode n)}
+    {v w : section5StartComponent hstart} :
+    w ∈ section5BoundaryNeighbors v ↔ (section5StartComponentGraph hstart).Adj v w := by
+  classical
+  constructor
+  · intro hw
+    rw [section5BoundaryNeighbors, Finset.mem_union] at hw
+    rcases hw with hw | hw
+    · exact (mem_section5LowerNeighbors_iff.mp hw).1.symm
+    · exact (mem_section5UpperNeighbors_iff.mp hw).1
+  · intro hw
+    rcases section5StartComponentGraph_adj_levels (hstart := hstart) hw with hlevel | hlevel
+    · rw [section5BoundaryNeighbors, Finset.mem_union]
+      exact Or.inr <| (mem_section5UpperNeighbors_iff).mpr ⟨hw, hlevel⟩
+    · rw [section5BoundaryNeighbors, Finset.mem_union]
+      exact Or.inl <| (mem_section5LowerNeighbors_iff).mpr ⟨hw.symm, hlevel⟩
+
+structure Section5BoundarySegmentGenericity {n : ℕ} [NeZero n]
+    (T : SimplexTriangulation n) (f : SelfMapOnRentSimplex n)
+    (hstart : IsSection5GraphNode T f (section5StartNode n)) : Prop where
+  boundaryNeighbors_card_le_two :
+    ∀ v : section5StartComponent hstart,
+      (section5BoundaryNeighbors v).card ≤ 2
+  single_boundary_neighbor_is_endpoint :
+    ∀ v : section5StartComponent hstart,
+      v ≠ section5StartVertexInComponent hstart →
+        (section5BoundaryNeighbors v).card = 1 →
+          IsSection5Endpoint T f v.1.1
+
+theorem section5LowerNeighbors_eq_singleton_of_ne_start {n : ℕ} [NeZero n]
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    {hstart : IsSection5GraphNode T f (section5StartNode n)}
+    (hlower :
+      ∀ v : section5StartComponent hstart,
+        v ≠ section5StartVertexInComponent hstart →
+          ∃ u : section5StartComponent hstart,
+            (section5StartComponentGraph hstart).Adj u v ∧
+              u.1.1.level + 1 = v.1.1.level)
+    {v : section5StartComponent hstart}
+    (hv : v ≠ section5StartVertexInComponent hstart) :
+    ∃ u : section5StartComponent hstart, section5LowerNeighbors v = {u} := by
+  classical
+  rcases hlower v hv with ⟨u, huAdj, huLevel⟩
+  refine ⟨u, Finset.ext ?_⟩
+  intro x
+  constructor
+  · intro hx
+    have hxAdj : (section5StartComponentGraph hstart).Adj x v :=
+      (mem_section5LowerNeighbors_iff).mp hx |>.1
+    have hxLevel : x.1.1.level + 1 = v.1.1.level :=
+      (mem_section5LowerNeighbors_iff).mp hx |>.2
+    have hxEq : x = u :=
+      section5StartComponentGraph_lower_neighbor_unique hxAdj hxLevel huAdj huLevel
+    simp [hxEq]
+  · intro hx
+    have hx' : x = u := by simpa using hx
+    subst hx'
+    exact (mem_section5LowerNeighbors_iff).mpr ⟨huAdj, huLevel⟩
+
+theorem section5UpperNeighbors_eq_empty_of_noUpper {n : ℕ} [NeZero n]
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    {hstart : IsSection5GraphNode T f (section5StartNode n)}
+    {v : section5StartComponent hstart}
+    (hno :
+      ¬ ∃ w : section5StartComponent hstart,
+        (section5StartComponentGraph hstart).Adj v w ∧
+          v.1.1.level + 1 = w.1.1.level) :
+    section5UpperNeighbors v = ∅ := by
+  classical
+  apply Finset.eq_empty_iff_forall_notMem.mpr
+  intro w hw
+  exact hno ⟨w, (mem_section5UpperNeighbors_iff).mp hw⟩
+
 /-- A local 1-dimensional-cell-complex package for the real Section 5 start component.
 It records that every non-start node is entered from a unique lower-level neighbor, each node has
 at most one higher-level continuation, and a node with no higher-level continuation already hits
@@ -2087,6 +2206,52 @@ theorem section5SegmentGeometry_of_startBoundaryAndOneComplexGeometry {n : ℕ} 
   refine ⟨hstartGeom.start_unique_neighbor, hcomplex.degree_le_two, ?_⟩
   exact hcomplex.nonstart_degree_one_is_endpoint
 
+theorem Section5BoundarySegmentGenericity.degree_le_two {n : ℕ} [NeZero n]
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    {hstart : IsSection5GraphNode T f (section5StartNode n)}
+    (hseg : Section5BoundarySegmentGenericity T f hstart) :
+    ∀ v : section5StartComponent hstart, section5StartComponentNodeDegree v ≤ 2 := by
+  intro v
+  classical
+  let neighbors : Finset (section5StartComponent hstart) :=
+    Finset.univ.filter fun w : section5StartComponent hstart =>
+      (section5StartComponentGraph hstart).Adj v w
+  have hneighbors : neighbors = section5BoundaryNeighbors v := by
+    ext w
+    simp [neighbors]
+  calc
+    section5StartComponentNodeDegree v = neighbors.card := by rfl
+    _ = (section5BoundaryNeighbors v).card := by rw [hneighbors]
+    _ ≤ 2 := hseg.boundaryNeighbors_card_le_two v
+
+theorem Section5BoundarySegmentGenericity.nonstart_degree_one_is_endpoint {n : ℕ} [NeZero n]
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    {hstart : IsSection5GraphNode T f (section5StartNode n)}
+    (hseg : Section5BoundarySegmentGenericity T f hstart) :
+    ∀ v : section5StartComponent hstart, section5StartComponentNodeDegree v = 1 →
+      v ≠ section5StartVertexInComponent hstart →
+        IsSection5Endpoint T f v.1.1 := by
+  intro v hv hne
+  classical
+  let neighbors : Finset (section5StartComponent hstart) :=
+    Finset.univ.filter fun w : section5StartComponent hstart =>
+      (section5StartComponentGraph hstart).Adj v w
+  have hneighbors : neighbors = section5BoundaryNeighbors v := by
+    ext w
+    simp [neighbors]
+  have hcard : (section5BoundaryNeighbors v).card = 1 := by
+    simpa [section5StartComponentNodeDegree, hneighbors, neighbors] using hv
+  exact hseg.single_boundary_neighbor_is_endpoint v hne hcard
+
+theorem section5SegmentGeometry_of_startBoundaryAndBoundarySegmentGenericity {n : ℕ}
+    [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    {hstart : IsSection5GraphNode T f (section5StartNode n)}
+    (hstartGeom : Section5StartBoundaryGeometry T f hstart)
+    (hseg : Section5BoundarySegmentGenericity T f hstart) :
+    Section5SegmentGeometry T f hstart := by
+  refine ⟨hstartGeom.start_unique_neighbor, hseg.degree_le_two, ?_⟩
+  exact hseg.nonstart_degree_one_is_endpoint
+
 theorem section5SegmentGeometry_of_startBoundaryGeometry {n : ℕ} [NeZero n]
     {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
     {hstart : IsSection5GraphNode T f (section5StartNode n)}
@@ -2191,5 +2356,15 @@ theorem Section5CanonicalBoundarySuccessorData.exists_targetFacet_of_oneComplexG
   exact (section5SegmentGeometry_of_startBoundaryAndOneComplexGeometry
     (T := T) (f := f) (hstart := hf.section5StartNode_isGraphNode)
     (hsucc.toStartBoundaryGeometry hf) hcomplex).exists_targetFacet hf
+
+theorem Section5CanonicalBoundarySuccessorData.exists_targetFacet_of_boundarySegmentGenericity
+    {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    (hf : IsFaceRespecting f) (hsucc : Section5CanonicalBoundarySuccessorData T f hf)
+    (hseg : Section5BoundarySegmentGenericity T f hf.section5StartNode_isGraphNode) :
+    ∃ τ ∈ T.facets,
+      FacetImageContains f τ ((rentBarycenter n : RentSimplex n) : RentCoordinates n) := by
+  exact (section5SegmentGeometry_of_startBoundaryAndBoundarySegmentGenericity
+    (T := T) (f := f) (hstart := hf.section5StartNode_isGraphNode)
+    (hsucc.toStartBoundaryGeometry hf) hseg).exists_targetFacet hf
 
 end Arxiv170207325

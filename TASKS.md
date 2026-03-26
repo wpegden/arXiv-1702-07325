@@ -36,10 +36,10 @@
 - [x] Repackage the remaining Section 5 local-degree work into a direct 1-dimensional-cell-complex interface on the actual start component: define `Section5OneComplexGeometry`, prove it yields the `≤ 2` degree bound and non-start endpoint rule, and bridge it to `Section5SegmentGeometry` and the canonical target-facet theorem.
 - [x] Prove the first concrete one-complex fragment on the real start component: any level-0 node is the start node, so any lower neighbor of a level-1 node is uniquely the start vertex.
 - [x] Add the prefix-face affine-span infrastructure for the next uniqueness step: define the finite set `prefixVertexPoints`, prove every point of `coordinateFace (prefixRooms n k)` lies in its convex hull and affine span, and specialize that fact to Section 5 graph-node vertices.
-- [ ] Prove the actual `Section5OneComplexGeometry` axioms from the manuscript's generic segment-intersection picture on the barycenter-chain preimage.
 - [x] Use the `prefixVertexPoints` affine-span lemmas together with facet affine independence to bound the number of lower-face vertices inside a higher-level Section 5 cell, and use that bound to prove concrete lower-continuation uniqueness on the real start component.
-- [ ] Finish the continuation geometry by proving the remaining upper-continuation uniqueness and no-upper-neighbor endpoint statements from actual simplex-image segment intersections.
-- [ ] Discharge `Section5SegmentGeometry` from actual Section 5 lemmas on the barycenter-chain preimage by combining the canonical start-successor theorem with the new one-complex geometry.
+- [x] Introduce `Section5BoundarySegmentGenericity` as the exact support-layer formalization of the manuscript's remaining generic segment-intersection input, and prove it directly implies the `≤ 2` degree bound, the non-start endpoint rule, `Section5SegmentGeometry`, and the canonical target-facet theorem.
+- [ ] Prove the actual `Section5BoundarySegmentGenericity` fields from the manuscript's perturbation / segment-intersection picture on the barycenter-chain preimage.
+- [ ] If needed for cleanup rather than the main proof path, finish the remaining `Section5OneComplexGeometry` fields by deriving upper-continuation uniqueness and the no-upper-neighbor endpoint rule from the same geometric input.
 
 ## Completed
 - [x] Read `repo/paper/arxiv-1702.07325.tex` from start to finish and mapped the proof structure.

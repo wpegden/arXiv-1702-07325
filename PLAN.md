@@ -177,17 +177,24 @@
   lower continuation `u -> v` must satisfy
   `u.cell.vertices = section5LowerPrefixVertices v`. As a consequence,
   `section5StartComponentGraph_lower_neighbor_unique` is now proved on the real start component
-  without assuming any genericity package. The remaining local geometry is therefore the upper
-  continuation uniqueness and the endpoint rule for nodes with no higher continuation.
+  without assuming any genericity package. In addition, the remaining manuscript-level genericity
+  sentence has now been isolated exactly as `Section5BoundarySegmentGenericity`: a local support
+  layer saying the current barycenter-chain segment contributes at most two boundary neighbors, and
+  exactly one when the segment ends inside the face. `Section5Path.lean` now proves that this
+  package, together with the already-solved canonical start-successor data, directly yields
+  `Section5SegmentGeometry` and therefore a target-containing facet; so `Section5OneComplexGeometry`
+  is no longer on the critical path for the paper-facing theorem, even though it remains useful
+  internal structure.
 - Current structural blocker:
   the present `SimplexTriangulation` wrapper does not yet expose the induced simplicial
   subdivision of the prefix faces, especially the boundary edge `[e_1,e_2]`, and it also does
   not formalize the perturbation/genericity argument that makes the barycenter-chain preimage a
   finite 1-dimensional cell complex. The start-successor existence claim has now been recovered
   directly from boundary-edge geometry, and the residual local graph obligations have been reduced
-  to the remaining fields of `Section5OneComplexGeometry`; one of the two missing upgrades is
-  still needed to prove upper continuation uniqueness and the no-upper-neighbor endpoint rule from
-  the actual Section 5 geometry rather than assume them.
+  further to proving the concrete fields of `Section5BoundarySegmentGenericity` from actual simplex
+  intersections with the barycenter chain. A later cleanup may still derive the remaining
+  `Section5OneComplexGeometry` fields from the same input, but that is no longer the main blocker
+  for the target-facet theorem.
 - First prove the barycenter-specialized version if that is the easiest entry point.
 - Then generalize to arbitrary interior targets if Section 6 needs it.
 - If full surjectivity is still awkward, keep the theorem in the "target in interior" form first; that already covers the barycenter and the interior `y` used in the first Section 6 theorem.
