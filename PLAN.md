@@ -215,6 +215,15 @@
   `Section5MinimalSliceFaceData.exists_point_mem_slice_and_mem_coordinateFace` extracts such a
   point directly, so any future proof of `Section5SimplexSliceGenericity` or
   `Section5SimplexSliceBoundaryGeometry` already supplies the canonical lower-prefix slice point.
+  The same is now true from the step language itself:
+  `IsPiecewiseAffineOn.section5Step_card_eq_lowerPrefixVertices_and_exists_point` shows that a
+  single lower predecessor `Section5Step f v u` already forces both canonical lower-entry facts
+  on `u`, namely `(section5LowerPrefixVertices u).card = u.level` and existence of a slice point
+  in the lower prefix face. The older simplex-slice genericity package now also compiles all the
+  way to that same canonical pair:
+  `Section5SimplexSliceGenericity.card_eq_lowerPrefixVertices_and_exists_point` passes from the
+  existing lower-step theorem to the predecessor-step bridge, so no further conversion work
+  remains between the old slice package and the new canonical lower-entry route.
   So the remaining honest geometry on `u.cell` is now: prove that the slice reaches the lower
   prefix face, and prove that the canonical lower-prefix face has exactly `u.level` vertices.
   The older `Section5OneComplexGeometry` layer remains useful as cleanup, but it is no longer the

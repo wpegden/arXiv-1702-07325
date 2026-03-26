@@ -1951,6 +1951,27 @@ theorem section5Step_vertices_eq_lowerPrefixVertices {n : ℕ} {T : SimplexTrian
     (section5LowerPrefixVertices v).card ≤ v.level := hcard_le
     _ = u.cell.vertices.card := hcard_eq.symm
 
+theorem IsPiecewiseAffineOn.section5Step_card_eq_lowerPrefixVertices_and_exists_point
+    {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    (hfpl : IsPiecewiseAffineOn T f) {u v : Section5Node n}
+    (hu : IsSection5GraphNode T f u) (hv : IsSection5GraphNode T f v)
+    (hstep : Section5Step f v u) :
+    (section5LowerPrefixVertices u).card = u.level ∧
+      ∃ x : RentSimplex n,
+        x ∈ section5CellSlice u f ∧ x ∈ coordinateFace (prefixRooms n u.level) := by
+  have hverts : v.cell.vertices = section5LowerPrefixVertices u :=
+    section5Step_vertices_eq_lowerPrefixVertices hv hu hstep
+  have hcard : (section5LowerPrefixVertices u).card = u.level := by
+    rw [← hverts, hv.card_eq, hstep.1]
+  have hhit :
+      FacetImageContains f (⟨section5LowerPrefixVertices u⟩ : SimplexFacet n)
+        (prefixBarycenter n u.level) := by
+    simpa [← hverts] using hstep.2.2
+  exact
+    ⟨hcard,
+      hfpl.exists_mem_section5CellSlice_and_mem_coordinateFace_of_facetImageContains_section5LowerPrefixVertices
+        hu hhit⟩
+
 /-- The undirected adjacency relation on the Section 5 graph. -/
 def Section5Adjacent {n : ℕ} (f : SelfMapOnRentSimplex n) (u v : Section5Node n) : Prop :=
   Section5Step f u v ∨ Section5Step f v u
@@ -3611,6 +3632,23 @@ theorem Section5SimplexSliceGenericity.exists_point_mem_section5CellSlice_and_me
   exact
     (hslice.lower_minimal_slice_face_of_ne_start v hv).exists_point_mem_slice_and_mem_coordinateFace
       hfpl hv_node
+
+theorem Section5SimplexSliceGenericity.card_eq_lowerPrefixVertices_and_exists_point
+    {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    {hstart : IsSection5GraphNode T f (section5StartNode n)}
+    (hslice : Section5SimplexSliceGenericity T f hstart)
+    (hf : IsFaceRespecting f) (hfpl : IsPiecewiseAffineOn T f)
+    (v : section5StartComponent hstart)
+    (hv : v ≠ section5StartVertexInComponent hstart) :
+    (section5LowerPrefixVertices v.1.1).card = v.1.1.level ∧
+      ∃ x : RentSimplex n,
+        x ∈ section5CellSlice v.1.1 f ∧
+          x ∈ coordinateFace (prefixRooms n v.1.1.level) := by
+  have hv_node : IsSection5GraphNode T f v.1.1 := (mem_section5Nodes_iff).mp v.1.2
+  obtain ⟨u, huStep⟩ :=
+    (hslice.lower_minimal_slice_face_of_ne_start v hv).exists_startComponentLowerStep hf hfpl hv
+  have hu_node : IsSection5GraphNode T f u.1.1 := (mem_section5Nodes_iff).mp u.1.2
+  exact hfpl.section5Step_card_eq_lowerPrefixVertices_and_exists_point hv_node hu_node huStep
 
 def Section5SimplexSliceBoundaryGeometry.toSimplexSliceGenericity {n : ℕ} [NeZero n]
     {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
