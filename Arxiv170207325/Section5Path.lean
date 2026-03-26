@@ -2548,4 +2548,61 @@ theorem Section5PointwiseGenericity.exists_targetFacet {n : ℕ} [NeZero n]
       FacetImageContains f τ ((rentBarycenter n : RentSimplex n) : RentCoordinates n) := by
   exact (hgeom.toSegmentGeometry hn hf).exists_targetFacet hf
 
+/-- Minimal local support theorem matching the manuscript's perturbation-to-a-local-1-complex
+claim: at each start-component node the upper-neighbor fiber is locally a singleton, and when it
+is empty the face already hits the barycenter. -/
+structure Section5LocalOneComplexGeometry {n : ℕ} [NeZero n]
+    (T : SimplexTriangulation n) (f : SelfMapOnRentSimplex n)
+    (hstart : IsSection5GraphNode T f (section5StartNode n)) where
+  piecewiseAffine : IsPiecewiseAffineOn T f
+  upper_neighbors_subsingleton :
+    ∀ v : section5StartComponent hstart,
+      Subsingleton {w : section5StartComponent hstart //
+        (section5StartComponentGraph hstart).Adj v w ∧
+          v.1.1.level + 1 = w.1.1.level}
+  no_upper_neighbor_hits_barycenter :
+    ∀ v : section5StartComponent hstart,
+      IsEmpty {w : section5StartComponent hstart //
+        (section5StartComponentGraph hstart).Adj v w ∧
+          v.1.1.level + 1 = w.1.1.level} →
+        FaceHitWitness T f v.1.1.cell
+          ((rentBarycenter n : RentSimplex n) : RentCoordinates n)
+
+def Section5LocalOneComplexGeometry.toPointwiseGenericity {n : ℕ} [NeZero n]
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    {hstart : IsSection5GraphNode T f (section5StartNode n)}
+    (hgeom : Section5LocalOneComplexGeometry T f hstart) :
+    Section5PointwiseGenericity T f hstart := by
+  refine ⟨hgeom.piecewiseAffine, ?_, ?_⟩
+  · intro u a b haAdj haLevel hbAdj hbLevel _hw
+    let a' : {w : section5StartComponent hstart //
+        (section5StartComponentGraph hstart).Adj u w ∧
+          u.1.1.level + 1 = w.1.1.level} := ⟨a, haAdj, haLevel⟩
+    let b' : {w : section5StartComponent hstart //
+        (section5StartComponentGraph hstart).Adj u w ∧
+          u.1.1.level + 1 = w.1.1.level} := ⟨b, hbAdj, hbLevel⟩
+    have hs : Subsingleton {w : section5StartComponent hstart //
+        (section5StartComponentGraph hstart).Adj u w ∧
+          u.1.1.level + 1 = w.1.1.level} := hgeom.upper_neighbors_subsingleton u
+    have hab : a' = b' := hs.elim a' b'
+    exact congrArg Subtype.val hab
+  · intro v hv
+    let hEmpty :
+        IsEmpty {w : section5StartComponent hstart //
+          (section5StartComponentGraph hstart).Adj v w ∧
+            v.1.1.level + 1 = w.1.1.level} := by
+      refine ⟨?_⟩
+      intro w
+      exact hv ⟨w.1, w.2.1, w.2.2⟩
+    exact hgeom.no_upper_neighbor_hits_barycenter v hEmpty
+
+theorem Section5LocalOneComplexGeometry.exists_targetFacet {n : ℕ} [NeZero n]
+    (hn : 2 ≤ n) {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    (hf : IsFaceRespecting f)
+    {hstart : IsSection5GraphNode T f (section5StartNode n)}
+    (hgeom : Section5LocalOneComplexGeometry T f hstart) :
+    ∃ τ ∈ T.facets,
+      FacetImageContains f τ ((rentBarycenter n : RentSimplex n) : RentCoordinates n) := by
+  exact hgeom.toPointwiseGenericity.exists_targetFacet hn hf
+
 end Arxiv170207325

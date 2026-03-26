@@ -157,7 +157,10 @@
   the endpoint theorem has been repackaged so that the remaining Lean frontier is precisely the
   chain-local upper-branching and no-upper-neighbor endpoint hypotheses. These are now packaged in
   `Section5PointwiseGenericity`, which states the remaining genericity input directly using actual
-  face-realization hit witnesses supplied by `PiecewiseAffine.lean`.
+  face-realization hit witnesses supplied by `PiecewiseAffine.lean`. The minimal fallback support
+  theorem has also now been isolated as `Section5LocalOneComplexGeometry`, matching the paper's
+  perturbation-to-a-local-1-complex language and feeding directly into
+  `Section5PointwiseGenericity`.
 - Next local objective:
   discharge `Section5SegmentGeometry` from the actual Section 5 geometry:
   prove that every graph node in the actual start component has at most two neighbors while every
@@ -165,9 +168,9 @@
   segment-intersection assumptions. The start-boundary entrance geometry is now complete, the
   prefix-face infrastructure is no longer tied to the first boundary edge, and both the
   lower-neighbor uniqueness and lower-neighbor existence sides are now formal. The remaining work
-  should therefore proceed by proving the two fields of `Section5PointwiseGenericity`: that the
-  segment `[b_k,b_{k+1}]` can contribute at most one upper continuation through a `k`-face, and
-  that the absence of such a continuation forces a barycenter hit when the node is not the start.
+  should therefore proceed by proving the two fields of `Section5LocalOneComplexGeometry`: that
+  the upper-neighbor fiber over each start-component node is a subsingleton, and that an empty
+  upper-neighbor fiber forces a barycenter hit witness when the node is not the start.
 - Current structural blocker:
   the present `SimplexTriangulation` wrapper now exposes induced prefix faces and their induced
   realizations, but it still does not expose the full simplicial-subdivision combinatorics of
