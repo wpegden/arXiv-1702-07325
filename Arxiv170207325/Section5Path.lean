@@ -751,6 +751,50 @@ theorem
   exact eq_prefixBarycenter_of_prefixSegmentCollapse_eq_zero_of_mem_lowerAmbientFace
     (n := n) (k := k + 1) hk hy hzero
 
+/-- The affine zero fiber of the collapsed-segment map on one facetwise affine chart. -/
+def prefixSegmentZeroFiber (n k : ℕ) [NeZero n]
+    (g : RentCoordinates n →ᵃ[ℝ] RentCoordinates n) :
+    AffineSubspace ℝ (RentCoordinates n) :=
+  ((⊥ : Submodule ℝ (RentCoordinates n)).toAffineSubspace).comap
+    ((prefixSegmentCollapseMap n k).toAffineMap.comp g)
+
+@[simp]
+theorem mem_prefixSegmentZeroFiber {n k : ℕ} [NeZero n]
+    {g : RentCoordinates n →ᵃ[ℝ] RentCoordinates n} {x : RentCoordinates n} :
+    x ∈ prefixSegmentZeroFiber n k g ↔ prefixSegmentCollapseMap n k (g x) = 0 := by
+  change (((prefixSegmentCollapseMap n k).toAffineMap.comp g) x ∈
+      ((⊥ : Submodule ℝ (RentCoordinates n)).toAffineSubspace :
+        AffineSubspace ℝ (RentCoordinates n))) ↔
+    prefixSegmentCollapseMap n k (g x) = 0
+  simp
+
+theorem
+    SimplexFacet.image_mem_segment_of_mem_prefixSegmentZeroFiber
+    {n : ℕ} [NeZero n] {τ : SimplexFacet n} {f : SelfMapOnRentSimplex n}
+    (hf : IsFaceRespecting f) {k : ℕ} (hk : k + 1 ≤ n)
+    {g : RentCoordinates n →ᵃ[ℝ] RentCoordinates n}
+    (hg : ∀ v ∈ (τ.vertices : Set (RentSimplex n)), g v = f v)
+    {x : RentCoordinates n} (hxZero : x ∈ prefixSegmentZeroFiber n k g)
+    (hx : x ∈ (τ.section5PrefixFace k).realization) :
+    g x ∈ segment ℝ (prefixBarycenter n k)
+      (((stdSimplex.vertex (S := ℝ)
+          (⟨k, lt_of_lt_of_le (Nat.lt_succ_self k) hk⟩ : RoomIndex n) : RentSimplex n) :
+        RentCoordinates n)) := by
+  exact τ.mem_segment_prefixBarycenter_lastVertex_of_mem_section5PrefixFace_realization
+    hf hk hg hx ((mem_prefixSegmentZeroFiber (n := n) (k := k) (g := g)).mp hxZero)
+
+theorem
+    SimplexFacet.eq_prefixBarycenter_succ_of_mem_prefixSegmentZeroFiber
+    {n : ℕ} [NeZero n] {τ : SimplexFacet n} {f : SelfMapOnRentSimplex n}
+    (hf : IsFaceRespecting f) {k : ℕ} (hk : k + 1 ≤ n)
+    {g : RentCoordinates n →ᵃ[ℝ] RentCoordinates n}
+    (hg : ∀ v ∈ (τ.vertices : Set (RentSimplex n)), g v = f v)
+    {x : RentCoordinates n} (hxZero : x ∈ prefixSegmentZeroFiber n (k + 1) g)
+    (hx : x ∈ (τ.section5PrefixFace k).realization) :
+    g x = prefixBarycenter n (k + 1) := by
+  exact τ.eq_prefixBarycenter_succ_of_mem_section5PrefixFace_realization_of_zeroCollapse
+    hf hk hg hx ((mem_prefixSegmentZeroFiber (n := n) (k := k + 1) (g := g)).mp hxZero)
+
 /-- The standard vertices spanning the prefix face `conv{e₁, ..., e_{k+1}}`. -/
 def prefixFaceStdVertices (n k : ℕ) : Finset (RentCoordinates n) :=
   (prefixRooms n (k + 1)).image fun i : RoomIndex n =>
@@ -1568,6 +1612,20 @@ theorem IsSection5GraphNode.exists_point_in_incidentPrefixFace_zeroFiber_of_piec
   refine ⟨hw.facet, hw.facet_mem, hw.affineMap, hw.agrees, hw.point, ?_, hzero⟩
   rw [← hu.cell_eq_prefixFace_of_incidentFacet hw.facet_mem hw.subface]
   exact hw.point_mem
+
+theorem
+    IsSection5GraphNode.exists_point_in_incidentPrefixFace_mem_segmentZeroFiber_of_piecewiseAffineOn
+    {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    {u : Section5Node n} (hu : IsSection5GraphNode T f u) (hpa : IsPiecewiseAffineOn T f) :
+    ∃ τ ∈ T.facets,
+      ∃ g : RentCoordinates n →ᵃ[ℝ] RentCoordinates n,
+        (∀ v ∈ (τ.vertices : Set (RentSimplex n)), g v = f v) ∧
+        ∃ x ∈ (τ.section5PrefixFace u.level).realization,
+          x ∈ prefixSegmentZeroFiber n u.level g := by
+  rcases hu.exists_point_in_incidentPrefixFace_zeroFiber_of_piecewiseAffineOn hpa with
+    ⟨τ, hτ, g, hg, x, hx, hzero⟩
+  exact ⟨τ, hτ, g, hg, x, hx,
+    (mem_prefixSegmentZeroFiber (n := n) (k := u.level) (g := g)).2 hzero⟩
 
 theorem IsSection5GraphNode.levelOne_cell_eq_boundaryVertices_of_incidentFacet {n : ℕ}
     [NeZero n] (hn : 2 ≤ n) {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}

@@ -181,6 +181,11 @@
   on induced prefix-face realizations via `SimplexFacet.map_mem_ambientCoordinateFace_of_mem_section5PrefixFace_realization`,
   `SimplexFacet.mem_segment_prefixBarycenter_lastVertex_of_mem_section5PrefixFace_realization`,
   and `SimplexFacet.eq_prefixBarycenter_succ_of_mem_section5PrefixFace_realization_of_zeroCollapse`.
+  The domain-side affine-subspace model is now also explicit: `prefixSegmentZeroFiber n k g`
+  is the affine zero fiber of `prefixSegmentCollapseMap n k ∘ g`, and
+  `IsSection5GraphNode.exists_point_in_incidentPrefixFace_mem_segmentZeroFiber_of_piecewiseAffineOn`
+  packages the local witness directly as a point of that affine subspace inside one induced prefix
+  face.
 - Next local objective:
   discharge `Section5SegmentGeometry` from the actual Section 5 geometry:
   prove that every graph node in the actual start component has at most two neighbors while every
@@ -190,12 +195,12 @@
   lower-neighbor uniqueness and lower-neighbor existence sides are now formal. The remaining work
   should therefore proceed by proving the facet-local collapsed-fiber theorem behind
   `section5LocalOneComplexGeometry_of_uniqueUpperOrEndpoint`: for a start-component node `v`,
-  apply `IsSection5GraphNode.exists_point_in_incidentPrefixFace_zeroFiber_of_piecewiseAffineOn`,
-  use the new ambient slice theorem to identify that zero fiber with the segment from
-  `prefixBarycenter n v.level` to the new standard vertex on the ambient prefix face, and then
-  prove that its intersection with the simplicial subdivision of the induced prefix face has at
-  most one upper codimension-one continuation and that the no-upper-continuation case already
-  forces the barycenter endpoint.
+  apply `IsSection5GraphNode.exists_point_in_incidentPrefixFace_mem_segmentZeroFiber_of_piecewiseAffineOn`,
+  use the new ambient slice theorem to identify `prefixSegmentZeroFiber n v.level g` with the
+  segment from `prefixBarycenter n v.level` to the new standard vertex on the ambient prefix face,
+  and then prove that its intersection with the simplicial subdivision of the induced prefix face
+  has at most one upper codimension-one continuation and that the no-upper-continuation case
+  already forces the barycenter endpoint.
 - Current structural blocker:
   the present `SimplexTriangulation` wrapper now exposes induced prefix faces and their induced
   realizations, but it still does not expose the full simplicial-subdivision combinatorics of
