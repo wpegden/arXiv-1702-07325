@@ -274,8 +274,9 @@
   that any singleton facet whose unique vertex lies in `coordinateFace (prefixRooms n 1)` is
   literally `section5StartCell n`, and packages a conditional
   `section5LocalLeftBoundaryFaceGenericity_of_levelOne_and_start_subface_of_minimal_vertex_mem`.
-  So the remaining level-1 work is exactly to show that the unique vertex of a minimal singleton
-  exact left hit lies in that lower face.
+  Lean now names the missing premise itself as `Section5LocalLevelOneLeftVertexGenericity u f`.
+  So the remaining level-1 work is exactly to prove that named local hypothesis, i.e. to show
+  that the unique vertex of a minimal singleton exact left hit lies in that lower face.
   On the packaging side, the remaining graph-theoretic conversion gap is now gone: the support
   layer proves `Section5PerturbationGenericity.toBoundarySegmentGenericity`, and the existing
   local-left/upper-endpoint wrapper is rerouted through

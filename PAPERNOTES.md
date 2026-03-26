@@ -65,7 +65,11 @@
   boundary face `section5StartCell n`, not some other level-1 vertex. Lean now also isolates this
   more sharply: a singleton facet whose unique vertex lies in `coordinateFace (prefixRooms n 1)` is
   already forced to equal `section5StartCell n`, so the unresolved level-1 input is precisely the
-  lower-face membership of the singleton exact-left-hit vertex.
+  lower-face membership of the singleton exact-left-hit vertex. The code now names that exact local
+  requirement `Section5LocalLevelOneLeftVertexGenericity`; current exploration suggests it does not
+  follow from `IsFaceRespecting` alone, so if the manuscript intends it, it should be understood as
+  part of the local generic-position/transversality input rather than a formal consequence of face
+  preservation by itself.
 - Section 5, current formalization status: this remaining manuscript sentence is now represented directly by the support-layer structure `Section5BoundarySegmentGenericity`. That package is already sufficient, together with the canonical start-successor theorem, to derive the paper-facing Section 5 target-facet conclusion; the unresolved work is therefore the actual geometric proof of `Section5BoundarySegmentGenericity`, not any further graph-theoretic packaging.
 - Section 5, current proof boundary: the Lean development now also has the more literal step-level perturbation package `Section5PerturbationGenericity`, whose fields say that a non-start cell is entered from a lower face, has at most one upper continuation as a `Section5Step`, and if there is no such continuation then it already contains the barycenter. This matches the manuscript's segment-intersection language more closely than the older neighbor-cardinality packaging, so the remaining work is best understood as proving `Section5PerturbationGenericity` from the paper's genericity/perturbation claim.
 - Section 5, interface status after the latest cleanup: the step-level and boundary-segment

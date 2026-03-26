@@ -3039,16 +3039,21 @@ theorem section5LocalLeftCodimensionGenericity_of_levelOne_and_start_subface
   exact minimal_section5HitParamLeftSubface_card_eq_one_of_levelOne_and_start_subface
     hf hu hulevel hstartsub hτ hmin
 
+/-- Exact residual level-1 left-endpoint genericity: in the start-subface regime, the unique
+vertex of a minimal singleton exact left hit is forced onto the lower face `e₁`. -/
+def Section5LocalLevelOneLeftVertexGenericity {n : ℕ} (u : Section5Node n)
+    (f : SelfMapOnRentSimplex n) : Prop :=
+  ∀ {τ : SimplexFacet n},
+    τ ∈ section5HitParamLeftSubfaces u f →
+    (∀ σ ∈ section5HitParamLeftSubfaces u f, τ.vertices.card ≤ σ.vertices.card) →
+      ∀ ⦃w : RentSimplex n⦄, w ∈ τ.vertices →
+        w ∈ coordinateFace (prefixRooms n 1)
+
 theorem section5LocalLeftBoundaryFaceGenericity_of_levelOne_and_start_subface_of_minimal_vertex_mem
     {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
     {u : Section5Node n} (hf : IsFaceRespecting f) (hu : IsSection5GraphNode T f u)
     (hulevel : u.level = 1) (hstartsub : (section5StartCell n).IsSubfaceOf u.cell)
-    (hvertexFace :
-      ∀ {τ : SimplexFacet n},
-        τ ∈ section5HitParamLeftSubfaces u f →
-        (∀ σ ∈ section5HitParamLeftSubfaces u f, τ.vertices.card ≤ σ.vertices.card) →
-          ∀ ⦃w : RentSimplex n⦄,
-            w ∈ τ.vertices → w ∈ coordinateFace (prefixRooms n 1)) :
+    (hvertexFace : Section5LocalLevelOneLeftVertexGenericity u f) :
     Section5LocalLeftBoundaryFaceGenericity u f := by
   intro τ hτ hmin
   have hτcard : τ.vertices.card = 1 :=
