@@ -265,6 +265,12 @@
   predecessor theorem. So for higher-level cells the left-side proof boundary is now purely the
   codimension/cardinality claim; only the degenerate exact-endpoint cases (notably the level-1
   regime) still require additional geometry beyond that.
+  On the packaging side, the remaining graph-theoretic conversion gap is now gone: the support
+  layer proves `Section5PerturbationGenericity.toBoundarySegmentGenericity`, and the existing
+  local-left/upper-endpoint wrapper is rerouted through
+  `section5BoundarySegmentGenericity_of_localLeftBoundaryFaceAndUpperEndpoint`. So any future
+  proof of the literal endpoint geometry can now discharge either the step-level or the
+  boundary-segment formulation without further interface work.
 - Current structural blocker:
   the present `SimplexTriangulation` wrapper does not yet expose the induced simplicial
   subdivision of the prefix faces, especially the boundary edge `[e_1,e_2]`, and it also does

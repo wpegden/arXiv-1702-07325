@@ -4382,6 +4382,27 @@ theorem Section5OneComplexGeometry.nonstart_degree_one_is_endpoint {n : ℕ} [Ne
     omega
   exact hgeom.no_upper_neighbor_is_endpoint v hnoUpper
 
+theorem Section5PerturbationGenericity.toBoundarySegmentGenericity {n : ℕ} [NeZero n]
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    {hstart : IsSection5GraphNode T f (section5StartNode n)}
+    (hpert : Section5PerturbationGenericity T f hstart) :
+    Section5BoundarySegmentGenericity T f hstart := by
+  refine ⟨?_, ?_⟩
+  · intro v
+    exact section5BoundaryNeighbors_card_le_two_of_upper_card_le_one
+      (hpert.upperNeighbors_card_le_one v)
+  · intro v hv hcard
+    have hdeg : section5StartComponentNodeDegree v = 1 := by
+      classical
+      let neighbors : Finset (section5StartComponent hstart) :=
+        Finset.univ.filter fun w : section5StartComponent hstart =>
+          (section5StartComponentGraph hstart).Adj v w
+      have hneighbors : neighbors = section5BoundaryNeighbors v := by
+        ext w
+        simp [neighbors]
+      simpa [section5StartComponentNodeDegree, hneighbors, neighbors] using hcard
+    exact hpert.toOneComplexGeometry.nonstart_degree_one_is_endpoint v hdeg hv
+
 theorem section5SegmentGeometry_of_startBoundaryAndOneComplexGeometry {n : ℕ} [NeZero n]
     {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
     {hstart : IsSection5GraphNode T f (section5StartNode n)}
@@ -4627,6 +4648,29 @@ theorem IsFaceRespecting.exists_barycenter_targetFacet_of_two_le_and_perturbatio
   exact Section5CanonicalBoundarySuccessorData.exists_targetFacet_of_perturbationGenericity
     (T := T) (f := f) hf (hf.section5CanonicalBoundarySuccessorData_of_two_le hn) hpert
 
+theorem section5BoundarySegmentGenericity_of_localLeftBoundaryFaceAndUpperEndpoint
+    {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    {hstart : IsSection5GraphNode T f (section5StartNode n)}
+    (hf : IsFaceRespecting f) (hfpl : IsPiecewiseAffineOn T f)
+    (hlower :
+      ∀ v : section5StartComponent hstart,
+        v ≠ section5StartVertexInComponent hstart →
+          Section5LocalLeftBoundaryFaceGenericity v.1.1 f)
+    (hupper :
+      ∀ {v u w : section5StartComponent hstart},
+        Section5Step f v.1.1 u.1.1 →
+        Section5Step f v.1.1 w.1.1 →
+          u = w)
+    (hendpoint :
+      ∀ v : section5StartComponent hstart,
+        (¬ ∃ w : section5StartComponent hstart, Section5Step f v.1.1 w.1.1) →
+          IsSection5Endpoint T f v.1.1) :
+    Section5BoundarySegmentGenericity T f hstart := by
+  exact
+    (section5PerturbationGenericity_of_localLeftBoundaryFaceAndUpperEndpoint
+      (T := T) (f := f) (hstart := hstart) hf hfpl hlower hupper hendpoint
+    ).toBoundarySegmentGenericity
+
 theorem IsFaceRespecting.exists_barycenter_targetFacet_of_two_le_and_localLeftBoundaryFaceAndUpperEndpoint
     {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
     (hn : 2 ≤ n) (hf : IsFaceRespecting f) (hfpl : IsPiecewiseAffineOn T f)
@@ -4646,8 +4690,8 @@ theorem IsFaceRespecting.exists_barycenter_targetFacet_of_two_le_and_localLeftBo
             IsSection5Endpoint T f v.1.1) :
     ∃ τ ∈ T.facets,
       FacetImageContains f τ ((rentBarycenter n : RentSimplex n) : RentCoordinates n) := by
-  exact hf.exists_barycenter_targetFacet_of_two_le_and_perturbationGenericity hn <|
-    section5PerturbationGenericity_of_localLeftBoundaryFaceAndUpperEndpoint
+  exact hf.exists_barycenter_targetFacet_of_two_le_and_boundarySegmentGenericity hn <|
+    section5BoundarySegmentGenericity_of_localLeftBoundaryFaceAndUpperEndpoint
       (T := T) (f := f) (hstart := hf.section5StartNode_isGraphNode)
       hf hfpl hlower hupper hendpoint
 

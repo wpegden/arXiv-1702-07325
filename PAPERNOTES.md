@@ -58,6 +58,13 @@
   situation, plus the right-side uniqueness/endpoint claims.
 - Section 5, current formalization status: this remaining manuscript sentence is now represented directly by the support-layer structure `Section5BoundarySegmentGenericity`. That package is already sufficient, together with the canonical start-successor theorem, to derive the paper-facing Section 5 target-facet conclusion; the unresolved work is therefore the actual geometric proof of `Section5BoundarySegmentGenericity`, not any further graph-theoretic packaging.
 - Section 5, current proof boundary: the Lean development now also has the more literal step-level perturbation package `Section5PerturbationGenericity`, whose fields say that a non-start cell is entered from a lower face, has at most one upper continuation as a `Section5Step`, and if there is no such continuation then it already contains the barycenter. This matches the manuscript's segment-intersection language more closely than the older neighbor-cardinality packaging, so the remaining work is best understood as proving `Section5PerturbationGenericity` from the paper's genericity/perturbation claim.
+- Section 5, interface status after the latest cleanup: the step-level and boundary-segment
+  formulations are now explicitly bridged in Lean by
+  `Section5PerturbationGenericity.toBoundarySegmentGenericity`, and the local
+  left-boundary/upper-endpoint wrapper is routed through
+  `section5BoundarySegmentGenericity_of_localLeftBoundaryFaceAndUpperEndpoint`. So there is no
+  further abstraction gap between the manuscript's perturbation language and the boundary-neighbor
+  package; the only missing work is still the actual endpoint geometry.
 - Section 6, first generalization theorem: when `y` is assumed not to lie in the convex hull of any `n` lattice points, the simplex `tau` containing `x` must actually be a facet. Otherwise `lambda(tau)` would lie in the convex hull of at most `n` lattice points, contradicting `lambda(x) = y`.
 - Section 6, second generalization theorem: the weight choice `alpha_j = (k_j + 1/m - 1)/(n+1)` is valid because `k_j >= 1` gives `alpha_j > 0` and `sum_j alpha_j = 1` follows from `sum_j k_j = n + m`. The final counting step uses integrality: the number of positive `beta_ij` is an integer strictly greater than `k_j - 1`, hence at least `k_j`.
 
