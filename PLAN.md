@@ -190,7 +190,12 @@
   induced prefix face of any supercell, `IsSection5GraphNode.upper_step_vertices_eq_insert` shows
   an upper step adds exactly one new vertex, and
   `IsSection5GraphNode.upper_step_unique_of_common_incidentFacet` removes all ambiguity once two
-  candidate upper continuations lie in the same incident facet.
+  candidate upper continuations lie in the same incident facet. The distinct-facet route has also
+  advanced one step: `exists_upper_prefix_vertex_of_mem_convexHull` generalizes the old boundary
+  convex-hull extraction to arbitrary prefix faces, and
+  `IsSection5GraphNode.upper_step_eq_of_common_point_outside_lowerFace` now shows that any two
+  upper steps already coincide as soon as one can exhibit a common point of their incident facets
+  lying in the upper prefix face but outside the lower one.
 - Next local objective:
   discharge `Section5SegmentGeometry` from the actual Section 5 geometry:
   prove that every graph node in the actual start component has at most two neighbors while every
@@ -208,7 +213,11 @@
   already forces the barycenter endpoint. Because common-facet ambiguity is now gone, the only
   genuinely remaining case is to compare candidate upper continuations coming from distinct
   incident facets and show the collapsed slice can meet at most one of them away from the lower
-  face.
+  face. The new conditional theorem
+  `IsSection5GraphNode.upper_step_eq_of_common_point_outside_lowerFace` means the remaining task
+  is now precisely to manufacture such a common non-lower point from the facet-local slice
+  geometry, or prove that no such upper continuation exists and hence the node is already an
+  endpoint.
 - Current structural blocker:
   the present `SimplexTriangulation` wrapper now exposes induced prefix faces and their induced
   realizations, but it still does not expose the full simplicial-subdivision combinatorics of

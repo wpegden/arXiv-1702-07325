@@ -1066,6 +1066,91 @@ theorem exists_nonstart_boundary_vertex_of_mem_convexHull {n : ℕ} [NeZero n] (
     exact hpsecond (by simpa [hvEq] using this)
   exact ⟨v, hv, hvFace, hv_ne⟩
 
+theorem exists_upper_prefix_vertex_of_mem_convexHull {n k : ℕ} [NeZero n] (hk : k + 2 ≤ n)
+    {s : Finset (RentSimplex n)} {y : RentSimplex n}
+    (hyUpper : y ∈ coordinateFace (prefixRooms n (k + 2)))
+    (hyNotLower : y ∉ coordinateFace (prefixRooms n (k + 1)))
+    (hyConv :
+      ((y : RentSimplex n) : RentCoordinates n) ∈
+        convexHull ℝ
+          ((s.image fun v : RentSimplex n => ((v : RentSimplex n) : RentCoordinates n)) :
+            Set (RentCoordinates n))) :
+    ∃ v ∈ s, v ∈ coordinateFace (prefixRooms n (k + 2)) ∧
+      v ∉ coordinateFace (prefixRooms n (k + 1)) := by
+  classical
+  let iLast : RoomIndex n := ⟨k + 1, lt_of_lt_of_le (Nat.lt_succ_self (k + 1)) hk⟩
+  let s' : Finset (RentCoordinates n) :=
+    s.image fun v : RentSimplex n => ((v : RentSimplex n) : RentCoordinates n)
+  have hyConv' : ((y : RentSimplex n) : RentCoordinates n) ∈ convexHull ℝ (s' : Set _) := by
+    simpa [s'] using hyConv
+  rcases (Finset.mem_convexHull (R := ℝ) (s := s')
+      (x := ((y : RentSimplex n) : RentCoordinates n))).mp hyConv' with
+    ⟨w, hw0, hw1, hcenter⟩
+  rw [Finset.centerMass_eq_of_sum_1 (t := s') (w := w) (z := id) hw1] at hcenter
+  have hiLast_not_mem : iLast ∉ prefixRooms n (k + 1) := by
+    simp [iLast, mem_prefixRooms_iff]
+  have hyLast_ne_zero : y.1 iLast ≠ 0 := by
+    intro hyLast_zero
+    have hyLower : y ∈ coordinateFace (prefixRooms n (k + 1)) := by
+      rw [mem_coordinateFace_iff]
+      intro i hi
+      by_cases hEq : i = iLast
+      · simpa [hEq] using hyLast_zero
+      · have hiUpper : i ∉ prefixRooms n (k + 2) := by
+          intro hi'
+          have hik2 : i.1 < k + 2 := mem_prefixRooms_iff.mp hi'
+          have hik1 : ¬ i.1 < k + 1 := by
+            exact fun hik1 => hi (mem_prefixRooms_iff.mpr hik1)
+          have hiVal : i.1 = k + 1 := by
+            omega
+          have : i = iLast := by
+            apply Fin.ext
+            simpa [iLast] using hiVal
+          exact hEq this
+        exact (mem_coordinateFace_iff.mp hyUpper) i hiUpper
+    exact hyNotLower hyLower
+  have hyLast_pos : 0 < y.1 iLast := lt_of_le_of_ne (y.2.1 iLast) (Ne.symm hyLast_ne_zero)
+  have hcoord_last :
+      ∑ p ∈ s', w p * p iLast = y.1 iLast := by
+    have := congrArg (fun z : RentCoordinates n => z iLast) hcenter
+    simpa [Finset.sum_apply, Pi.smul_apply, mul_comm, mul_left_comm, mul_assoc] using this
+  have hexists :
+      ∃ p ∈ s', w p ≠ 0 ∧ p iLast ≠ 0 := by
+    by_contra hnone
+    have hsum_zero : ∑ p ∈ s', w p * p iLast = 0 := by
+      apply Finset.sum_eq_zero
+      intro p hp
+      by_cases hwp : w p = 0
+      · simp [hwp]
+      · have hpzero : p iLast = 0 := by
+          by_contra hpzero
+          exact hnone ⟨p, hp, hwp, hpzero⟩
+        simp [hpzero]
+    exact hyLast_pos.ne' (hcoord_last.symm.trans hsum_zero)
+  rcases hexists with ⟨p, hp, hwp, hpLast⟩
+  rcases Finset.mem_image.mp hp with ⟨v, hv, rfl⟩
+  have hvUpper : v ∈ coordinateFace (prefixRooms n (k + 2)) := by
+    rw [mem_coordinateFace_iff]
+    intro i hi
+    have hcoord_i :
+        ∑ q ∈ s', w q * q i = 0 := by
+      have := congrArg (fun z : RentCoordinates n => z i) hcenter
+      have hyi : y.1 i = 0 := (mem_coordinateFace_iff.mp hyUpper) i hi
+      have hyi' : (((y : RentSimplex n) : RentCoordinates n) i) = 0 := by
+        simpa using hyi
+      simpa [Finset.sum_apply, Pi.smul_apply, mul_comm, mul_left_comm, mul_assoc, hyi'] using
+        this
+    have hnonneg : ∀ q ∈ s', 0 ≤ w q * q i := by
+      intro q hq
+      rcases Finset.mem_image.mp hq with ⟨u, hu, rfl⟩
+      exact mul_nonneg (hw0 _ (by exact Finset.mem_image.mpr ⟨u, hu, rfl⟩)) (u.2.1 i)
+    have hterms := (Finset.sum_eq_zero_iff_of_nonneg hnonneg).mp hcoord_i
+    exact (mul_eq_zero.mp (hterms _ hp)).resolve_left hwp
+  have hvNotLower : v ∉ coordinateFace (prefixRooms n (k + 1)) := by
+    intro hvLower
+    exact hpLast ((mem_coordinateFace_iff.mp hvLower) iLast hiLast_not_mem)
+  exact ⟨v, hv, hvUpper, hvNotLower⟩
+
 theorem secondCoord_lower_bound_of_mem_convexHull {n : ℕ} [NeZero n] (hn : 2 ≤ n)
     {s : Finset (RentSimplex n)} {x : RentSimplex n} {c : ℝ}
     (hxConv :
@@ -1910,6 +1995,79 @@ theorem IsSection5GraphNode.upper_step_unique_of_common_incidentFacet {n : ℕ}
     hw.cell_eq_prefixFace_of_incidentFacet hτ hwτ
   have hcell : v.cell = w.cell := by
     rw [hvCell, hwCell, hlevel]
+  exact Section5Node.eq_of_level_eq_of_cell_eq hlevel hcell
+
+theorem IsSection5GraphNode.upper_step_eq_of_common_point_outside_lowerFace {n : ℕ}
+    [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    {u v w : Section5Node n} (hu : IsSection5GraphNode T f u)
+    (hv : IsSection5GraphNode T f v) (hw : IsSection5GraphNode T f w)
+    (huv : Section5Step f u v) (huw : Section5Step f u w)
+    {τv τw : SimplexFacet n} (hτv : τv ∈ T.facets) (hvτ : v.cell.IsSubfaceOf τv)
+    (hτw : τw ∈ T.facets) (hwτ : w.cell.IsSubfaceOf τw)
+    {x : RentSimplex n} (hxUpper : x ∈ coordinateFace (prefixRooms n (u.level + 2)))
+    (hxNotLower : x ∉ coordinateFace (prefixRooms n (u.level + 1)))
+    (hxτv : ((x : RentSimplex n) : RentCoordinates n) ∈ τv.realization)
+    (hxτw : ((x : RentSimplex n) : RentCoordinates n) ∈ τw.realization) :
+    v = w := by
+  have hk : u.level + 2 ≤ n := by
+    have hsucc : u.level + 2 = v.level + 1 := by
+      simpa [Nat.add_assoc] using congrArg Nat.succ huv.1
+    calc
+      u.level + 2 = v.level + 1 := hsucc
+      _ ≤ n := hv.level_le
+  have hxInter :
+      ((x : RentSimplex n) : RentCoordinates n) ∈ τv.realization ∩ τw.realization :=
+    ⟨hxτv, hxτw⟩
+  rw [T.face_intersection hτv hτw] at hxInter
+  have hxConv :
+      ((x : RentSimplex n) : RentCoordinates n) ∈
+        convexHull ℝ
+          (((τv.commonVertices τw).image fun z : RentSimplex n =>
+            ((z : RentSimplex n) : RentCoordinates n)) : Set (RentCoordinates n)) := by
+    simpa [SimplexFacet.intersectionPointSet, SimplexFacet.commonVertices] using hxInter
+  rcases exists_upper_prefix_vertex_of_mem_convexHull (n := n) (k := u.level) hk
+      hxUpper hxNotLower hxConv with ⟨c, hcCommon, hcUpper, hcNotLower⟩
+  have hcNotU : c ∉ u.cell.vertices := by
+    intro hcU
+    exact hcNotLower (hu.prefix_vertices (v := c) hcU)
+  have hcInV : c ∈ v.cell.vertices := by
+    have hcτv : c ∈ τv.vertices := (mem_commonVertices_iff.mp hcCommon).1
+    have hcPrefix : c ∈ τv.section5PrefixVertices v.level := by
+      rw [huv.1.symm]
+      exact τv.mem_section5PrefixVertices_iff.mpr ⟨hcτv, hcUpper⟩
+    rw [hv.cell_eq_prefixFace_of_incidentFacet hτv hvτ, SimplexFacet.section5PrefixFace_vertices]
+    exact hcPrefix
+  have hcInW : c ∈ w.cell.vertices := by
+    have hcτw : c ∈ τw.vertices := (mem_commonVertices_iff.mp hcCommon).2
+    have hcPrefix : c ∈ τw.section5PrefixVertices w.level := by
+      rw [huw.1.symm]
+      exact τw.mem_section5PrefixVertices_iff.mpr ⟨hcτw, hcUpper⟩
+    rw [hw.cell_eq_prefixFace_of_incidentFacet hτw hwτ, SimplexFacet.section5PrefixFace_vertices]
+    exact hcPrefix
+  rcases hu.upper_step_vertices_eq_insert hv huv with ⟨a, _haNotU, hva⟩
+  rcases hu.upper_step_vertices_eq_insert hw huw with ⟨b, _hbNotU, hwb⟩
+  have hcEqA : c = a := by
+    have hcInsert : c ∈ insert a u.cell.vertices := by simpa [hva] using hcInV
+    simpa [Finset.mem_insert, Finset.mem_singleton, hcNotU] using hcInsert
+  have hcEqB : c = b := by
+    have hcInsert : c ∈ insert b u.cell.vertices := by simpa [hwb] using hcInW
+    simpa [Finset.mem_insert, Finset.mem_singleton, hcNotU] using hcInsert
+  have hab : a = b := hcEqA.symm.trans hcEqB
+  have hverts : v.cell.vertices = w.cell.vertices := by
+    calc
+      v.cell.vertices = insert a u.cell.vertices := by exact hva.symm
+      _ = insert b u.cell.vertices := by simp [hab]
+      _ = w.cell.vertices := by exact hwb
+  have hvLevel : v.level = u.level + 1 := huv.1.symm
+  have hwLevel : w.level = u.level + 1 := huw.1.symm
+  have hlevel : v.level = w.level := hvLevel.trans hwLevel.symm
+  have hcell : v.cell = w.cell := by
+    cases hvCell : v.cell with
+    | mk vverts =>
+      cases hwCell : w.cell with
+      | mk wverts =>
+        simp only [SimplexFacet.mk.injEq]
+        simpa [hvCell, hwCell] using hverts
   exact Section5Node.eq_of_level_eq_of_cell_eq hlevel hcell
 
 theorem IsSection5GraphNode.lower_step_unique {n : ℕ}
