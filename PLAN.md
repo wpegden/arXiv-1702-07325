@@ -147,14 +147,20 @@
   actual start component, and that every graph node there has at most two neighbors while every
   non-start degree-one node is a barycenter-hitting endpoint, all under the paper's generic
   segment-intersection assumptions; the start-node existence and `e_1 ↦ b_1` portions are now
-  already discharged by face preservation.
+  already discharged by face preservation. The boundary-edge support has also been strengthened:
+  points of `coordinateFace (prefixRooms n 2)` are now explicitly parametrized along `[e_1,e_2]`,
+  every facet has at most two such boundary vertices, and a level-1 graph node through `e_1`
+  identifies with the boundary-vertex pair cut out by any containing facet.
 - Current structural blocker:
   the present `SimplexTriangulation` wrapper does not yet expose the induced simplicial
   subdivision of the prefix faces, especially the boundary edge `[e_1,e_2]`, and it also does
   not formalize the perturbation/genericity argument that makes the barycenter-chain preimage a
-  finite 1-dimensional cell complex. One of those two upgrades is needed before the remaining
-  unique-successor and one-or-two-neighbor claims can be proved on the real graph rather than
-  assumed via `Section5SegmentGeometry`.
+  finite 1-dimensional cell complex. The new boundary lemmas reduce the immediate proof frontier
+  to a sharper local claim: use `face_intersection` and the boundary-point-in-convex-hull API on
+  common vertex sets to show two candidate level-1 cells through `e_1` must share the same
+  non-start boundary vertex, hence coincide. After that, the unique-successor and degree-one
+  claims should follow directly on the real graph rather than remain assumptions via
+  `Section5SegmentGeometry`.
 - First prove the barycenter-specialized version if that is the easiest entry point.
 - Then generalize to arbitrary interior targets if Section 6 needs it.
 - If full surjectivity is still awkward, keep the theorem in the "target in interior" form first; that already covers the barycenter and the interior `y` used in the first Section 6 theorem.
