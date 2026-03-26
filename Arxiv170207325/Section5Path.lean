@@ -2367,4 +2367,27 @@ theorem Section5CanonicalBoundarySuccessorData.exists_targetFacet_of_boundarySeg
     (T := T) (f := f) (hstart := hf.section5StartNode_isGraphNode)
     (hsucc.toStartBoundaryGeometry hf) hseg).exists_targetFacet hf
 
+theorem IsFaceRespecting.exists_barycenter_targetFacet_of_two_le_and_boundarySegmentGenericity
+    {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    (hn : 2 ≤ n) (hf : IsFaceRespecting f)
+    (hseg : Section5BoundarySegmentGenericity T f hf.section5StartNode_isGraphNode) :
+    ∃ τ ∈ T.facets,
+      FacetImageContains f τ ((rentBarycenter n : RentSimplex n) : RentCoordinates n) := by
+  exact Section5CanonicalBoundarySuccessorData.exists_targetFacet_of_boundarySegmentGenericity
+    (T := T) (f := f) hf (hf.section5CanonicalBoundarySuccessorData_of_two_le hn) hseg
+
+theorem IsFaceRespecting.exists_barycenter_targetFacet_of_boundarySegmentGenericity
+    {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    (hf : IsFaceRespecting f)
+    (hseg :
+      2 ≤ n → Section5BoundarySegmentGenericity T f hf.section5StartNode_isGraphNode) :
+    ∃ τ ∈ T.facets,
+      FacetImageContains f τ ((rentBarycenter n : RentSimplex n) : RentCoordinates n) := by
+  by_cases h1 : n = 1
+  · subst h1
+    exact hf.exists_barycenter_targetFacet_of_eq_one
+  · have hn0 : 0 < n := Nat.pos_of_ne_zero (NeZero.ne n)
+    have hn : 2 ≤ n := by omega
+    exact hf.exists_barycenter_targetFacet_of_two_le_and_boundarySegmentGenericity hn (hseg hn)
+
 end Arxiv170207325

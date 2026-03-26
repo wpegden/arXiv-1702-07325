@@ -184,7 +184,10 @@
   package, together with the already-solved canonical start-successor data, directly yields
   `Section5SegmentGeometry` and therefore a target-containing facet; so `Section5OneComplexGeometry`
   is no longer on the critical path for the paper-facing theorem, even though it remains useful
-  internal structure.
+  internal structure. The last wrapper gap has also been removed: `Section5Path.lean` now exposes
+  `IsFaceRespecting.exists_barycenter_targetFacet_of_boundarySegmentGenericity`, which combines the
+  trivial `n = 1` base case with the `2 ≤ n` canonical-start theorem, so the only missing input
+  at the Section 5 theorem boundary is a proof of `Section5BoundarySegmentGenericity` itself.
 - Current structural blocker:
   the present `SimplexTriangulation` wrapper does not yet expose the induced simplicial
   subdivision of the prefix faces, especially the boundary edge `[e_1,e_2]`, and it also does
