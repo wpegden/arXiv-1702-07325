@@ -251,7 +251,15 @@
   contradiction to a single concrete erased-face statement. It is now enough to show that if a
   vertex of the minimal segment-hitting face lies outside the lower prefix face, then erasing
   that one vertex still leaves a face whose image meets `[b_k,b_{k+1}]`; minimality then yields
-  the contradiction automatically. The older `section5LowerPrefixVertices` route remains
+  the contradiction automatically. The newest helper
+  `IsPiecewiseAffineOn.exists_erased_face_point_of_minimal_section5SegmentSubface` now packages
+  the domain-side part of this erasure completely: after choosing `v`, it builds a point `x'` in
+  the erased face realization and a coefficient `0 < c < 1` such that the original witness point
+  is `lineMap x' v c` and its image is `lineMap (f x') (f v) c`. So the remaining obstruction is
+  now an explicit codomain lemma: prove that when `v` lies outside the lower prefix face, this
+  affine image formula still forces `f x' ∈ [b_k,b_{k+1}]`, which is exactly the erased-face
+  membership needed for the minimality contradiction. The older `section5LowerPrefixVertices`
+  route remains
   available as a fallback, and the new local
   obstruction theorem still records that if the
   filtered lower subface already hits `b_k`, then every room in `prefixRooms n k` appears in the

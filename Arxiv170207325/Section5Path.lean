@@ -1009,6 +1009,196 @@ theorem IsPiecewiseAffineOn.exists_point_with_nonzero_weights_of_minimal_section
   have : σ.vertices.card < τ.vertices.card := Finset.card_lt_card hproper
   omega
 
+theorem Finset.centerMass_eq_lineMap_centerMass_erase_of_mem
+    {ι : Type*} [DecidableEq ι] {n : ℕ} {t : Finset ι} {w : ι → ℝ}
+    {z : ι → RentCoordinates n} {i : ι}
+    (hi : i ∈ t) (hw_sum : ∑ j ∈ t, w j = 1) (hwi : w i ≠ 1) :
+    t.centerMass w z =
+      AffineMap.lineMap ((t.erase i).centerMass (fun j => w j / (1 - w i)) z) (z i) (w i) := by
+  have hden : 1 - w i ≠ 0 := sub_ne_zero.mpr hwi.symm
+  have hsum_erase : ∑ j ∈ t.erase i, w j = 1 - w i := by
+    have hsum_erase_add := Finset.sum_erase_add (s := t) (f := w) hi
+    linarith
+  have hnorm_sum : ∑ j ∈ t.erase i, w j / (1 - w i) = 1 := by
+    calc
+      ∑ j ∈ t.erase i, w j / (1 - w i)
+          = (∑ j ∈ t.erase i, w j) / (1 - w i) := by
+              simp_rw [div_eq_mul_inv]
+              rw [Finset.sum_mul]
+      _ = 1 := by
+          rw [hsum_erase]
+          field_simp [hden]
+  have hsplit : ∑ j ∈ t, w j • z j = ∑ j ∈ t.erase i, w j • z j + w i • z i := by
+    simpa [add_comm] using
+      (Finset.sum_erase_add (s := t) (f := fun j => w j • z j) hi).symm
+  rw [Finset.centerMass_eq_of_sum_1 _ _ hw_sum, Finset.centerMass_eq_of_sum_1 _ _ hnorm_sum,
+    AffineMap.lineMap_apply_module]
+  calc
+    ∑ j ∈ t, w j • z j = ∑ j ∈ t.erase i, w j • z j + w i • z i := hsplit
+    _ = (1 - w i) • ∑ j ∈ t.erase i, (w j / (1 - w i)) • z j + w i • z i := by
+            rw [Finset.smul_sum]
+            congr 1
+            refine Finset.sum_congr rfl ?_
+            intro j hj
+            have hcoef : (1 - w i) * (w j / (1 - w i)) = w j := by
+              field_simp [hden]
+            rw [smul_smul, hcoef]
+
+theorem IsPiecewiseAffineOn.exists_erased_face_point_of_minimal_section5SegmentSubface
+    {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    (hfpl : IsPiecewiseAffineOn T f) {u : Section5Node n} (hu : IsSection5GraphNode T f u)
+    {τ : SimplexFacet n} (hτ : τ ∈ section5SegmentSubfaces u f)
+    (hmin : ∀ σ ∈ section5SegmentSubfaces u f, τ.vertices.card ≤ σ.vertices.card)
+    {v : RentSimplex n} (hv : v ∈ τ.vertices) (hcard : 1 < τ.vertices.card) :
+    ∃ x x' : RentSimplex n, ∃ c : ℝ,
+      ((x : RentSimplex n) : RentCoordinates n) ∈ τ.realization ∧
+      f x ∈ prefixBarycenterSegment n u.level ∧
+      ((x' : RentSimplex n) : RentCoordinates n) ∈ (⟨τ.vertices.erase v⟩ : SimplexFacet n).realization ∧
+      0 < c ∧ c < 1 ∧
+      ((x : RentSimplex n) : RentCoordinates n) =
+        AffineMap.lineMap (((x' : RentSimplex n) : RentCoordinates n))
+          (((v : RentSimplex n) : RentCoordinates n)) c ∧
+      f x = AffineMap.lineMap (f x') (f v) c := by
+  classical
+  obtain ⟨x, hxτ, hfxSeg, w, hw_nonneg, hw_sum, hw_center, hw_nz⟩ :=
+    hfpl.exists_point_with_nonzero_weights_of_minimal_section5SegmentSubface hu hτ hmin
+  let s : Finset (RentCoordinates n) :=
+    τ.vertices.image fun u : RentSimplex n => ((u : RentSimplex n) : RentCoordinates n)
+  let yv : RentCoordinates n := ((v : RentSimplex n) : RentCoordinates n)
+  have hyv_mem : yv ∈ s := by
+    exact Finset.mem_image.mpr ⟨v, hv, rfl⟩
+  have hyv_ne_zero : w yv ≠ 0 := hw_nz _ hyv_mem
+  have hyv_pos : 0 < w yv := by
+    exact lt_of_le_of_ne (hw_nonneg _ hyv_mem) (by simpa using hyv_ne_zero.symm)
+  have hs_card : s.card = τ.vertices.card := by
+    dsimp [s]
+    simpa using
+      Finset.card_image_of_injective τ.vertices
+        (fun a b hab => Subtype.ext hab)
+  have hyv_ne_one : w yv ≠ 1 := by
+    intro hyv_one
+    have hsum_erase_zero : ∑ y ∈ s.erase yv, w y = 0 := by
+      have hsum_erase_add := Finset.sum_erase_add (s := s) (f := w) hyv_mem
+      linarith
+    have hzero_erase : ∀ y ∈ s.erase yv, w y = 0 := by
+      exact (Finset.sum_eq_zero_iff_of_nonneg
+        (by
+          intro y hy
+          exact hw_nonneg _ (Finset.mem_of_mem_erase hy))).mp hsum_erase_zero
+    have herase_card : 0 < (s.erase yv).card := by
+      rw [Finset.card_erase_of_mem hyv_mem]
+      omega
+    rcases Finset.card_pos.mp herase_card with ⟨y, hy⟩
+    exact (hw_nz _ (Finset.mem_of_mem_erase hy)) (hzero_erase _ hy)
+  have hyv_le_one : w yv ≤ 1 := by
+    have hsum_erase_nonneg : 0 ≤ ∑ y ∈ s.erase yv, w y := by
+      exact Finset.sum_nonneg (by
+        intro y hy
+        exact hw_nonneg _ (Finset.mem_of_mem_erase hy))
+    have hsum_erase_add := Finset.sum_erase_add (s := s) (f := w) hyv_mem
+    linarith
+  have hyv_lt_one : w yv < 1 := by
+    exact lt_of_le_of_ne hyv_le_one hyv_ne_one
+  have hden_pos : 0 < 1 - w yv := sub_pos.mpr hyv_lt_one
+  let x'coord : RentCoordinates n :=
+    (s.erase yv).centerMass (fun y => w y / (1 - w yv)) id
+  have hnorm_sum : ∑ y ∈ s.erase yv, w y / (1 - w yv) = 1 := by
+    have hsum_erase : ∑ y ∈ s.erase yv, w y = 1 - w yv := by
+      have hsum_erase_add := Finset.sum_erase_add (s := s) (f := w) hyv_mem
+      linarith
+    calc
+      ∑ y ∈ s.erase yv, w y / (1 - w yv)
+          = (∑ y ∈ s.erase yv, w y) / (1 - w yv) := by
+              simp_rw [div_eq_mul_inv]
+              rw [Finset.sum_mul]
+      _ = 1 := by
+          rw [hsum_erase]
+          field_simp [ne_of_gt hden_pos]
+  have hx'conv :
+      x'coord ∈ convexHull ℝ ((s.erase yv : Finset (RentCoordinates n)) : Set (RentCoordinates n)) := by
+    have hnorm_pos : 0 < ∑ y ∈ s.erase yv, w y / (1 - w yv) := by
+      rw [hnorm_sum]
+      norm_num
+    exact Finset.centerMass_id_mem_convexHull
+      (t := s.erase yv)
+      (w := fun y => w y / (1 - w yv))
+      (by
+        intro y hy
+        exact div_nonneg (hw_nonneg _ (Finset.mem_of_mem_erase hy)) (le_of_lt hden_pos))
+      hnorm_pos
+  have hs_erase :
+      (τ.vertices.erase v).image
+          (fun u : RentSimplex n => ((u : RentSimplex n) : RentCoordinates n)) =
+        s.erase yv := by
+    simpa [s, yv] using
+      (Finset.image_erase
+        (s := τ.vertices) (a := v)
+        (f := fun u : RentSimplex n => ((u : RentSimplex n) : RentCoordinates n))
+        (fun a b hab => Subtype.ext hab))
+  have hs_erase_set :
+      (((↑) : RentSimplex n → RentCoordinates n) '' ((τ.vertices.erase v : Finset (RentSimplex n)) :
+        Set (RentSimplex n))) = ((s.erase yv : Finset (RentCoordinates n)) : Set (RentCoordinates n)) := by
+    simpa [Finset.coe_image] using
+      congrArg (fun t : Finset (RentCoordinates n) => (t : Set (RentCoordinates n))) hs_erase
+  have hx'erase :
+      x'coord ∈ (⟨τ.vertices.erase v⟩ : SimplexFacet n).realization := by
+    rw [SimplexFacet.realization, SimplexFacet.pointSet, hs_erase_set]
+    exact hx'conv
+  let x' : RentSimplex n := ⟨x'coord, by
+    simpa [RentSimplex, scaledSimplex] using
+      (⟨τ.vertices.erase v⟩ : SimplexFacet n).realization_subset_scaledSimplex hx'erase⟩
+  have hx'_real : ((x' : RentSimplex n) : RentCoordinates n) ∈
+      (⟨τ.vertices.erase v⟩ : SimplexFacet n).realization := hx'erase
+  have hx_line :
+      ((x : RentSimplex n) : RentCoordinates n) =
+        AffineMap.lineMap (((x' : RentSimplex n) : RentCoordinates n))
+          (((v : RentSimplex n) : RentCoordinates n)) (w yv) := by
+    calc
+      ((x : RentSimplex n) : RentCoordinates n) = s.centerMass w id := by
+        symm
+        exact hw_center
+      _ = AffineMap.lineMap ((s.erase yv).centerMass (fun y => w y / (1 - w yv)) id) yv (w yv) := by
+        exact Finset.centerMass_eq_lineMap_centerMass_erase_of_mem hyv_mem hw_sum hyv_ne_one
+      _ = AffineMap.lineMap (((x' : RentSimplex n) : RentCoordinates n))
+            (((v : RentSimplex n) : RentCoordinates n)) (w yv) := by
+        rfl
+  have hτsubu : τ.IsSubfaceOf u.cell :=
+    (mem_section5SegmentSubfaces_iff (u := u) (f := f) (τ := τ)).mp hτ |>.1
+  have herase_subτ : (⟨τ.vertices.erase v⟩ : SimplexFacet n).IsSubfaceOf τ := by
+    intro w hw
+    exact Finset.mem_of_mem_erase hw
+  have hxcell : ((x : RentSimplex n) : RentCoordinates n) ∈ u.cell.realization :=
+    SimplexFacet.realization_mono_of_isSubface hτsubu hxτ
+  have hx'cell : ((x' : RentSimplex n) : RentCoordinates n) ∈ u.cell.realization :=
+    SimplexFacet.realization_mono_of_isSubface (herase_subτ.trans hτsubu) hx'_real
+  have hvτreal : ((v : RentSimplex n) : RentCoordinates n) ∈ τ.realization := by
+    rw [SimplexFacet.realization]
+    exact subset_convexHull ℝ _ <|
+      Set.mem_image_of_mem ((↑) : RentSimplex n → RentCoordinates n) hv
+  have hvcell : ((v : RentSimplex n) : RentCoordinates n) ∈ u.cell.realization :=
+    SimplexFacet.realization_mono_of_isSubface hτsubu hvτreal
+  rcases hu.isFace with ⟨ρ, hρ, hu_subρ⟩
+  rcases hfpl ρ hρ with ⟨g, hg⟩
+  have hxρ : ((x : RentSimplex n) : RentCoordinates n) ∈ ρ.realization :=
+    SimplexFacet.realization_mono_of_isSubface hu_subρ hxcell
+  have hx'ρ : ((x' : RentSimplex n) : RentCoordinates n) ∈ ρ.realization :=
+    SimplexFacet.realization_mono_of_isSubface hu_subρ hx'cell
+  have hvρ : ((v : RentSimplex n) : RentCoordinates n) ∈ ρ.realization :=
+    SimplexFacet.realization_mono_of_isSubface hu_subρ hvcell
+  have hfx : f x = g x := (hg x hxρ).symm
+  have hfx' : f x' = g x' := (hg x' hx'ρ).symm
+  have hfv : f v = g v := (hg v hvρ).symm
+  refine ⟨x, x', w yv, hxτ, hfxSeg, hx'_real, hyv_pos, hyv_lt_one, hx_line, ?_⟩
+  calc
+    f x = g x := hfx
+    _ = g (AffineMap.lineMap (((x' : RentSimplex n) : RentCoordinates n))
+          (((v : RentSimplex n) : RentCoordinates n)) (w yv)) := by
+            simpa [hx_line]
+    _ = AffineMap.lineMap (g x') (g v) (w yv) := by
+          rw [AffineMap.apply_lineMap]
+    _ = AffineMap.lineMap (f x') (f v) (w yv) := by
+          simp [hfx', hfv]
+
 theorem minimal_section5SegmentSubface_erase_not_mem
     {n : ℕ} {f : SelfMapOnRentSimplex n} {u : Section5Node n} {τ : SimplexFacet n}
     (hmin : ∀ σ ∈ section5SegmentSubfaces u f, τ.vertices.card ≤ σ.vertices.card)
