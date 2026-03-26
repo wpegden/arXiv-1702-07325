@@ -370,6 +370,70 @@ theorem section5HitParamMap_eq_prefixBarycenter_succ_iff_eq_one {n k : ℕ} (hk 
     subst ht
     simp [section5HitParamMap]
 
+theorem eq_right_of_lineMap_eq_lineMap_left {n : ℕ} {a b₁ b₂ : RentCoordinates n} {c : ℝ}
+    (hc : c ≠ 0)
+    (h :
+      AffineMap.lineMap a b₁ c = AffineMap.lineMap a b₂ c) :
+    b₁ = b₂ := by
+  have hsub : c • (b₁ - a) = c • (b₂ - a) := by
+    simpa [AffineMap.lineMap_apply_module, sub_eq_add_neg, add_comm, add_left_comm, add_assoc,
+      mul_comm, mul_left_comm, mul_assoc, add_mul, mul_add] using
+      congrArg (fun z : RentCoordinates n => z - a) h
+  have hsub' : b₁ - a = b₂ - a := (smul_right_inj (M := RentCoordinates n) hc).mp hsub
+  have hadd := congrArg (fun z : RentCoordinates n => z + a) hsub'
+  simpa [sub_eq_add_neg, add_comm, add_left_comm, add_assoc] using hadd
+
+theorem exists_section5HitParam_of_mem_ambientCoordinateFace_succ_of_lineMap_eq
+    {n k : ℕ} (hk : k + 1 ≤ n) {t t' c : ℝ} {y : RentCoordinates n}
+    (hyFace : y ∈ ambientCoordinateFace (prefixRooms n (k + 1)))
+    (hc : c ≠ 0)
+    (hline :
+      section5HitParamMap n k t =
+        AffineMap.lineMap (section5HitParamMap n k t') y c) :
+    ∃ s : ℝ, y = section5HitParamMap n k s ∧ t = (1 - c) * t' + c * s := by
+  let ik : RoomIndex n := ⟨k, lt_of_lt_of_le (Nat.lt_succ_self k) hk⟩
+  let s : ℝ := (k + 1 : ℝ) * y ik
+  have hcoord :
+      t * ((k + 1 : ℝ)⁻¹) =
+        (1 - c) * (t' * ((k + 1 : ℝ)⁻¹)) + c * y ik := by
+    simpa [section5HitParamMap, AffineMap.lineMap_apply_module, prefixBarycenter, ik] using
+      congrArg (fun z : RentCoordinates n => z ik) hline
+  have hk1 : (k + 1 : ℝ) ≠ 0 := by
+    positivity
+  have hparam : t = (1 - c) * t' + c * s := by
+    have hcoord' : t = (1 - c) * t' + c * ((k + 1 : ℝ) * y ik) := by
+      have hmul := congrArg (fun r : ℝ => r * (k + 1 : ℝ)) hcoord
+      field_simp [hk1] at hmul
+      nlinarith
+    simpa [s] using hcoord'
+  have hline' :
+      section5HitParamMap n k t =
+        AffineMap.lineMap (section5HitParamMap n k t') (section5HitParamMap n k s) c := by
+    rw [hparam]
+    simpa [AffineMap.lineMap_apply_module, sub_eq_add_neg, add_comm, add_left_comm, add_assoc,
+      mul_comm, mul_left_comm, mul_assoc] using
+      (section5HitParamMap n k).apply_lineMap t' s c
+  refine ⟨s, ?_, hparam⟩
+  have hsame :
+      AffineMap.lineMap (section5HitParamMap n k t') (section5HitParamMap n k s) c =
+        AffineMap.lineMap (section5HitParamMap n k t') y c := by
+    exact hline'.symm.trans hline
+  simpa using (eq_right_of_lineMap_eq_lineMap_left hc hsame).symm
+
+theorem eq_hitParamLeft_of_convexCombination {t t' s c : ℝ}
+    (hc0 : 0 < c) (hc1 : c < 1)
+    (ht' : t ≤ t') (hs : t ≤ s)
+    (hcomb : t = (1 - c) * t' + c * s) :
+    t' = t ∧ s = t := by
+  constructor <;> nlinarith
+
+theorem eq_hitParamRight_of_convexCombination {t t' s c : ℝ}
+    (hc0 : 0 < c) (hc1 : c < 1)
+    (ht' : t' ≤ t) (hs : s ≤ t)
+    (hcomb : t = (1 - c) * t' + c * s) :
+    t' = t ∧ s = t := by
+  constructor <;> nlinarith
+
 theorem IsFaceRespecting.eq_prefixBarycenter_of_mem_coordinateFace_of_map_mem_prefixBarycenterSegment
     {n k : ℕ} [NeZero k] {f : SelfMapOnRentSimplex n} (hf : IsFaceRespecting f)
     (hk : k + 1 ≤ n) {x : RentSimplex n}
@@ -1847,6 +1911,101 @@ theorem Section5LocalLowerTransversality.erased_face_mem_section5SegmentSubfaces
     (τ := (⟨τ.vertices.erase v⟩ : SimplexFacet n))).mpr
       ⟨herase_sub, herase_nonempty, hhit⟩
 
+theorem Section5LocalLowerTransversality.erased_face_mem_section5HitParamLeftSubfaces
+    {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    {u : Section5Node n} (htrans : Section5LocalLowerTransversality u f)
+    (hf : IsFaceRespecting f) (hfpl : IsPiecewiseAffineOn T f) (hu : IsSection5GraphNode T f u)
+    {τ : SimplexFacet n} (hτ : τ ∈ section5HitParamLeftSubfaces u f)
+    (hmin : ∀ σ ∈ section5HitParamLeftSubfaces u f, τ.vertices.card ≤ σ.vertices.card)
+    {v : RentSimplex n} (hv : v ∈ τ.vertices)
+    (hvFace : v ∉ coordinateFace (prefixRooms n u.level))
+    (hcard : 1 < τ.vertices.card) :
+    (⟨τ.vertices.erase v⟩ : SimplexFacet n) ∈ section5HitParamLeftSubfaces u f := by
+  have hτsub : τ.IsSubfaceOf u.cell :=
+    (mem_section5PointHitSubfaces_iff
+      (u := u) (f := f)
+      (y := section5HitParamMap n u.level (section5HitParamLeft u f)) (τ := τ)).mp hτ |>.1
+  rcases hfpl.exists_erased_face_point_of_minimal_section5PointHitSubface hu hτ hmin hv hcard with
+    ⟨x, x', c, hxτ, hfx, hx'erase, hc0, hc1, hxline, hfxline⟩
+  have hfxSeg : f x ∈ prefixBarycenterSegment n u.level := by
+    simpa [hfx] using section5HitParamLeft_image_mem_prefixBarycenterSegment hu
+  have hx'Seg : f x' ∈ prefixBarycenterSegment n u.level :=
+    htrans hτsub hv hvFace hxτ hfxSeg hx'erase hc0 hc1 hxline hfxline
+  rw [prefixBarycenterSegment,
+    segment_eq_image_lineMap ℝ (prefixBarycenter n u.level) (prefixBarycenter n (u.level + 1))] at hx'Seg
+  rcases hx'Seg with ⟨t', ht'Icc, ht'eq⟩
+  have hvFaceSucc : v ∈ coordinateFace (prefixRooms n (u.level + 1)) := by
+    exact hu.prefix_vertices (hτsub hv)
+  have hfvFace : f v ∈ ambientCoordinateFace (prefixRooms n (u.level + 1)) :=
+    hf.mapsTo_ambientCoordinateFace (prefixRooms n (u.level + 1)) hvFaceSucc
+  have hline :
+      section5HitParamMap n u.level (section5HitParamLeft u f) =
+        AffineMap.lineMap (section5HitParamMap n u.level t') (f v) c := by
+    simpa [hfx, ht'eq] using hfxline
+  rcases exists_section5HitParam_of_mem_ambientCoordinateFace_succ_of_lineMap_eq
+      hu.level_le hfvFace (ne_of_gt hc0) hline with
+    ⟨s, hsEq, hparam⟩
+  have herase_subτ : (⟨τ.vertices.erase v⟩ : SimplexFacet n).IsSubfaceOf τ := by
+    intro w hw
+    exact Finset.mem_of_mem_erase hw
+  have hx'cell : ((x' : RentSimplex n) : RentCoordinates n) ∈ u.cell.realization :=
+    SimplexFacet.realization_mono_of_isSubface (herase_subτ.trans hτsub) hx'erase
+  have hvτreal : ((v : RentSimplex n) : RentCoordinates n) ∈ τ.realization := by
+    rw [SimplexFacet.realization]
+    exact subset_convexHull ℝ _ <|
+      Set.mem_image_of_mem ((↑) : RentSimplex n → RentCoordinates n) hv
+  have hvcell : ((v : RentSimplex n) : RentCoordinates n) ∈ u.cell.realization :=
+    SimplexFacet.realization_mono_of_isSubface hτsub hvτreal
+  have ht'mem : t' ∈ section5HitParams u f := by
+    refine (mem_section5HitParams_iff (u := u) (f := f) (t := t')).mpr ⟨ht'Icc, ?_⟩
+    simpa [ht'eq] using hfpl.facetImageContains_of_mem_realization hu.isFace hx'cell
+  let ik : RoomIndex n := ⟨u.level, lt_of_lt_of_le (Nat.lt_succ_self u.level) hu.level_le⟩
+  have hs_nonneg : 0 ≤ s := by
+    have hcoord_nonneg : 0 ≤ f v ik := hfvFace.1.1 ik
+    have hcoord_eq : f v ik = s * ((u.level + 1 : ℝ)⁻¹) := by
+      simpa [hsEq, section5HitParamMap, AffineMap.lineMap_apply_module, prefixBarycenter, ik]
+    have hpos : 0 < ((u.level + 1 : ℝ)⁻¹) := by
+      positivity
+    nlinarith
+  have hleft_le_t' : section5HitParamLeft u f ≤ t' := by
+    exact ((isCompact_section5HitParams u f).isLeast_sInf (section5HitParams_nonempty hu)).2 ht'mem
+  have hs_le_left : s ≤ section5HitParamLeft u f := by
+    nlinarith
+  have hsIcc : s ∈ Set.Icc (0 : ℝ) 1 := by
+    refine ⟨hs_nonneg, le_trans hs_le_left (section5HitParamLeft_mem_Icc hu).2⟩
+  have hsmem : s ∈ section5HitParams u f := by
+    refine (mem_section5HitParams_iff (u := u) (f := f) (t := s)).mpr ⟨hsIcc, ?_⟩
+    simpa [hsEq] using hfpl.facetImageContains_of_mem_realization hu.isFace hvcell
+  have hleft_le_s : section5HitParamLeft u f ≤ s := by
+    exact ((isCompact_section5HitParams u f).isLeast_sInf (section5HitParams_nonempty hu)).2 hsmem
+  have hcollapse :=
+    eq_hitParamLeft_of_convexCombination hc0 hc1 hleft_le_t' hleft_le_s hparam
+  have ht'_eq_left : t' = section5HitParamLeft u f := hcollapse.1
+  have hfx'left :
+      f x' = section5HitParamMap n u.level (section5HitParamLeft u f) := by
+    rw [← ht'eq, ht'_eq_left]
+    simp [section5HitParamMap]
+  have herase_sub : (⟨τ.vertices.erase v⟩ : SimplexFacet n).IsSubfaceOf u.cell := by
+    intro w hw
+    exact hτsub (Finset.mem_of_mem_erase hw)
+  have herase_nonempty : (⟨τ.vertices.erase v⟩ : SimplexFacet n).vertices.Nonempty := by
+    have hpos : 0 < (τ.vertices.erase v).card := by
+      rw [Finset.card_erase_of_mem hv]
+      omega
+    exact Finset.card_pos.mp hpos
+  have herase_face : T.IsFace (⟨τ.vertices.erase v⟩ : SimplexFacet n) := by
+    rcases hu.isFace with ⟨σ, hσ, hσsub⟩
+    exact ⟨σ, hσ, herase_sub.trans hσsub⟩
+  have hhit :
+      section5HitParamMap n u.level (section5HitParamLeft u f) ∈
+        FacetImageHull f (⟨τ.vertices.erase v⟩ : SimplexFacet n) := by
+    simpa [hfx'left] using hfpl.facetImageContains_of_mem_realization herase_face hx'erase
+  exact (mem_section5PointHitSubfaces_iff
+    (u := u) (f := f)
+    (y := section5HitParamMap n u.level (section5HitParamLeft u f))
+    (τ := (⟨τ.vertices.erase v⟩ : SimplexFacet n))).mpr
+      ⟨herase_sub, herase_nonempty, hhit⟩
+
 theorem minimal_section5PointHitSubface_erase_not_mem
     {n : ℕ} {f : SelfMapOnRentSimplex n} {u : Section5Node n} {y : RentCoordinates n}
     {τ : SimplexFacet n}
@@ -1909,6 +2068,21 @@ theorem Section5LocalLowerTransversality.vertex_mem_coordinateFace_of_minimal_se
     minimal_section5SegmentSubface_vertices_mem_coordinateFace_of_erase_mem hmin
       (fun {_} hw hwFace =>
         htrans.erased_face_mem_section5SegmentSubfaces hfpl hu hτ hmin hw hwFace hcard)
+      hv
+
+theorem Section5LocalLowerTransversality.vertex_mem_coordinateFace_of_minimal_section5HitParamLeftSubface
+    {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    {u : Section5Node n} (htrans : Section5LocalLowerTransversality u f)
+    (hf : IsFaceRespecting f) (hfpl : IsPiecewiseAffineOn T f) (hu : IsSection5GraphNode T f u)
+    {τ : SimplexFacet n} (hτ : τ ∈ section5HitParamLeftSubfaces u f)
+    (hmin : ∀ σ ∈ section5HitParamLeftSubfaces u f, τ.vertices.card ≤ σ.vertices.card)
+    (hcard : 1 < τ.vertices.card) {v : RentSimplex n} (hv : v ∈ τ.vertices) :
+    v ∈ coordinateFace (prefixRooms n u.level) := by
+  exact
+    minimal_section5PointHitSubface_vertices_mem_coordinateFace_of_erase_mem
+      (y := section5HitParamMap n u.level (section5HitParamLeft u f)) hmin
+      (fun {_} hw hwFace =>
+        htrans.erased_face_mem_section5HitParamLeftSubfaces hf hfpl hu hτ hmin hw hwFace hcard)
       hv
 
 theorem IsSection5GraphNode.vertex_mem_affineSpan_prefixVertexPoints {n : ℕ}
@@ -2708,6 +2882,55 @@ theorem exists_section5LowerStep_of_card_eq_and_mem_realization_map_hitParamLeft
     simpa [hfx] using section5HitParamLeft_image_mem_prefixBarycenterSegment hu
   exact exists_section5LowerStep_of_card_eq_and_mem_realization_map_segment
     hf hfpl hu hulevel hxτ hxFace hfxSeg hcard
+
+theorem Section5LocalLowerTransversality.exists_section5LowerStep_of_minimal_section5HitParamLeftSubface_card_eq
+    {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    {u : Section5Node n} (htrans : Section5LocalLowerTransversality u f)
+    (hf : IsFaceRespecting f) (hfpl : IsPiecewiseAffineOn T f)
+    (hu : IsSection5GraphNode T f u) (hulevel : 0 < u.level)
+    {τ : SimplexFacet n} (hτ : τ ∈ section5HitParamLeftSubfaces u f)
+    (hmin : ∀ σ ∈ section5HitParamLeftSubfaces u f, τ.vertices.card ≤ σ.vertices.card)
+    (hτcard : τ.vertices.card = u.level) (hcard : 1 < τ.vertices.card) :
+    ∃ v : Section5Node n, IsSection5GraphNode T f v ∧ Section5Step f v u := by
+  have hτsub : τ.IsSubfaceOf u.cell :=
+    (mem_section5PointHitSubfaces_iff
+      (u := u) (f := f)
+      (y := section5HitParamMap n u.level (section5HitParamLeft u f)) (τ := τ)).mp hτ |>.1
+  have hτface :
+      ∀ ⦃w : RentSimplex n⦄, w ∈ τ.vertices → w ∈ coordinateFace (prefixRooms n u.level) := by
+    intro w hw
+    exact htrans.vertex_mem_coordinateFace_of_minimal_section5HitParamLeftSubface
+      hf hfpl hu hτ hmin hcard hw
+  rcases hfpl.exists_point_in_realization_of_mem_section5HitParamLeftSubfaces hu hτ with
+    ⟨x, hxτ, hfx⟩
+  exact exists_section5LowerStep_of_subface_card_eq_and_map_eq_hitParamLeft
+    hf hfpl hu hulevel hτsub hτcard hτface hxτ hfx
+
+theorem Section5LocalLowerTransversality.exists_section5StartComponentLowerStep_of_minimal_section5HitParamLeftSubface_card_eq
+    {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    {hstart : IsSection5GraphNode T f (section5StartNode n)}
+    {u : section5StartComponent hstart} (htrans : Section5LocalLowerTransversality u.1.1 f)
+    (hf : IsFaceRespecting f) (hfpl : IsPiecewiseAffineOn T f)
+    (hu_ne : u ≠ section5StartVertexInComponent hstart)
+    {τ : SimplexFacet n} (hτ : τ ∈ section5HitParamLeftSubfaces u.1.1 f)
+    (hmin : ∀ σ ∈ section5HitParamLeftSubfaces u.1.1 f, τ.vertices.card ≤ σ.vertices.card)
+    (hτcard : τ.vertices.card = u.1.1.level) (hcard : 1 < τ.vertices.card) :
+    ∃ v : section5StartComponent hstart, Section5Step f v.1.1 u.1.1 := by
+  have hu : IsSection5GraphNode T f u.1.1 := (mem_section5Nodes_iff).mp u.1.2
+  have hτsub : τ.IsSubfaceOf u.1.1.cell :=
+    (mem_section5PointHitSubfaces_iff
+      (u := u.1.1) (f := f)
+      (y := section5HitParamMap n u.1.1.level (section5HitParamLeft u.1.1 f)) (τ := τ)).mp hτ |>.1
+  have hτface :
+      ∀ ⦃w : RentSimplex n⦄, w ∈ τ.vertices →
+        w ∈ coordinateFace (prefixRooms n u.1.1.level) := by
+    intro w hw
+    exact htrans.vertex_mem_coordinateFace_of_minimal_section5HitParamLeftSubface
+      hf hfpl hu hτ hmin hcard hw
+  rcases hfpl.exists_point_in_realization_of_mem_section5HitParamLeftSubfaces hu hτ with
+    ⟨x, hxτ, hfx⟩
+  exact exists_section5StartComponentLowerStep_of_subface_card_eq_and_map_eq_hitParamLeft
+    hf hfpl hu_ne hτsub hτcard hτface hxτ hfx
 
 theorem section5StartComponentGraph_lower_neighbor_unique {n : ℕ} [NeZero n]
     {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}

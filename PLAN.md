@@ -313,13 +313,15 @@
   to prove that the endpoint realization points lie on the correct lower and upper boundary faces,
   then to feed the left-endpoint face into the predecessor theorem and the right-endpoint face
   into the upper-neighbor / endpoint parts of `Section5BoundarySegmentGenericity`. The latest
-  refinement removes another bookkeeping layer on the lower side: if the geometric argument shows
-  that a left-endpoint realization point lies in the lower prefix face, then
-  `section5HitParamLeft u f = 0` is now automatic; and if it produces any codimension-one lower
-  subface with `u.level` vertices in that face, then
-  `(section5LowerPrefixVertices u).card = u.level` is also automatic. So the unresolved work is
-  now purely the geometric extraction of those actual lower/upper boundary faces from the endpoint
-  realization points, not the downstream cardinality or parameter algebra.
+  refinement makes the left side much sharper: for a minimal `card > 1` member of
+  `section5HitParamLeftSubfaces u f`, the exact-point erased-face theorem plus
+  `Section5LocalLowerTransversality` now shows that every vertex already lies in the lower prefix
+  face, and the new wrapper
+  `Section5LocalLowerTransversality.exists_section5(StartComponent)LowerStep_of_minimal_section5HitParamLeftSubface_card_eq`
+  turns the remaining cardinality statement `τ.vertices.card = u.level` directly into the desired
+  lower predecessor. So the unresolved lower-side work is now precisely that codimension-one
+  cardinality upgrade for minimal exact left-endpoint hits; the unresolved upper-side work is the
+  corresponding uniqueness / endpoint extraction from minimal exact right-endpoint hits.
 - First prove the barycenter-specialized version if that is the easiest entry point.
 - Then generalize to arbitrary interior targets if Section 6 needs it.
 - If full surjectivity is still awkward, keep the theorem in the "target in interior" form first; that already covers the barycenter and the interior `y` used in the first Section 6 theorem.
