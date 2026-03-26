@@ -3409,6 +3409,56 @@ theorem section5_levelOne_start_subface_unique {n : ℕ} [NeZero n]
         simpa [hb_ne] using hb_pair
       exact False.elim (hab this.symm)
 
+theorem section5StartComponent_upper_step_unique_of_levelZero {n : ℕ} [NeZero n]
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    {hstart : IsSection5GraphNode T f (section5StartNode n)}
+    {v u w : section5StartComponent hstart}
+    (hvzero : v.1.1.level = 0)
+    (huv : Section5Step f v.1.1 u.1.1)
+    (hvw : Section5Step f v.1.1 w.1.1) :
+    u = w := by
+  have hv_node : IsSection5GraphNode T f v.1.1 := (mem_section5Nodes_iff).mp v.1.2
+  have hu_node : IsSection5GraphNode T f u.1.1 := (mem_section5Nodes_iff).mp u.1.2
+  have hw_node : IsSection5GraphNode T f w.1.1 := (mem_section5Nodes_iff).mp w.1.2
+  have hv_eq_start : v.1.1 = section5StartNode n :=
+    section5_levelZero_eq_startNode hv_node hvzero
+  have hulevel : u.1.1.level = 1 := by
+    have huv_level : v.1.1.level + 1 = u.1.1.level := huv.1
+    omega
+  have hwlevel : w.1.1.level = 1 := by
+    have hwv_level : v.1.1.level + 1 = w.1.1.level := hvw.1
+    omega
+  have hustart : (section5StartCell n).IsSubfaceOf u.1.1.cell := by
+    simpa [hv_eq_start, section5StartNode] using huv.2.1
+  have hwstart : (section5StartCell n).IsSubfaceOf w.1.1.cell := by
+    simpa [hv_eq_start, section5StartNode] using hvw.2.1
+  have hnode_eq : u.1.1 = w.1.1 :=
+    section5_levelOne_start_subface_unique hu_node hw_node hulevel hwlevel hustart hwstart
+  have hnodes_eq : u.1 = w.1 := by
+    exact Subtype.ext hnode_eq
+  exact Subtype.ext hnodes_eq
+
+theorem section5StartComponent_upper_step_unique_of_pos_level_cell_vertices_eq {n : ℕ}
+    [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    {hstart : IsSection5GraphNode T f (section5StartNode n)}
+    (hcell_verts :
+      ∀ {v u w : section5StartComponent hstart},
+        0 < v.1.1.level →
+        Section5Step f v.1.1 u.1.1 →
+        Section5Step f v.1.1 w.1.1 →
+          u.1.1.cell.vertices = w.1.1.cell.vertices) :
+    ∀ {v u w : section5StartComponent hstart},
+      Section5Step f v.1.1 u.1.1 →
+      Section5Step f v.1.1 w.1.1 →
+        u = w := by
+  intro v u w huv hvw
+  by_cases hvzero : v.1.1.level = 0
+  · exact section5StartComponent_upper_step_unique_of_levelZero hvzero huv hvw
+  · apply Subtype.ext
+    apply Subtype.ext
+    exact section5Step_same_source_eq_of_cell_vertices_eq huv hvw <|
+      hcell_verts (Nat.pos_of_ne_zero hvzero) huv hvw
+
 theorem existsUnique_section5_levelOne_start_subface_of_exists {n : ℕ} [NeZero n]
     {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
     {hstart : IsSection5GraphNode T f (section5StartNode n)}

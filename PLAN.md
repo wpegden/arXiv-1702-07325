@@ -305,15 +305,18 @@
   perturbation sentence is invoked. A richer `n = 4` tetrahedral diagnostic now still finds no
   `upper_step_unique` counterexample in a fixed 4-room search, so the best current proof route is
   to stop treating that field as another hidden genericity axiom and instead prove a structural
-  boundary-coface lemma: a level-`k` Section 5 node is already a full-dimensional simplex in the
-  boundary face `coordinateFace (prefixRooms n (k + 1))`, hence it should have at most one
-  incident `(k+1)`-cell on the `coordinateFace (prefixRooms n (k + 2))` side. Concretely, the
-  reduction is now exact: if `u,v,w` are Section 5 graph nodes with `Section5Step f u v` and
-  `Section5Step f u w`, then `section5Step_vertices_eq_lowerPrefixVertices` already gives
+  boundary-coface lemma: a positive-level Section 5 node is already a full-dimensional simplex in
+  the boundary face `coordinateFace (prefixRooms n (k + 1))`, hence it should have at most one
+  incident `(k+1)`-cell on the `coordinateFace (prefixRooms n (k + 2))` side. The level-`0`
+  source case is now formally discharged separately in `Section5Path.lean` from the existing
+  canonical start-edge uniqueness theorems. Concretely, the reduction is now exact: if `u,v,w`
+  are Section 5 graph nodes with `Section5Step f u v` and `Section5Step f u w`, then
+  `section5Step_vertices_eq_lowerPrefixVertices` already gives
   `u.cell.vertices = section5LowerPrefixVertices v = section5LowerPrefixVertices w`, so the
-  remaining theorem is purely triangulation-side: for any full-dimensional boundary cell `σ` in
-  `coordinateFace (prefixRooms n (k + 1))`, there is at most one `(k+1)`-face of the triangulation
-  inside `coordinateFace (prefixRooms n (k + 2))` whose lower-prefix vertex set is `σ`.
+  remaining theorem is purely triangulation-side for `0 < u.level`: for any full-dimensional
+  boundary cell `σ` in `coordinateFace (prefixRooms n (k + 1))`, there is at most one `(k+1)`-face
+  of the triangulation inside `coordinateFace (prefixRooms n (k + 2))` whose lower-prefix vertex
+  set is `σ`.
   On the packaging side, the remaining graph-theoretic conversion gap is now gone: the support
   layer proves `Section5PerturbationGenericity.toBoundarySegmentGenericity`, and the existing
   local-left/upper-endpoint wrapper is rerouted through
