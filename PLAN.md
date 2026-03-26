@@ -231,6 +231,14 @@
   same result on the real start component. So the remaining gap is no longer to translate the
   local boundary geometry into the canonical language; it is to actually construct that boundary
   geometry from the manuscript's 1-dimensional slice picture on each non-start cell.
+  The exact remaining support-layer input is now isolated explicitly as well:
+  `Section5MinimalSliceLowerBoundaryFaceData u f` records just a minimal segment-hitting face,
+  one codimension-one lower face, and a point of that lower face mapping into
+  `[b_k,b_{k+1}]`; `Section5MinimalSliceLowerBoundaryFaceData.toLowerBoundaryGeometry` proves this
+  is already sufficient for the full local package `Section5MinimalSliceLowerBoundaryGeometry u f`.
+  So if the current API still cannot derive the lower boundary face from first principles, this
+  structure is now the exact honest hypothesis to target from the manuscript's quoted genericity
+  sentence, rather than any further graph-translation wrapper.
   So the remaining honest geometry on `u.cell` is now: prove that the slice reaches the lower
   prefix face, and prove that the canonical lower-prefix face has exactly `u.level` vertices.
   The older `Section5OneComplexGeometry` layer remains useful as cleanup, but it is no longer the

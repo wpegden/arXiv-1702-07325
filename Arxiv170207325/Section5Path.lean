@@ -1048,6 +1048,28 @@ theorem mem_section5SegmentSubfaces_of_mem_realization_map_segment {n : ℕ} [Ne
   exact (mem_section5SegmentSubfaces_iff (u := u) (f := f) (τ := τ)).mpr
     ⟨hτsub, hτne, hτhit⟩
 
+/-- Exact local support-layer data for the paper's remaining genericity sentence on one cell:
+a minimal segment-hitting face `τ` has a codimension-one lower face carrying a point whose image
+still lies on the barycenter segment. The existing Section 5 support API can already upgrade this
+package to genuine slice geometry. -/
+structure Section5MinimalSliceLowerBoundaryFaceData {n : ℕ} (u : Section5Node n)
+    (f : SelfMapOnRentSimplex n) where
+  minimal_face : SimplexFacet n
+  mem_segmentSubfaces : minimal_face ∈ section5SegmentSubfaces u f
+  minimal :
+    ∀ σ ∈ section5SegmentSubfaces u f, minimal_face.vertices.card ≤ σ.vertices.card
+  lower_boundary_face : SimplexFacet n
+  lower_boundary_isSubface : lower_boundary_face.IsSubfaceOf minimal_face
+  lower_boundary_card_eq : lower_boundary_face.vertices.card = u.level
+  lower_boundary_prefix_vertices :
+    ∀ ⦃w : RentSimplex n⦄,
+      w ∈ lower_boundary_face.vertices → w ∈ coordinateFace (prefixRooms n u.level)
+  lower_boundary_point : RentSimplex n
+  lower_boundary_point_mem_realization :
+    ((lower_boundary_point : RentSimplex n) : RentCoordinates n) ∈ lower_boundary_face.realization
+  lower_boundary_point_map_mem_segment :
+    f lower_boundary_point ∈ prefixBarycenterSegment n u.level
+
 /-- A first local boundary-geometry package for one minimal segment-hitting face `τ`: a lower
 codimension-one boundary face carries an actual point of the slice. Minimality then forces `τ`
 itself to be that lower face. -/
@@ -1636,6 +1658,17 @@ def minimal_section5SegmentSubface_lowerBoundaryGeometry_of_lower_boundary_face
       hfpl hu hulevel hτ hmin hρsub hρcard hρface hxρ hfxSeg
   exact minimal_section5SegmentSubface_lowerBoundaryGeometry_of_card_eq_of_vertices_mem_coordinateFace
     hfpl hu hτ hmin hτcard hτface
+
+def Section5MinimalSliceLowerBoundaryFaceData.toLowerBoundaryGeometry
+    {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    (hfpl : IsPiecewiseAffineOn T f) {u : Section5Node n} (hu : IsSection5GraphNode T f u)
+    (hulevel : 0 < u.level) (hdata : Section5MinimalSliceLowerBoundaryFaceData u f) :
+    Section5MinimalSliceLowerBoundaryGeometry u f := by
+  exact minimal_section5SegmentSubface_lowerBoundaryGeometry_of_lower_boundary_face
+    hfpl hu hulevel hdata.mem_segmentSubfaces hdata.minimal
+    hdata.lower_boundary_isSubface hdata.lower_boundary_card_eq
+    hdata.lower_boundary_prefix_vertices hdata.lower_boundary_point_mem_realization
+    hdata.lower_boundary_point_map_mem_segment
 
 theorem IsSection5GraphNode.vertex_mem_affineSpan_prefixVertexPoints {n : ℕ}
     {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n} {u : Section5Node n}
