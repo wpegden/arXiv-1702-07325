@@ -1350,6 +1350,77 @@ theorem minimal_section5SegmentSubface_vertices_mem_coordinateFace_of_erase_mem
   by_contra hvFace
   exact minimal_section5SegmentSubface_erase_not_mem hmin hv (herase hv hvFace)
 
+theorem minimal_section5SegmentSubface_vertices_mem_coordinateFace_of_erase_realization_map_segment
+    {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    (hfpl : IsPiecewiseAffineOn T f) {u : Section5Node n} (hu : IsSection5GraphNode T f u)
+    {τ : SimplexFacet n} (hτ : τ ∈ section5SegmentSubfaces u f)
+    (hmin : ∀ σ ∈ section5SegmentSubfaces u f, τ.vertices.card ≤ σ.vertices.card)
+    (herase :
+      ∀ ⦃v : RentSimplex n⦄, v ∈ τ.vertices →
+        v ∉ coordinateFace (prefixRooms n u.level) →
+          ∃ x : RentSimplex n,
+            ((x : RentSimplex n) : RentCoordinates n) ∈
+              (⟨τ.vertices.erase v⟩ : SimplexFacet n).realization ∧
+            f x ∈ prefixBarycenterSegment n u.level) :
+    ∀ ⦃v : RentSimplex n⦄, v ∈ τ.vertices → v ∈ coordinateFace (prefixRooms n u.level) := by
+  apply minimal_section5SegmentSubface_vertices_mem_coordinateFace_of_erase_mem hmin
+  intro v hv hvFace
+  rcases herase hv hvFace with ⟨x, hxerase, hfxSeg⟩
+  have hτsubu : τ.IsSubfaceOf u.cell :=
+    (mem_section5SegmentSubfaces_iff (u := u) (f := f) (τ := τ)).mp hτ |>.1
+  have herase_subτ : (⟨τ.vertices.erase v⟩ : SimplexFacet n).IsSubfaceOf τ := by
+    intro w hw
+    exact Finset.mem_of_mem_erase hw
+  have herase_ne : (⟨τ.vertices.erase v⟩ : SimplexFacet n).vertices.Nonempty := by
+    by_contra herase_empty
+    have hverts_empty :
+        (⟨τ.vertices.erase v⟩ : SimplexFacet n).vertices = ∅ :=
+      Finset.not_nonempty_iff_eq_empty.mp herase_empty
+    have hset_empty : ((τ.vertices : Set (RentSimplex n)) \ {v}) = ∅ := by
+      simpa [Finset.coe_erase] using
+        congrArg (fun s : Finset (RentSimplex n) => (s : Set (RentSimplex n))) hverts_empty
+    have himage_empty :
+        DFunLike.coe '' (((τ.vertices : Set (RentSimplex n)) \ {v}) : Set (RentSimplex n)) =
+          (∅ : Set (RentCoordinates n)) := by
+      rw [hset_empty, Set.image_empty]
+    have : False := by
+      simpa [SimplexFacet.realization, SimplexFacet.pointSet, himage_empty, convexHull_empty]
+        using hxerase
+    exact this
+  exact mem_section5SegmentSubfaces_of_mem_realization_map_segment
+    hfpl hu (herase_subτ.trans hτsubu) herase_ne hxerase hfxSeg
+
+def minimal_section5SegmentSubface_lowerBoundaryGeometry_of_card_eq_of_erase_realization_map_segment
+    {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    (hfpl : IsPiecewiseAffineOn T f) {u : Section5Node n} (hu : IsSection5GraphNode T f u)
+    {τ : SimplexFacet n} (hτ : τ ∈ section5SegmentSubfaces u f)
+    (hmin : ∀ σ ∈ section5SegmentSubfaces u f, τ.vertices.card ≤ σ.vertices.card)
+    (hτcard : τ.vertices.card = u.level)
+    (herase :
+      ∀ ⦃v : RentSimplex n⦄, v ∈ τ.vertices →
+        v ∉ coordinateFace (prefixRooms n u.level) →
+          ∃ x : RentSimplex n,
+            ((x : RentSimplex n) : RentCoordinates n) ∈
+              (⟨τ.vertices.erase v⟩ : SimplexFacet n).realization ∧
+            f x ∈ prefixBarycenterSegment n u.level) :
+    Section5MinimalSliceLowerBoundaryGeometry u f := by
+  classical
+  let hx :=
+    hfpl.exists_point_in_realization_of_mem_section5SegmentSubfaces hu hτ
+  let x : RentSimplex n := Classical.choose hx
+  have hxspec := Classical.choose_spec hx
+  have hxτ : ((x : RentSimplex n) : RentCoordinates n) ∈ τ.realization := hxspec.1
+  have hfxSeg : f x ∈ prefixBarycenterSegment n u.level := hxspec.2
+  have hτsubu : τ.IsSubfaceOf u.cell :=
+    (mem_section5SegmentSubfaces_iff (u := u) (f := f) (τ := τ)).mp hτ |>.1
+  have hτface :
+      ∀ ⦃v : RentSimplex n⦄, v ∈ τ.vertices → v ∈ coordinateFace (prefixRooms n u.level) :=
+    minimal_section5SegmentSubface_vertices_mem_coordinateFace_of_erase_realization_map_segment
+      hfpl hu hτ hmin herase
+  refine
+    ⟨τ, hτ, hmin, τ, Finset.Subset.refl _, hτcard, hτface, x, ?_, hxτ⟩
+  exact ⟨SimplexFacet.realization_mono_of_isSubface hτsubu hxτ, hfxSeg⟩
+
 theorem IsSection5GraphNode.vertex_mem_affineSpan_prefixVertexPoints {n : ℕ}
     {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n} {u : Section5Node n}
     (hu : IsSection5GraphNode T f u) {v : RentSimplex n} (hv : v ∈ u.cell.vertices) :

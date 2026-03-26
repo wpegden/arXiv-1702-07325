@@ -166,6 +166,14 @@
   fields are available, the existing bridge already compiles them into
   `Section5MinimalSliceFaceData`, `Section5SimplexSliceGenericity`,
   `Section5PerturbationGenericity`, and finally `Section5BoundarySegmentGenericity`.
+  The newest reduction makes this target more explicit and proof-local: `Section5Path.lean` now
+  proves that for a minimal segment-hitting face `τ`, if every vertex of `τ` outside the lower
+  prefix face can be erased while retaining a slice point on the opposite face, then all vertices
+  of `τ` already lie in `coordinateFace (prefixRooms n u.level)`; if in addition
+  `τ.vertices.card = u.level`, this immediately packages as
+  `Section5MinimalSliceLowerBoundaryGeometry u f`. So the remaining geometry is now concentrated
+  in two honest claims extracted from the manuscript's generic picture: produce those erased-face
+  slice witnesses and prove the minimal face has exactly `u.level` vertices.
   The older `Section5OneComplexGeometry` layer remains useful as cleanup, but it is no longer the
   main proof boundary.
   A first concrete fragment is already in place: level `0` is rigidly the start node, so any
@@ -246,7 +254,15 @@
   `Section5MinimalSliceFaceData` and `Section5SimplexSliceGenericity`. So the remaining blocker is
   no longer how to transport a proved local geometry statement through the graph wrappers; it is
   specifically the honest geometric theorem that the preimage slice inside one simplex cell really
-  is a segment with the required lower boundary face.
+  is a segment with the required lower boundary face. The latest support theorem sharpens this
+  further: once a minimal face `τ` has the manuscript's erased-face slice witnesses for vertices
+  outside the lower prefix face, the new theorem
+  `minimal_section5SegmentSubface_vertices_mem_coordinateFace_of_erase_realization_map_segment`
+  forces all vertices of `τ` into the lower prefix face, and
+  `minimal_section5SegmentSubface_lowerBoundaryGeometry_of_card_eq_of_erase_realization_map_segment`
+  then packages the result as `Section5MinimalSliceLowerBoundaryGeometry`. So the unresolved
+  content is now precisely the genuinely geometric production of those erased-face slice witnesses
+  and the cardinality statement `τ.vertices.card = u.level`.
   bridge removes even that final `b_k ∈ λ(τ)` packaging step: if the geometry gives a point of
   `τ.realization` whose image stays on `[b_k,b_{k+1}]`, convexity forces that whole face to lie in
   the lower prefix face, the endpoint lemma turns the image into `b_k`, and the direct theorem
