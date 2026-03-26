@@ -1021,6 +1021,17 @@ theorem Section5MinimalSliceFaceData.exists_point_mem_slice {n : ℕ} [NeZero n]
     SimplexFacet.realization_mono_of_isSubface hdata.face_isSubface hxface
   exact ⟨x, ⟨hxcell, hfxSeg⟩, hxface⟩
 
+theorem Section5MinimalSliceFaceData.exists_point_mem_slice_and_mem_coordinateFace {n : ℕ}
+    [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    (hfpl : IsPiecewiseAffineOn T f) {u : Section5Node n}
+    (hu : IsSection5GraphNode T f u) (hdata : Section5MinimalSliceFaceData u f) :
+    ∃ x : RentSimplex n,
+      x ∈ section5CellSlice u f ∧ x ∈ coordinateFace (prefixRooms n u.level) := by
+  rcases hdata.exists_point_mem_slice hfpl hu with ⟨x, hxSlice, hxface⟩
+  refine ⟨x, hxSlice, ?_⟩
+  exact hdata.face.mem_coordinateFace_of_mem_realization_of_vertices_mem_coordinateFace
+    hxface hdata.lower_prefix_vertices
+
 theorem mem_section5SegmentSubfaces_of_mem_realization_map_segment {n : ℕ} [NeZero n]
     {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
     (hfpl : IsPiecewiseAffineOn T f) {u : Section5Node n} (hu : IsSection5GraphNode T f u)
@@ -3585,6 +3596,21 @@ theorem Section5EntryFaceGenericity.lower_entry_face_of_ne_start_canonical {n : 
     (section5LowerEntryFaceData_nonempty_iff_card_eq_and_facetImageContains_lowerPrefixVertices
       hv_node).mp
       ⟨hentry.lower_entry_face_of_ne_start v hv⟩
+
+theorem Section5SimplexSliceGenericity.exists_point_mem_section5CellSlice_and_mem_coordinateFace
+    {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    {hstart : IsSection5GraphNode T f (section5StartNode n)}
+    (hslice : Section5SimplexSliceGenericity T f hstart)
+    (hfpl : IsPiecewiseAffineOn T f)
+    (v : section5StartComponent hstart)
+    (hv : v ≠ section5StartVertexInComponent hstart) :
+    ∃ x : RentSimplex n,
+      x ∈ section5CellSlice v.1.1 f ∧
+        x ∈ coordinateFace (prefixRooms n v.1.1.level) := by
+  have hv_node : IsSection5GraphNode T f v.1.1 := (mem_section5Nodes_iff).mp v.1.2
+  exact
+    (hslice.lower_minimal_slice_face_of_ne_start v hv).exists_point_mem_slice_and_mem_coordinateFace
+      hfpl hv_node
 
 def Section5SimplexSliceBoundaryGeometry.toSimplexSliceGenericity {n : ℕ} [NeZero n]
     {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}

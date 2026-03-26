@@ -211,6 +211,10 @@
   been sharpened one step further: `FacetImageContains f (⟨section5LowerPrefixVertices u⟩ :
   SimplexFacet n) (prefixBarycenter n u.level)` is equivalent to the existence of a point
   `x ∈ section5CellSlice u f` that also lies in `coordinateFace (prefixRooms n u.level)`.
+  This slice-point half is now also automatic once one has the older local slice package:
+  `Section5MinimalSliceFaceData.exists_point_mem_slice_and_mem_coordinateFace` extracts such a
+  point directly, so any future proof of `Section5SimplexSliceGenericity` or
+  `Section5SimplexSliceBoundaryGeometry` already supplies the canonical lower-prefix slice point.
   So the remaining honest geometry on `u.cell` is now: prove that the slice reaches the lower
   prefix face, and prove that the canonical lower-prefix face has exactly `u.level` vertices.
   The older `Section5OneComplexGeometry` layer remains useful as cleanup, but it is no longer the
