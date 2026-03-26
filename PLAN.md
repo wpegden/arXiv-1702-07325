@@ -245,9 +245,14 @@
   nonzero barycentric weight on every vertex of the minimal face, via
   `IsPiecewiseAffineOn.exists_point_with_nonzero_weights_of_minimal_section5SegmentSubface`, so
   the remaining lower-step work is now best phrased as one local contradiction lemma on a
-  canonical relative-interior point of this chosen face: show every one of its vertices already
-  lies in the lower prefix face, then upgrade the resulting face to the predecessor step. The
-  older `section5LowerPrefixVertices` route remains available as a fallback, and the new local
+  canonical relative-interior point of this chosen face. The support layer now sharpens this one
+  step further: `minimal_section5SegmentSubface_erase_not_mem` and
+  `minimal_section5SegmentSubface_vertices_mem_coordinateFace_of_erase_mem` reduce the bad-vertex
+  contradiction to a single concrete erased-face statement. It is now enough to show that if a
+  vertex of the minimal segment-hitting face lies outside the lower prefix face, then erasing
+  that one vertex still leaves a face whose image meets `[b_k,b_{k+1}]`; minimality then yields
+  the contradiction automatically. The older `section5LowerPrefixVertices` route remains
+  available as a fallback, and the new local
   obstruction theorem still records that if the
   filtered lower subface already hits `b_k`, then every room in `prefixRooms n k` appears in the
   support of some lower-prefix vertex, while any actual lower-face preimage of `b_k` has simplex

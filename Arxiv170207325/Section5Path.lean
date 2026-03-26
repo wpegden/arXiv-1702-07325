@@ -1009,6 +1009,30 @@ theorem IsPiecewiseAffineOn.exists_point_with_nonzero_weights_of_minimal_section
   have : σ.vertices.card < τ.vertices.card := Finset.card_lt_card hproper
   omega
 
+theorem minimal_section5SegmentSubface_erase_not_mem
+    {n : ℕ} {f : SelfMapOnRentSimplex n} {u : Section5Node n} {τ : SimplexFacet n}
+    (hmin : ∀ σ ∈ section5SegmentSubfaces u f, τ.vertices.card ≤ σ.vertices.card)
+    {v : RentSimplex n} (hv : v ∈ τ.vertices) :
+    (⟨τ.vertices.erase v⟩ : SimplexFacet n) ∉ section5SegmentSubfaces u f := by
+  intro hσ
+  have hcard_min : τ.vertices.card ≤ (⟨τ.vertices.erase v⟩ : SimplexFacet n).vertices.card :=
+    hmin _ hσ
+  have hcard_lt : (⟨τ.vertices.erase v⟩ : SimplexFacet n).vertices.card < τ.vertices.card := by
+    simpa using Finset.card_erase_lt_of_mem hv
+  omega
+
+theorem minimal_section5SegmentSubface_vertices_mem_coordinateFace_of_erase_mem
+    {n : ℕ} {f : SelfMapOnRentSimplex n} {u : Section5Node n} {τ : SimplexFacet n}
+    (hmin : ∀ σ ∈ section5SegmentSubfaces u f, τ.vertices.card ≤ σ.vertices.card)
+    (herase :
+      ∀ ⦃v : RentSimplex n⦄, v ∈ τ.vertices →
+        v ∉ coordinateFace (prefixRooms n u.level) →
+          (⟨τ.vertices.erase v⟩ : SimplexFacet n) ∈ section5SegmentSubfaces u f) :
+    ∀ ⦃v : RentSimplex n⦄, v ∈ τ.vertices → v ∈ coordinateFace (prefixRooms n u.level) := by
+  intro v hv
+  by_contra hvFace
+  exact minimal_section5SegmentSubface_erase_not_mem hmin hv (herase hv hvFace)
+
 theorem IsSection5GraphNode.vertex_mem_affineSpan_prefixVertexPoints {n : ℕ}
     {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n} {u : Section5Node n}
     (hu : IsSection5GraphNode T f u) {v : RentSimplex n} (hv : v ∈ u.cell.vertices) :
