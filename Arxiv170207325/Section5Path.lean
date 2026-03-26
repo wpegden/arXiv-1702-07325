@@ -201,6 +201,46 @@ theorem prefixBarycenter_self_eq_rentBarycenter (n : ℕ) [NeZero n] :
 def prefixBarycenterSegment (n k : ℕ) : Set (RentCoordinates n) :=
   segment ℝ (prefixBarycenter n k) (prefixBarycenter n (k + 1))
 
+theorem mem_prefixBarycenterSegment_iff_exists_lineMap {n k : ℕ}
+    {y : RentCoordinates n} :
+    y ∈ prefixBarycenterSegment n k ↔
+      ∃ t ∈ Set.Icc (0 : ℝ) 1,
+        AffineMap.lineMap (prefixBarycenter n k) (prefixBarycenter n (k + 1)) t = y := by
+  rw [prefixBarycenterSegment, segment_eq_image_lineMap, Set.mem_image]
+
+theorem LinearMap.map_eq_prefixBarycenter_of_mem_prefixBarycenterSegment
+    {n k : ℕ} {β : Type*} [AddCommGroup β] [Module ℝ β]
+    (L : RentCoordinates n →ₗ[ℝ] β)
+    (hL : L (prefixBarycenter n (k + 1) - prefixBarycenter n k) = 0)
+    {y : RentCoordinates n} (hy : y ∈ prefixBarycenterSegment n k) :
+    L y = L (prefixBarycenter n k) := by
+  rcases mem_prefixBarycenterSegment_iff_exists_lineMap.mp hy with ⟨t, _ht, rfl⟩
+  have hEq : L (prefixBarycenter n (k + 1)) = L (prefixBarycenter n k) := by
+    exact sub_eq_zero.mp <| by simpa using hL
+  calc
+    L (AffineMap.lineMap (prefixBarycenter n k) (prefixBarycenter n (k + 1)) t) =
+        (1 - t) • L (prefixBarycenter n k) + t • L (prefixBarycenter n (k + 1)) := by
+          simp [AffineMap.lineMap_apply_module, map_add]
+    _ = (1 - t) • L (prefixBarycenter n k) + t • L (prefixBarycenter n k) := by
+          rw [hEq]
+    _ = ((1 - t) + t) • L (prefixBarycenter n k) := by
+          rw [← add_smul]
+    _ = L (prefixBarycenter n k) := by
+          simp
+
+theorem FaceHitWitness.eq_under_segmentCollapse_of_mem_prefixBarycenterSegment
+    {n : ℕ} {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    {σ : SimplexFacet n} {y : RentCoordinates n}
+    (hw : FaceHitWitness T f σ y) {k : ℕ}
+    {β : Type*} [AddCommGroup β] [Module ℝ β]
+    (L : RentCoordinates n →ₗ[ℝ] β)
+    (hL : L (prefixBarycenter n (k + 1) - prefixBarycenter n k) = 0)
+    (hy : y ∈ prefixBarycenterSegment n k) :
+    L (hw.affineMap hw.point) = L (prefixBarycenter n k) := by
+  simpa [hw.point_image] using
+    LinearMap.map_eq_prefixBarycenter_of_mem_prefixBarycenterSegment
+      (n := n) (k := k) L hL hy
+
 theorem prefixBarycenterSegment_subset_ambientCoordinateFace {n k : ℕ} [NeZero k]
     (hk : k + 1 ≤ n) :
     prefixBarycenterSegment n k ⊆ ambientCoordinateFace (prefixRooms n (k + 1)) := by
@@ -210,6 +250,37 @@ theorem prefixBarycenterSegment_subset_ambientCoordinateFace {n k : ℕ} [NeZero
   · exact ambientCoordinateFace_mono (prefixRooms_mono (Nat.le_succ k))
       (prefixBarycenter_mem_ambientCoordinateFace hk')
   · exact prefixBarycenter_mem_ambientCoordinateFace hk
+
+theorem eq_prefixBarycenter_of_mem_prefixBarycenterSegment_of_mem_lowerAmbientFace
+    {n k : ℕ} [NeZero k] (hk : k + 1 ≤ n) {y : RentCoordinates n}
+    (hySeg : y ∈ prefixBarycenterSegment n k)
+    (hyFace : y ∈ ambientCoordinateFace (prefixRooms n k)) :
+    y = prefixBarycenter n k := by
+  rcases mem_prefixBarycenterSegment_iff_exists_lineMap.mp hySeg with ⟨t, _ht, hline⟩
+  let i : RoomIndex n := ⟨k, lt_of_lt_of_le (Nat.lt_succ_self k) hk⟩
+  have hi_not_mem : i ∉ prefixRooms n k := by
+    simp [i, mem_prefixRooms_iff]
+  have hyi0 : y i = 0 := (coordSupport_subset_iff.mp hyFace.2) i hi_not_mem
+  have hi_not_lt : ¬ i.1 < k := by
+    simp [i]
+  have hi_lt_succ : i.1 < k + 1 := by
+    simp [i]
+  have hyi :
+      y i = t * ((k + 1 : ℝ)⁻¹) := by
+    rw [← hline, AffineMap.lineMap_apply_module]
+    simp [prefixBarycenter, hi_not_lt, hi_lt_succ, mul_comm]
+  have hmul :
+      t * ((k + 1 : ℝ)⁻¹) = 0 := by
+    rw [hyi0] at hyi
+    exact hyi.symm
+  have hk1_ne : ((k + 1 : ℝ)⁻¹) ≠ 0 := by
+    exact inv_ne_zero <| by exact_mod_cast Nat.succ_ne_zero k
+  have ht0 : t = 0 := (mul_eq_zero.mp hmul).resolve_right hk1_ne
+  calc
+    y = AffineMap.lineMap (prefixBarycenter n k) (prefixBarycenter n (k + 1)) t := by
+          exact hline.symm
+    _ = prefixBarycenter n k := by
+          simp [ht0]
 
 /-- The first barycenter `b_1`, viewed as a simplex vertex, is the Section 5 start point. -/
 def section5StartVertex (n : ℕ) [NeZero n] : RentSimplex n :=
@@ -1116,6 +1187,22 @@ theorem IsSection5GraphNode.exists_realizationPoint_mem_chain_of_piecewiseAffine
     ⟨τ, hτ, hsub, g, hg, x, hx, hxy⟩
   refine ⟨τ, hτ, hsub, g, hg, x, hx, ?_⟩
   simpa [hxy] using hySeg
+
+theorem
+    IsSection5GraphNode.exists_faceHitWitness_eq_under_segmentCollapse_of_piecewiseAffineOn
+    {n : ℕ} {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n} {u : Section5Node n}
+    (hu : IsSection5GraphNode T f u) (hpa : IsPiecewiseAffineOn T f)
+    {β : Type*} [AddCommGroup β] [Module ℝ β]
+    (L : RentCoordinates n →ₗ[ℝ] β)
+    (hL : L (prefixBarycenter n (u.level + 1) - prefixBarycenter n u.level) = 0) :
+    ∃ y, y ∈ prefixBarycenterSegment n u.level ∧
+      ∃ hw : FaceHitWitness T f u.cell y,
+        L (hw.affineMap hw.point) = L (prefixBarycenter n u.level) := by
+  rcases hu.meets_chain with ⟨y, hyHull, hySeg⟩
+  let hw : FaceHitWitness T f u.cell y :=
+    T.faceHitWitnessOfFacetImageContains hu.isFace hpa hyHull
+  exact ⟨y, hySeg, hw,
+    hw.eq_under_segmentCollapse_of_mem_prefixBarycenterSegment L hL hySeg⟩
 
 theorem IsSection5GraphNode.levelOne_cell_eq_boundaryVertices_of_incidentFacet {n : ℕ}
     [NeZero n] (hn : 2 ≤ n) {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
