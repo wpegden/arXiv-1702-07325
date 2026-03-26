@@ -308,6 +308,16 @@
   `Section5BoundarySegmentGenericity`. So the outstanding geometric frontier is now sharply
   phrased: prove the lower field of `Section5BoundaryFaceGenericity` from the manuscript's
   1-dimensional slice picture, rather than discovering any new graph infrastructure.
+  There is now also a cleaner branch target that bypasses the blocked minimal-face reduction:
+  `Section5CanonicalLowerEntryData u f` packages exactly the canonical lower-prefix cardinality
+  statement plus an actual slice point on that lower prefix face, and the global structure
+  `Section5CanonicalLowerEntryGenericity` asks for that data on every non-start node of the real
+  start component. The bridge `Section5CanonicalLowerEntryData.toLowerEntryFaceData` immediately
+  converts this to `Section5EntryFaceGenericity`, hence to `Section5PerturbationGenericity`,
+  `Section5BoundarySegmentGenericity`, and the existing canonical target-facet theorem. So the
+  new honest support-layer frontier is: derive `Section5CanonicalLowerEntryGenericity` directly
+  from the manuscript's perturbation / segment-intersection sentence, and treat the optimizer
+  route as a diagnostic backup rather than the default main line.
   So the remaining honest geometry on `u.cell` is now: prove that the slice reaches the lower
   prefix face, and prove that the canonical lower-prefix face has exactly `u.level` vertices.
   The older `Section5OneComplexGeometry` layer remains useful as cleanup, but it is no longer the
