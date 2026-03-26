@@ -71,7 +71,14 @@
   part of the local generic-position/transversality input rather than a formal consequence of face
   preservation by itself. Concretely, `IsFaceRespecting` forces `f(e₁) = b₁`, but it does not by
   itself prevent the other vertex of a level-1 cell `{e₁,w}` from also mapping to `b₁`; so a
-  minimal singleton exact-left hit at `w` is not excluded without extra local geometry.
+  minimal singleton exact-left hit at `w` is not excluded without extra local geometry. A small
+  `n = 3` diagnostic now confirms this is a real counterexample pattern, not just a proof gap:
+  take the triangulation with vertices `e₁,e₂,e₃,m₁₂,c`, where `m₁₂` is the midpoint of
+  `[e₁,e₂]`, `c` is an interior vertex, and the four facets are
+  `[e₁,m₁₂,c]`, `[m₁₂,e₂,c]`, `[e₂,e₃,c]`, `[e₃,e₁,c]`. The simplicial map fixing
+  `e₁,e₂,e₃` and sending both `m₁₂` and `c` to `e₁ = b₁` is face-respecting and piecewise affine.
+  For the level-1 cell `[e₁,m₁₂]`, the minimal exact left hits include the singleton `{m₁₂}`, so
+  `Section5LocalLevelOneLeftVertexGenericity` is false under the current hypotheses.
 - Section 5, outgoing-side status: the exact right-endpoint obligations are now named in Lean as
   `Section5LocalUpperEndpointGenericity T f hstart`. This is not new mathematical content; it is
   simply the manuscript's two generic outgoing-path claims made explicit as fields: upper-step
@@ -82,7 +89,13 @@
   while `upper_step_unique` is a statement about higher-dimensional cofaces containing `u.cell`.
   So the unresolved outgoing geometry is genuinely a statement about the star of `u.cell`, namely
   that the barycenter-chain segment exits through at most one higher-dimensional continuation cell,
-  and that if it exits through none then the right endpoint already is the final barycenter.
+  and that if it exits through none then the right endpoint already is the final barycenter. The
+  same `n = 3` diagnostic above also shows that the endpoint half is not derivable from the current
+  face-respecting hypotheses alone: in that example the reachable graph node `[e₁,m₁₂]` has no
+  upper `Section5Step`, but its image does not contain the final barycenter, so
+  `Section5LocalUpperEndpointGenericity.no_upper_step_is_endpoint` fails. By contrast, the same
+  small search did not produce a counterexample to `upper_step_unique`, so that field remains
+  mathematically open rather than falsified.
 - Section 5, current formalization status: this remaining manuscript sentence is now represented directly by the support-layer structure `Section5BoundarySegmentGenericity`. That package is already sufficient, together with the canonical start-successor theorem, to derive the paper-facing Section 5 target-facet conclusion; the unresolved work is therefore the actual geometric proof of `Section5BoundarySegmentGenericity`, not any further graph-theoretic packaging.
 - Section 5, current proof boundary: the Lean development now also has the more literal step-level perturbation package `Section5PerturbationGenericity`, whose fields say that a non-start cell is entered from a lower face, has at most one upper continuation as a `Section5Step`, and if there is no such continuation then it already contains the barycenter. This matches the manuscript's segment-intersection language more closely than the older neighbor-cardinality packaging, so the remaining work is best understood as proving `Section5PerturbationGenericity` from the paper's genericity/perturbation claim.
 - Section 5, interface status after the latest cleanup: the step-level and boundary-segment

@@ -281,7 +281,11 @@
   hypotheses force `f(e₁)=b₁` but do not rule out the second vertex of a level-1 cell from also
   mapping to `b₁`. So the level-1 left frontier should now be treated as either a separate
   level-one geometric lemma or an explicit extra local genericity assumption, not as something the
-  present face-respecting API is expected to imply automatically.
+  present face-respecting API is expected to imply automatically. The new `n = 3` diagnostic now
+  confirms this concretely: on the triangulation with vertices `e₁,e₂,e₃,m₁₂,c` and facets
+  `[e₁,m₁₂,c]`, `[m₁₂,e₂,c]`, `[e₂,e₃,c]`, `[e₃,e₁,c]`, the face-respecting simplicial map fixing
+  `e₁,e₂,e₃` and sending `m₁₂,c` to `e₁` already falsifies
+  `Section5LocalLevelOneLeftVertexGenericity`.
   Dually, the exact remaining right-endpoint input is now also named explicitly:
   `Section5LocalUpperEndpointGenericity T f hstart` bundles the two still-unproved fields that
   the manuscript's generic path argument needs on the outgoing side, namely uniqueness of an upper
@@ -293,6 +297,12 @@
   a local star-of-a-cell genericity claim: among higher-level Section 5 cells containing `u.cell`,
   the barycenter-chain segment has at most one outgoing continuation through the right endpoint,
   and if there is no such continuation then that right endpoint is already the final barycenter.
+  The same `n = 3` diagnostic shows that the endpoint part is genuinely additional: the reachable
+  graph node `[e₁,m₁₂]` in the example above has no upper `Section5Step` and still does not hit the
+  final barycenter. The small search did not find a counterexample to `upper_step_unique`, so the
+  next genuine proof target is now that uniqueness field alone, together with a decision to treat
+  the left level-1 and right endpoint assertions as extra local genericity whenever the paper's
+  perturbation sentence is invoked.
   On the packaging side, the remaining graph-theoretic conversion gap is now gone: the support
   layer proves `Section5PerturbationGenericity.toBoundarySegmentGenericity`, and the existing
   local-left/upper-endpoint wrapper is rerouted through
