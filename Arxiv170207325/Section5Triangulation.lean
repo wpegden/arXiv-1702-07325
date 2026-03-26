@@ -69,6 +69,104 @@ theorem SimplexFacet.stdSimplexVertex_mem_vertices_of_mem_realization {n : ℕ}
   have hEqCoord : v i = 1 := le_antisymm (stdSimplex.le_one v i) hcoord
   simpa [eq_stdSimplex_vertex_of_apply_eq_one hEqCoord] using hv
 
+theorem SimplexTriangulation.mem_subset_of_vertex_mem_convexHull {n : ℕ}
+    {T : SimplexTriangulation n} {τ : SimplexFacet n} (hτ : τ ∈ T.facets)
+    {S : Finset (RentSimplex n)} (hS : S ⊆ τ.vertices) {v : RentSimplex n} (hv : v ∈ τ.vertices)
+    (hx :
+      ((v : RentSimplex n) : RentCoordinates n) ∈
+        convexHull ℝ (((↑) : RentSimplex n → RentCoordinates n) '' (S : Set (RentSimplex n)))) :
+    v ∈ S := by
+  classical
+  let p : τ.vertices → RentCoordinates n := fun x => ((x : RentSimplex n) : RentCoordinates n)
+  let s : Set τ.vertices := {x | (x : RentSimplex n) ∈ S}
+  let i : τ.vertices := ⟨v, hv⟩
+  have hAffine : AffineIndependent ℝ p := T.facet_affineIndependent τ hτ
+  have hs_image :
+      p '' s = (((↑) : RentSimplex n → RentCoordinates n) '' (S : Set (RentSimplex n))) := by
+    ext y
+    constructor
+    · rintro ⟨x, hx, rfl⟩
+      exact ⟨(x : RentSimplex n), hx, rfl⟩
+    · rintro ⟨x, hx, rfl⟩
+      exact ⟨⟨x, hS hx⟩, by simpa [s], rfl⟩
+  have hi_mem :
+      p i ∈ affineSpan ℝ (p '' s) := by
+    have hx' : p i ∈ convexHull ℝ (p '' s) := by
+      rw [hs_image]
+      simpa [p, i] using hx
+    exact (convexHull_subset_affineSpan (𝕜 := ℝ) (p '' s)) hx'
+  have hsum :
+      ∑ j, Function.update (fun _ : τ.vertices => (0 : ℝ)) i 1 j = 1 := by
+    rw [Finset.sum_eq_single i]
+    · simp
+    · intro j _ hji
+      simp [Function.update, hji]
+    · simp
+  by_contra hvS
+  have hi_not : i ∉ s := by
+    simp [s, i, hvS]
+  have hi_eq :
+      (Finset.univ.affineCombination ℝ p
+        (Function.update (fun _ : τ.vertices => (0 : ℝ)) i 1)) = p i := by
+    refine Finset.univ.affineCombination_of_eq_one_of_eq_zero
+      (Function.update (fun _ : τ.vertices => (0 : ℝ)) i 1) p (by simp) (by simp) ?_
+    intro j _ hji
+    simp [Function.update, hji]
+  have hzero := hAffine.eq_zero_of_affineCombination_mem_affineSpan hsum
+    (by rwa [hi_eq]) (i := i) (by simp) hi_not
+  simpa [i] using hzero
+
+theorem SimplexTriangulation.mem_vertices_of_vertex_mem_realization {n : ℕ}
+    {T : SimplexTriangulation n} {τ₁ τ₂ : SimplexFacet n}
+    (hτ₁ : τ₁ ∈ T.facets) (hτ₂ : τ₂ ∈ T.facets) {v : RentSimplex n} (hv₂ : v ∈ τ₂.vertices)
+    (hv₁ : ((v : RentSimplex n) : RentCoordinates n) ∈ τ₁.realization) :
+    v ∈ τ₁.vertices := by
+  have hv₂' :
+      ((v : RentSimplex n) : RentCoordinates n) ∈ τ₂.realization := by
+    rw [SimplexFacet.realization]
+    exact subset_convexHull ℝ _ <| by
+      exact Set.mem_image_of_mem ((↑) : RentSimplex n → RentCoordinates n) hv₂
+  have hv_inter :
+      ((v : RentSimplex n) : RentCoordinates n) ∈ convexHull ℝ (τ₁.intersectionPointSet τ₂) := by
+    rw [← T.face_intersection hτ₁ hτ₂]
+    exact ⟨hv₁, hv₂'⟩
+  have hv_common :
+      v ∈ τ₁.commonVertices τ₂ := by
+    refine T.mem_subset_of_vertex_mem_convexHull hτ₂ (S := τ₁.commonVertices τ₂)
+      (SimplexFacet.commonVertices_subset_right τ₁ τ₂) hv₂ ?_
+    simpa [SimplexFacet.intersectionPointSet, SimplexFacet.commonVertices] using hv_inter
+  exact (mem_commonVertices_iff.mp hv_common).1
+
+theorem SimplexFacet.realization_mono_of_isSubface {n : ℕ} {σ τ : SimplexFacet n}
+    (hστ : σ.IsSubfaceOf τ) : σ.realization ⊆ τ.realization := by
+  rw [SimplexFacet.realization, SimplexFacet.realization]
+  refine convexHull_mono ?_
+  rintro x ⟨v, hv, rfl⟩
+  exact Set.mem_image_of_mem ((↑) : RentSimplex n → RentCoordinates n) (hστ hv)
+
+theorem SimplexFacet.realization_eq_segment_of_vertices_eq_pair {n : ℕ} (τ : SimplexFacet n)
+    {x y : RentSimplex n} (hτ : τ.vertices = {x, y}) :
+    τ.realization =
+      segment ℝ ((x : RentSimplex n) : RentCoordinates n) ((y : RentSimplex n) : RentCoordinates n) := by
+  rw [SimplexFacet.realization, SimplexFacet.pointSet, hτ]
+  have himage :
+      (((↑) : RentSimplex n → RentCoordinates n) '' ↑({x, y} : Finset (RentSimplex n))) =
+        ({((x : RentSimplex n) : RentCoordinates n), ((y : RentSimplex n) : RentCoordinates n)} :
+          Set (RentCoordinates n)) := by
+    ext z
+    constructor
+    · rintro ⟨a, ha, rfl⟩
+      simp [Finset.coe_insert, Finset.coe_singleton] at ha
+      rcases ha with rfl | rfl <;> simp
+    · intro hz
+      rcases hz with rfl | rfl
+      · exact ⟨x, by simp [Finset.coe_insert, Finset.coe_singleton], rfl⟩
+      · exact ⟨y, by simp [Finset.coe_insert, Finset.coe_singleton], rfl⟩
+  rw [himage]
+  exact convexHull_pair
+    (((x : RentSimplex n) : RentCoordinates n))
+    (((y : RentSimplex n) : RentCoordinates n))
+
 /-- The codimension-one adjacency relation on triangulation facets used by the Section 5 graph. -/
 def SimplexTriangulation.AdjacentFacets {n : ℕ} (T : SimplexTriangulation n)
     (τ₁ τ₂ : SimplexFacet n) : Prop :=

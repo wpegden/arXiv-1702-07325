@@ -20,6 +20,12 @@ theorem ambientCoordinateFace_mono {n : ℕ} {I J : Finset (RoomIndex n)} (hIJ :
   intro y hy
   exact ⟨hy.1, hy.2.trans hIJ⟩
 
+theorem mem_ambientCoordinateFace_of_mem_coordinateFace {n : ℕ} {I : Finset (RoomIndex n)}
+    {x : RentSimplex n} (hx : x ∈ coordinateFace I) :
+    ((x : RentSimplex n) : RentCoordinates n) ∈ ambientCoordinateFace I := by
+  refine ⟨?_, hx⟩
+  simpa [RentSimplex, scaledSimplex] using x.2
+
 @[simp]
 theorem ambientCoordinateFace_univ (n : ℕ) :
     ambientCoordinateFace (Finset.univ : Finset (RoomIndex n)) = scaledSimplex 1 n := by
