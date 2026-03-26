@@ -674,6 +674,66 @@ theorem mem_prefixBarycenterSegment_of_mem_ambientCoordinateFace_of_lineMap_stdS
     mem_prefixBarycenterSegment_of_mem_ambientCoordinateFace_and_apply_of_lt_and_levelCoord_le
       hk hyFace hprefix hyk_le
 
+theorem exists_upperPrefix_lineMap_prefixBarycenterSegment_counterexample :
+    ∃ y w z : RentCoordinates 4, ∃ c : ℝ,
+      y ∈ ambientCoordinateFace (prefixRooms 4 3) ∧
+      w ∈ ambientCoordinateFace (prefixRooms 4 3) ∧
+      0 < c ∧ c < 1 ∧
+      z = AffineMap.lineMap y w c ∧
+      z ∈ prefixBarycenterSegment 4 2 ∧
+      y ∉ prefixBarycenterSegment 4 2 := by
+  let y : RentCoordinates 4 := ![(1 : ℝ) / 5, 3 / 5, 1 / 5, 0]
+  let w : RentCoordinates 4 := ![3 / 5, (1 : ℝ) / 5, 1 / 5, 0]
+  let z : RentCoordinates 4 := ![2 / 5, 2 / 5, (1 : ℝ) / 5, 0]
+  refine ⟨y, w, z, (1 : ℝ) / 2, ?_⟩
+  refine ⟨?_, ?_, by norm_num, by norm_num, ?_, ?_, ?_⟩
+  · refine ⟨?_, ?_⟩
+    · constructor
+      · intro i
+        fin_cases i <;> norm_num [y]
+      · have hy2 : y (2 : RoomIndex 4) = (1 : ℝ) / 5 := by
+          simp [y]
+        have hy3 : y (3 : RoomIndex 4) = 0 := by
+          simp [y]
+        rw [Fin.sum_univ_four, hy2, hy3]
+        norm_num [y]
+    · rw [coordSupport_subset_iff]
+      intro i hi
+      fin_cases i <;> simp [y, mem_prefixRooms_iff] at hi ⊢
+  · refine ⟨?_, ?_⟩
+    · constructor
+      · intro i
+        fin_cases i <;> norm_num [w]
+      · have hw2 : w (2 : RoomIndex 4) = (1 : ℝ) / 5 := by
+          simp [w]
+        have hw3 : w (3 : RoomIndex 4) = 0 := by
+          simp [w]
+        rw [Fin.sum_univ_four, hw2, hw3]
+        norm_num [w]
+    · rw [coordSupport_subset_iff]
+      intro i hi
+      fin_cases i <;> simp [w, mem_prefixRooms_iff] at hi ⊢
+  · ext i
+    fin_cases i <;> norm_num [y, w, z, AffineMap.lineMap_apply_module]
+  · rw [prefixBarycenterSegment, segment_eq_image_lineMap ℝ
+      (prefixBarycenter 4 2) (prefixBarycenter 4 3)]
+    refine ⟨(3 : ℝ) / 5, by constructor <;> norm_num, ?_⟩
+    ext i
+    fin_cases i <;> norm_num [z, prefixBarycenter, AffineMap.lineMap_apply_module]
+  · intro hySeg
+    have hy0 :
+        y (0 : RoomIndex 4) = (2 : ℝ)⁻¹ - y (2 : RoomIndex 4) / 2 := by
+      simpa using
+        mem_prefixBarycenterSegment_apply_of_lt (n := 4) (k := 2) (by norm_num) hySeg
+          (i := (0 : RoomIndex 4)) (by norm_num)
+    have hy2 : y (2 : RoomIndex 4) = (1 : ℝ) / 5 := by
+      simp [y]
+    have hy0val : y (0 : RoomIndex 4) = (1 : ℝ) / 5 := by
+      simp [y]
+    rw [hy2] at hy0
+    rw [hy0val] at hy0
+    norm_num at hy0
+
 theorem ambientCoordinateFace_pair_of_lineMap_mem
     {n : ℕ} {I : Finset (RoomIndex n)} {x y : RentCoordinates n} {c : ℝ}
     (hxSimplex : x ∈ scaledSimplex 1 n) (hySimplex : y ∈ scaledSimplex 1 n)

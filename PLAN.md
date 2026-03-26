@@ -295,7 +295,12 @@
   standard basis vector `e_{k+1}`, then the current Lean pipeline closes immediately via
   `IsPiecewiseAffineOn.minimal_section5SegmentSubface_mem_coordinateFace_of_erase_vertexImage_eq_stdSimplexVertex`.
   This is probably stronger than the manuscript's intended local geometry, so it should be treated
-  as a diagnostic frontier rather than as the expected final theorem.
+  as a diagnostic frontier rather than as the expected final theorem. The API limitation is now
+  checked concretely as well: `Section5Path.lean` contains an explicit `n = 4`, `k = 2`
+  counterexample showing that upper-prefix support plus a nontrivial affine decomposition of a
+  point on `[b_k,b_{k+1}]` does not force either endpoint back onto that segment. So the missing
+  lower-coordinate identities must come from genuinely extra local geometry on the minimal face,
+  not from the bare affine decomposition data already present in Lean.
   This support layer is now also named globally on the real start component:
   `Section5BoundaryFaceGenericity` asks for that exact lower-boundary-face datum on every
   non-start node, keeps the existing upper-step uniqueness and endpoint fields, and then compiles
