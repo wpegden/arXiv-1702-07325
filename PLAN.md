@@ -203,6 +203,12 @@
   `prefixBarycenter n u.level` (or equivalently exhibits one lower-prefix slice point mapping
   there). So the remaining local geometry has been reduced to exactly those two cell-level facts
   on the canonical lower-prefix face, rather than to a search for an unnamed subface `ρ`.
+  A shortcut through support counting has now been ruled out: even though
+  `FacetImageContains f (⟨section5LowerPrefixVertices u⟩ : SimplexFacet n) b_k` forces every room
+  in `prefixRooms n k` to appear in the simplex support of some lower-prefix vertex, a single
+  triangulation vertex may support several of those rooms simultaneously, so this does not imply
+  `(section5LowerPrefixVertices u).card = k`. The remaining proof boundary is therefore truly the
+  manuscript's local entry-face geometry, not a combinatorial injection argument.
   This reduction is now checked in Lean in both local and global forms:
   `section5LowerEntryFaceData_nonempty_iff_card_eq_and_facetImageContains_lowerPrefixVertices`
   identifies lower-entry data with those two canonical facts on one cell, and
@@ -239,6 +245,13 @@
   So if the current API still cannot derive the lower boundary face from first principles, this
   structure is now the exact honest hypothesis to target from the manuscript's quoted genericity
   sentence, rather than any further graph-translation wrapper.
+  The most concrete formulation of that remaining hypothesis is now: for each non-start cell `u`
+  of level `k`, the preimage inside `u.cell` (or inside a minimal segment-hitting subface `τ`)
+  of the barycenter segment `[b_k,b_{k+1}]` reaches the lower prefix face through one
+  codimension-one face `ρ` with `ρ.vertices.card = k` and all vertices of `ρ` in
+  `coordinateFace (prefixRooms n k)`. Any witness point of `ρ.realization` on the segment then
+  supplies `Section5MinimalSliceLowerBoundaryFaceData u f`, hence the canonical lower-entry pair
+  and the rest of the Section 5 target-facet pipeline.
   The next sharper naming step is now checked too:
   `Section5MinimalSubfaceLowerBoundaryGenericity u f` is the exact theorem on a minimal
   `τ ∈ section5SegmentSubfaces u f` that the quoted sentence still has to supply. It says such a
