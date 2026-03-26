@@ -154,17 +154,24 @@
   direct theorem saying that face preservation, a concrete unique start successor, and the
   two local-degree hypotheses already imply a target-containing facet.
 - Next local objective:
-  discharge `Section5SegmentGeometry` from the actual Section 5 geometry:
-  the start-successor problem is now solved in the interesting range `2 ≤ n`, so the next work is
-  to prove the manuscript's actual 1-dimensional continuation axioms on the canonical start
-  component, now packaged as `Section5OneComplexGeometry`: every non-start node is entered from a
-  unique lower-level neighbor, every node has at most one higher-level continuation, and the
-  absence of a higher-level continuation forces a barycenter endpoint. These local one-complex
-  axioms now mechanically imply the old degree/endpoint hypotheses and the target-facet theorem.
+  discharge the compiled simplex-slice bridge from the actual Section 5 geometry:
+  the start-successor problem is now solved in the interesting range `2 ≤ n`, and the remaining
+  critical path no longer goes through the older `Section5OneComplexGeometry` abstraction. The
+  next work is to prove the manuscript's local segment-intersection picture in the more concrete
+  forms `Section5MinimalSliceLowerBoundaryGeometry` and `Section5SimplexSliceBoundaryGeometry`:
+  for each non-start node `u`, choose a minimal segment-hitting subface `τ`, show
+  `section5CellSlice u f` is a genuine 1-dimensional segment inside `u.cell`, and prove its lower
+  boundary lies in a unique codimension-one subface of `τ` contained in
+  `coordinateFace (prefixRooms n u.level)` with exactly `u.level` vertices. Once those local
+  fields are available, the existing bridge already compiles them into
+  `Section5MinimalSliceFaceData`, `Section5SimplexSliceGenericity`,
+  `Section5PerturbationGenericity`, and finally `Section5BoundarySegmentGenericity`.
+  The older `Section5OneComplexGeometry` layer remains useful as cleanup, but it is no longer the
+  main proof boundary.
   A first concrete fragment is already in place: level `0` is rigidly the start node, so any
-  lower neighbor of a level-`1` node is automatically and uniquely the start vertex.
-  The trivial `n = 1` bookkeeping is already separated by direct one-dimensional target-facet
-  lemmas, so the remaining nontrivial Section 5 path argument can stay focused on `2 ≤ n`.
+  lower neighbor of a level-`1` node is automatically and uniquely the start vertex. The trivial
+  `n = 1` bookkeeping is already separated by direct one-dimensional target-facet lemmas, so the
+  remaining nontrivial Section 5 path argument can stay focused on `2 ≤ n`.
   The new reusable local tool is `prefixVertexPoints`: `Section5Path.lean` now proves that every
   point in `coordinateFace (prefixRooms n k)` lies in the convex hull, hence the affine span, of
   the first `k` standard simplex vertices, and every Section 5 graph-node vertex inherits this
@@ -233,6 +240,13 @@
   manuscript-shaped predecessor theorem: if the geometry produces an actual codimension-one lower
   face `τ ≤ u.cell` with `τ.vertices.card = u.level`, all vertices of `τ` in the lower prefix
   face, and `b_k ∈ λ(τ)`, then that face already gives the predecessor `Section5Step`. The newest
+  packaging goes one step closer to the manuscript's prose: `Section5Path.lean` now has the
+  explicit local structures `Section5MinimalSliceLowerBoundaryGeometry` and
+  `Section5SimplexSliceBoundaryGeometry`, together with compiled bridges reducing them to
+  `Section5MinimalSliceFaceData` and `Section5SimplexSliceGenericity`. So the remaining blocker is
+  no longer how to transport a proved local geometry statement through the graph wrappers; it is
+  specifically the honest geometric theorem that the preimage slice inside one simplex cell really
+  is a segment with the required lower boundary face.
   bridge removes even that final `b_k ∈ λ(τ)` packaging step: if the geometry gives a point of
   `τ.realization` whose image stays on `[b_k,b_{k+1}]`, convexity forces that whole face to lie in
   the lower prefix face, the endpoint lemma turns the image into `b_k`, and the direct theorem

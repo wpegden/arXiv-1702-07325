@@ -960,6 +960,80 @@ theorem Section5MinimalSliceFaceData.exists_point_mem_slice {n : ℕ} [NeZero n]
     SimplexFacet.realization_mono_of_isSubface hdata.face_isSubface hxface
   exact ⟨x, ⟨hxcell, hfxSeg⟩, hxface⟩
 
+theorem mem_section5SegmentSubfaces_of_mem_realization_map_segment {n : ℕ} [NeZero n]
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    (hfpl : IsPiecewiseAffineOn T f) {u : Section5Node n} (hu : IsSection5GraphNode T f u)
+    {τ : SimplexFacet n} (hτsub : τ.IsSubfaceOf u.cell) (hτne : τ.vertices.Nonempty)
+    {x : RentSimplex n}
+    (hxτ : ((x : RentSimplex n) : RentCoordinates n) ∈ τ.realization)
+    (hfxSeg : f x ∈ prefixBarycenterSegment n u.level) :
+    τ ∈ section5SegmentSubfaces u f := by
+  have hτface : T.IsFace τ := by
+    rcases hu.isFace with ⟨σ, hσ, hσsub⟩
+    exact ⟨σ, hσ, hτsub.trans hσsub⟩
+  have hτhit : (FacetImageHull f τ ∩ prefixBarycenterSegment n u.level).Nonempty := by
+    refine ⟨f x, hfpl.facetImageContains_of_mem_realization hτface hxτ, hfxSeg⟩
+  exact (mem_section5SegmentSubfaces_iff (u := u) (f := f) (τ := τ)).mpr
+    ⟨hτsub, hτne, hτhit⟩
+
+/-- A first local boundary-geometry package for one minimal segment-hitting face `τ`: a lower
+codimension-one boundary face carries an actual point of the slice. Minimality then forces `τ`
+itself to be that lower face. -/
+structure Section5MinimalSliceLowerBoundaryGeometry {n : ℕ} (u : Section5Node n)
+    (f : SelfMapOnRentSimplex n) where
+  minimal_face : SimplexFacet n
+  mem_segmentSubfaces : minimal_face ∈ section5SegmentSubfaces u f
+  minimal :
+    ∀ σ ∈ section5SegmentSubfaces u f, minimal_face.vertices.card ≤ σ.vertices.card
+  lower_boundary_face : SimplexFacet n
+  lower_boundary_isSubface : lower_boundary_face.IsSubfaceOf minimal_face
+  lower_boundary_card_eq : lower_boundary_face.vertices.card = u.level
+  lower_boundary_prefix_vertices :
+    ∀ ⦃w : RentSimplex n⦄,
+      w ∈ lower_boundary_face.vertices → w ∈ coordinateFace (prefixRooms n u.level)
+  lower_boundary_point : RentSimplex n
+  lower_boundary_point_mem_slice : lower_boundary_point ∈ section5CellSlice u f
+  lower_boundary_point_mem_realization :
+    ((lower_boundary_point : RentSimplex n) : RentCoordinates n) ∈ lower_boundary_face.realization
+
+def Section5MinimalSliceLowerBoundaryGeometry.toMinimalSliceFaceData
+    {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    (hfpl : IsPiecewiseAffineOn T f) {u : Section5Node n} (hu : IsSection5GraphNode T f u)
+    (hulevel : 0 < u.level) (hgeom : Section5MinimalSliceLowerBoundaryGeometry u f) :
+    Section5MinimalSliceFaceData u f := by
+  have hρcard_pos : 0 < hgeom.lower_boundary_face.vertices.card := by
+    rw [hgeom.lower_boundary_card_eq]
+    exact hulevel
+  have hρne : hgeom.lower_boundary_face.vertices.Nonempty := Finset.card_pos.mp hρcard_pos
+  have hτsubu : hgeom.minimal_face.IsSubfaceOf u.cell :=
+    (mem_section5SegmentSubfaces_iff
+      (u := u) (f := f) (τ := hgeom.minimal_face)).mp hgeom.mem_segmentSubfaces |>.1
+  have hρsubu : hgeom.lower_boundary_face.IsSubfaceOf u.cell :=
+    hgeom.lower_boundary_isSubface.trans hτsubu
+  have hρmem : hgeom.lower_boundary_face ∈ section5SegmentSubfaces u f :=
+    mem_section5SegmentSubfaces_of_mem_realization_map_segment
+      hfpl hu hρsubu hρne
+      hgeom.lower_boundary_point_mem_realization
+      hgeom.lower_boundary_point_mem_slice.2
+  have hτcard_le : hgeom.minimal_face.vertices.card ≤ hgeom.lower_boundary_face.vertices.card :=
+    hgeom.minimal _ hρmem
+  have hρcard_le : hgeom.lower_boundary_face.vertices.card ≤ hgeom.minimal_face.vertices.card :=
+    Finset.card_le_card hgeom.lower_boundary_isSubface
+  have hcard_eq : hgeom.minimal_face.vertices.card = u.level := by
+    have hfaces_card_eq :
+        hgeom.minimal_face.vertices.card = hgeom.lower_boundary_face.vertices.card :=
+      le_antisymm hτcard_le hρcard_le
+    rw [hfaces_card_eq, hgeom.lower_boundary_card_eq]
+  have hverts_eq :
+      hgeom.lower_boundary_face.vertices = hgeom.minimal_face.vertices := by
+    refine Finset.eq_of_subset_of_card_le hgeom.lower_boundary_isSubface ?_
+    exact hτcard_le
+  refine ⟨hgeom.minimal_face, hgeom.mem_segmentSubfaces, hgeom.minimal, hcard_eq, ?_⟩
+  intro w hw
+  have hwρ : w ∈ hgeom.lower_boundary_face.vertices := by
+    simpa [hverts_eq] using hw
+  exact hgeom.lower_boundary_prefix_vertices hwρ
+
 theorem IsPiecewiseAffineOn.exists_point_with_nonzero_weights_of_minimal_section5SegmentSubface
     {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
     (hfpl : IsPiecewiseAffineOn T f) {u : Section5Node n} (hu : IsSection5GraphNode T f u)
@@ -1755,6 +1829,19 @@ theorem section5_levelZero_eq_startNode {n : ℕ} [NeZero n]
       have hcell : uc = section5StartCell n :=
         section5_levelZero_cell_eq_startCell (u := ⟨0, uc⟩) hu rfl
       simp [section5StartNode, hcell]
+
+theorem section5StartComponent_pos_level_of_ne_start {n : ℕ} [NeZero n]
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    {hstart : IsSection5GraphNode T f (section5StartNode n)}
+    {u : section5StartComponent hstart}
+    (hu_ne : u ≠ section5StartVertexInComponent hstart) :
+    0 < u.1.1.level := by
+  by_contra hzero
+  have hu0 : u.1.1.level = 0 := Nat.eq_zero_of_not_pos hzero
+  have hu_node : IsSection5GraphNode T f u.1.1 := (mem_section5Nodes_iff).mp u.1.2
+  have hu_eq_start : u.1.1 = section5StartNode n := section5_levelZero_eq_startNode hu_node hu0
+  apply hu_ne
+  exact Subtype.ext (Subtype.ext hu_eq_start)
 
 theorem exists_section5LowerStep_of_subface_card_eq_and_facetImageContains
     {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
@@ -2937,6 +3024,41 @@ structure Section5SimplexSliceGenericity {n : ℕ} [NeZero n]
       (¬ ∃ w : section5StartComponent hstart, Section5Step f v.1.1 w.1.1) →
         IsSection5Endpoint T f v.1.1
 
+/-- A slightly richer local package than `Section5SimplexSliceGenericity`: for each non-start
+node, choose a minimal segment-hitting face together with a lower boundary face of that minimal
+face carrying an actual slice point. The local theorem
+`Section5MinimalSliceLowerBoundaryGeometry.toMinimalSliceFaceData` collapses this geometry back to
+the simpler codimension-one data used by the existing perturbation bridge. -/
+structure Section5SimplexSliceBoundaryGeometry {n : ℕ} [NeZero n]
+    (T : SimplexTriangulation n) (f : SelfMapOnRentSimplex n)
+    (hstart : IsSection5GraphNode T f (section5StartNode n)) where
+  lower_boundary_geometry_of_ne_start :
+    ∀ v : section5StartComponent hstart,
+      v ≠ section5StartVertexInComponent hstart →
+        Section5MinimalSliceLowerBoundaryGeometry v.1.1 f
+  upper_step_unique :
+    ∀ {v u w : section5StartComponent hstart},
+      Section5Step f v.1.1 u.1.1 →
+      Section5Step f v.1.1 w.1.1 →
+        u = w
+  no_upper_step_is_endpoint :
+    ∀ v : section5StartComponent hstart,
+      (¬ ∃ w : section5StartComponent hstart, Section5Step f v.1.1 w.1.1) →
+        IsSection5Endpoint T f v.1.1
+
+def Section5SimplexSliceBoundaryGeometry.toSimplexSliceGenericity {n : ℕ} [NeZero n]
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    (hfpl : IsPiecewiseAffineOn T f)
+    {hstart : IsSection5GraphNode T f (section5StartNode n)}
+    (hgeom : Section5SimplexSliceBoundaryGeometry T f hstart) :
+    Section5SimplexSliceGenericity T f hstart := by
+  refine ⟨?_, hgeom.upper_step_unique, hgeom.no_upper_step_is_endpoint⟩
+  intro v hv
+  have hv_node : IsSection5GraphNode T f v.1.1 := (mem_section5Nodes_iff).mp v.1.2
+  have hv_level : 0 < v.1.1.level := section5StartComponent_pos_level_of_ne_start hv
+  exact (hgeom.lower_boundary_geometry_of_ne_start v hv).toMinimalSliceFaceData
+    hfpl hv_node hv_level
+
 theorem section5LowerNeighbors_eq_singleton_of_ne_start {n : ℕ} [NeZero n]
     {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
     {hstart : IsSection5GraphNode T f (section5StartNode n)}
@@ -3198,6 +3320,19 @@ theorem Section5PerturbationGenericity.upperNeighbors_card_le_one {n : ℕ} [NeZ
     (section5UpperNeighbors v).card ≤ 1 := by
   exact section5UpperNeighbors_card_le_one_of_step_unique hpert.upper_step_unique v
 
+theorem Section5SimplexSliceBoundaryGeometry.toPerturbationGenericity {n : ℕ} [NeZero n]
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    (hf : IsFaceRespecting f) (hfpl : IsPiecewiseAffineOn T f)
+    {hstart : IsSection5GraphNode T f (section5StartNode n)}
+    (hgeom : Section5SimplexSliceBoundaryGeometry T f hstart) :
+    Section5PerturbationGenericity T f hstart := by
+  refine ⟨?_, hgeom.upper_step_unique, hgeom.no_upper_step_is_endpoint⟩
+  intro v hv
+  have hv_node : IsSection5GraphNode T f v.1.1 := (mem_section5Nodes_iff).mp v.1.2
+  have hv_level : 0 < v.1.1.level := section5StartComponent_pos_level_of_ne_start hv
+  exact ((hgeom.lower_boundary_geometry_of_ne_start v hv).toMinimalSliceFaceData
+    hfpl hv_node hv_level).exists_startComponentLowerStep hf hfpl hv
+
 theorem Section5SimplexSliceGenericity.toPerturbationGenericity {n : ℕ} [NeZero n]
     {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
     (hf : IsFaceRespecting f) (hfpl : IsPiecewiseAffineOn T f)
@@ -3246,6 +3381,14 @@ theorem Section5SimplexSliceGenericity.toBoundarySegmentGenericity {n : ℕ} [Ne
     (hslice : Section5SimplexSliceGenericity T f hstart) :
     Section5BoundarySegmentGenericity T f hstart := by
   exact (hslice.toPerturbationGenericity hf hfpl).toBoundarySegmentGenericity
+
+theorem Section5SimplexSliceBoundaryGeometry.toBoundarySegmentGenericity {n : ℕ} [NeZero n]
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    (hf : IsFaceRespecting f) (hfpl : IsPiecewiseAffineOn T f)
+    {hstart : IsSection5GraphNode T f (section5StartNode n)}
+    (hgeom : Section5SimplexSliceBoundaryGeometry T f hstart) :
+    Section5BoundarySegmentGenericity T f hstart := by
+  exact (hgeom.toPerturbationGenericity hf hfpl).toBoundarySegmentGenericity
 
 theorem Section5PerturbationGenericity.toOneComplexGeometry {n : ℕ} [NeZero n]
     {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
