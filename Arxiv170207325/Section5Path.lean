@@ -2,6 +2,7 @@ import Mathlib.Data.List.Chain
 import Mathlib.Data.Finset.Powerset
 import Mathlib.Combinatorics.SimpleGraph.Connectivity.Connected
 import Mathlib.Combinatorics.SimpleGraph.DegreeSum
+import Mathlib.Analysis.Normed.Module.FiniteDimension
 import Mathlib.LinearAlgebra.AffineSpace.FiniteDimensional
 import Arxiv170207325.InteriorTarget
 import Arxiv170207325.Section5Triangulation
@@ -110,6 +111,13 @@ theorem outsideMass_lineMap {n : ℕ} {I : Finset (RoomIndex n)}
   rw [AffineMap.lineMap_apply_module]
   simp_rw [Pi.add_apply, Pi.smul_apply, smul_eq_mul]
   rw [Finset.sum_add_distrib, ← Finset.mul_sum, ← Finset.mul_sum]
+
+theorem continuous_outsideMass {n : ℕ} {I : Finset (RoomIndex n)} :
+    Continuous (outsideMass I) := by
+  unfold outsideMass
+  exact continuous_finset_sum _ (by
+    intro i hi
+    exact continuous_apply i)
 
 /-- The standard simplex vertices spanning the prefix face `conv{e_1, ..., e_k}`. -/
 def prefixVertexPoints (n k : ℕ) : Finset (RentCoordinates n) :=
@@ -322,6 +330,14 @@ theorem prefixBarycenter_self_eq_rentBarycenter (n : ℕ) [NeZero n] :
 /-- The Section 5 chain segment joining consecutive prefix-face barycenters. -/
 def prefixBarycenterSegment (n k : ℕ) : Set (RentCoordinates n) :=
   segment ℝ (prefixBarycenter n k) (prefixBarycenter n (k + 1))
+
+theorem isCompact_prefixBarycenterSegment {n k : ℕ} :
+    IsCompact (prefixBarycenterSegment n k) := by
+  rw [prefixBarycenterSegment, segment_eq_image_lineMap]
+  let g : ℝ →ᵃ[ℝ] RentCoordinates n :=
+    AffineMap.lineMap (prefixBarycenter n k) (prefixBarycenter n (k + 1))
+  have hg : Continuous g := g.continuous_of_finiteDimensional
+  simpa [g] using isCompact_Icc.image hg
 
 theorem prefixBarycenterSegment_subset_ambientCoordinateFace {n k : ℕ} [NeZero k]
     (hk : k + 1 ≤ n) :
@@ -1056,6 +1072,60 @@ theorem IsPiecewiseAffineOn.exists_point_in_realization_of_mem_section5SegmentSu
     ⟨x, hx, hfx⟩
   refine ⟨x, hx, ?_⟩
   simpa [hfx] using hySeg
+
+/-- The slice of one subface against the Section 5 barycenter segment, expressed in one affine
+chart on that subface. -/
+def section5SubfaceSliceSet {n : ℕ} (u : Section5Node n) (τ : SimplexFacet n)
+    (g : RentCoordinates n →ᵃ[ℝ] RentCoordinates n) : Set (RentCoordinates n) :=
+  τ.realization ∩ g ⁻¹' prefixBarycenterSegment n u.level
+
+theorem isCompact_section5SubfaceSliceSet {n : ℕ} (u : Section5Node n) (τ : SimplexFacet n)
+    (g : RentCoordinates n →ᵃ[ℝ] RentCoordinates n) :
+    IsCompact (section5SubfaceSliceSet u τ g) := by
+  unfold section5SubfaceSliceSet
+  refine τ.isCompact_realization.inter_right ?_
+  have hg : Continuous g := g.continuous_of_finiteDimensional
+  exact (isCompact_prefixBarycenterSegment (n := n) (k := u.level)).isClosed.preimage hg
+
+theorem IsPiecewiseAffineOn.section5SubfaceSliceSet_nonempty
+    {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    (hfpl : IsPiecewiseAffineOn T f) {u : Section5Node n} (hu : IsSection5GraphNode T f u)
+    {τ : SimplexFacet n} (hτ : τ ∈ section5SegmentSubfaces u f)
+    {g : RentCoordinates n →ᵃ[ℝ] RentCoordinates n}
+    (hg : ∀ x : RentSimplex n,
+      ((x : RentSimplex n) : RentCoordinates n) ∈ τ.realization → g x = f x) :
+    (section5SubfaceSliceSet u τ g).Nonempty := by
+  rcases hfpl.exists_point_in_realization_of_mem_section5SegmentSubfaces hu hτ with
+    ⟨x, hxτ, hfxSeg⟩
+  refine ⟨(x : RentCoordinates n), hxτ, ?_⟩
+  simpa [hg x hxτ] using hfxSeg
+
+theorem exists_isMinOn_outsideMass_section5SubfaceSliceSet {n : ℕ} (u : Section5Node n)
+    (τ : SimplexFacet n) (g : RentCoordinates n →ᵃ[ℝ] RentCoordinates n)
+    (hne : (section5SubfaceSliceSet u τ g).Nonempty) :
+    ∃ y ∈ section5SubfaceSliceSet u τ g,
+      IsMinOn (outsideMass (prefixRooms n u.level)) (section5SubfaceSliceSet u τ g) y := by
+  exact (isCompact_section5SubfaceSliceSet u τ g).exists_isMinOn
+    hne continuous_outsideMass.continuousOn
+
+theorem IsPiecewiseAffineOn.exists_outsideMass_minimizer_on_section5SegmentSubface
+    {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    (hfpl : IsPiecewiseAffineOn T f) {u : Section5Node n} (hu : IsSection5GraphNode T f u)
+    {τ : SimplexFacet n} (hτ : τ ∈ section5SegmentSubfaces u f) :
+    ∃ g : RentCoordinates n →ᵃ[ℝ] RentCoordinates n,
+      (∀ x : RentSimplex n,
+        ((x : RentSimplex n) : RentCoordinates n) ∈ τ.realization → g x = f x) ∧
+      ∃ y ∈ section5SubfaceSliceSet u τ g,
+        IsMinOn (outsideMass (prefixRooms n u.level)) (section5SubfaceSliceSet u τ g) y := by
+  have hτface : T.IsFace τ := by
+    rcases (mem_section5SegmentSubfaces_iff (u := u) (f := f) (τ := τ)).mp hτ with
+      ⟨hτsub, _, _⟩
+    rcases hu.isFace with ⟨σ, hσ, hσsub⟩
+    exact ⟨σ, hσ, hτsub.trans hσsub⟩
+  rcases hfpl.exists_affineMap_on_face hτface with ⟨g, hg⟩
+  refine ⟨g, hg, ?_⟩
+  exact exists_isMinOn_outsideMass_section5SubfaceSliceSet u τ g
+    (hfpl.section5SubfaceSliceSet_nonempty hu hτ hg)
 
 theorem Section5MinimalSliceFaceData.exists_point_mem_slice {n : ℕ} [NeZero n]
     {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}

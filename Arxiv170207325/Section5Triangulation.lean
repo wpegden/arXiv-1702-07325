@@ -1,4 +1,5 @@
 import Mathlib.Analysis.Convex.Jensen
+import Mathlib.Analysis.Convex.Topology
 import Mathlib.Data.Finset.Insert
 import PaperDefinitions
 
@@ -150,6 +151,14 @@ theorem SimplexFacet.realization_mono_of_isSubface {n : ℕ} {σ τ : SimplexFac
   rintro x ⟨v, hv, rfl⟩
   exact Set.mem_image_of_mem ((↑) : RentSimplex n → RentCoordinates n) (hστ hv)
 
+/-- The realization of a finite simplex facet is compact. -/
+theorem SimplexFacet.isCompact_realization {n : ℕ} (τ : SimplexFacet n) :
+    IsCompact τ.realization := by
+  have hfinite : τ.pointSet.Finite := by
+    unfold SimplexFacet.pointSet
+    exact (Finset.finite_toSet τ.vertices).image ((↑) : RentSimplex n → RentCoordinates n)
+  simpa [SimplexFacet.realization] using Set.Finite.isCompact_convexHull hfinite
+
 /-- Every geometric realization of a simplex facet lies in the ambient simplex. -/
 theorem SimplexFacet.realization_subset_scaledSimplex {n : ℕ} (τ : SimplexFacet n) :
     τ.realization ⊆ scaledSimplex 1 n := by
@@ -268,6 +277,17 @@ theorem IsPiecewiseAffineOn.facetImageContains_of_mem_realization
   rw [FacetImageContains, FacetImageHull]
   rw [← hg_pointSet]
   simpa [hfx] using hg_mem
+
+theorem IsPiecewiseAffineOn.exists_affineMap_on_face
+    {n : ℕ} {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    (hf : IsPiecewiseAffineOn T f) {σ : SimplexFacet n} (hσ : T.IsFace σ) :
+    ∃ g : RentCoordinates n →ᵃ[ℝ] RentCoordinates n,
+      ∀ x : RentSimplex n, ((x : RentSimplex n) : RentCoordinates n) ∈ σ.realization → g x = f x := by
+  rcases hσ with ⟨τ, hτ, hστ⟩
+  rcases hf τ hτ with ⟨g, hg⟩
+  refine ⟨g, ?_⟩
+  intro x hx
+  exact hg x (SimplexFacet.realization_mono_of_isSubface hστ hx)
 
 theorem IsPiecewiseAffineOn.exists_point_in_realization_of_facetImageContains
     {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}

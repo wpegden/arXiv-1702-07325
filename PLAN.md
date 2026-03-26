@@ -253,11 +253,22 @@
   lies in `coordinateFace (prefixRooms n u.level)`. Once that single geometric statement is
   available, `Section5MinimalSubfaceLowerBoundaryGenericity u f` follows immediately from any
   witness point of `ρ.realization` mapping into `[b_k,b_{k+1}]`.
-  The optimizer recovery route is now partially formalized too: `Section5Path.lean` has the
-  linear functional `outsideMass I y` measuring how far a point lies from a coordinate face, plus
-  the basic lemmas needed to use it on the slice (`outsideMass_nonneg`,
-  `outsideMass_eq_zero_iff_mem_coordinateFace`, `outsideMass_pos_of_not_mem_coordinateFace`, and
-  `outsideMass_lineMap`). This reduces the next experiment to a genuinely geometric one: prove
+  The optimizer recovery route is now formalized through the compactness step as well:
+  `Section5Path.lean` has the linear functional `outsideMass I y`, the affine-chart slice set
+  `section5SubfaceSliceSet u τ g`, compactness/nonemptiness of that slice, and the bundled
+  minimizer existence theorem
+  `IsPiecewiseAffineOn.exists_outsideMass_minimizer_on_section5SegmentSubface`. Together with the
+  earlier erased-face line-map decomposition, this reduces the next experiment to one genuinely
+  geometric contradiction: prove
+  that a minimizer with positive outside-prefix mass can be moved to an erased face without
+  leaving the slice. Concretely, on a minimal `τ` and a minimizer `x`, the remaining missing
+  lemma is: if an outside-prefix vertex has positive barycentric weight at `x`, there exists
+  `x'` in the erased-face realization with the same image under the affine chart (or at least
+  still mapping into `[b_k,b_{k+1}]`). Once that lemma is available, the existing
+  `minimal_section5SegmentSubface_vertices_mem_coordinateFace_of_erase_realization_map_segment`
+  pipeline forces the minimizer into the lower prefix face and yields
+  `Section5MinimalSubfaceLowerBoundaryGenericity u f`. The older slice-endpoint theorem remains
+  a backup route if this affine-fiber contradiction proves harder than expected.
   that an outside-prefix-mass minimizer on a minimal slice cannot retain positive outside mass.
   This support layer is now also named globally on the real start component:
   `Section5BoundaryFaceGenericity` asks for that exact lower-boundary-face datum on every
