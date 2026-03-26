@@ -175,10 +175,15 @@
   `minimal_section5SegmentSubface_card_eq_and_vertices_mem_coordinateFace_of_lower_boundary_face`
   shows that one codimension-one lower boundary face `ρ ≤ τ` with `ρ.vertices.card = u.level`,
   all `ρ`-vertices in the lower prefix face, and one slice point on `ρ` already forces both
-  remaining face-level conclusions for `τ`. So the remaining geometry is now concentrated in a
-  single honest manuscript-level task: prove that the 1-dimensional slice inside a minimal
-  segment-hitting face enters the lower prefix face through such a codimension-one lower boundary
-  face. The new theorem
+  remaining face-level conclusions for `τ`. The latest refinement makes that lower face canonical:
+  for any lower-prefix slice point `x ∈ τ.realization`, the filtered face
+  `section5FacetLowerPrefixVertices u τ` automatically contains `x`, and
+  `minimal_section5SegmentSubface_lowerBoundaryGeometry_of_facetLowerPrefixVertices_card_eq`
+  packages the whole lower-boundary theorem as soon as one proves
+  `(section5FacetLowerPrefixVertices u τ).card = u.level`. So the remaining geometry is now
+  concentrated in a single honest manuscript-level task: prove that the 1-dimensional slice
+  inside a minimal segment-hitting face actually reaches the lower prefix face, and that the
+  resulting canonical filtered subface has the expected cardinality `u.level`. The new theorem
   `minimal_section5SegmentSubface_exists_mem_coordinateFace_point_of_vertices_mem_coordinateFace`
   now makes the lower-prefix slice point automatic from the vertex condition, so one no longer
   has to construct that point separately once the face-in-lower-prefix statement is known.

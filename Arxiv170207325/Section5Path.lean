@@ -1634,25 +1634,27 @@ theorem IsSection5GraphNode.vertex_mem_affineSpan_prefixVertexPoints {n : ℕ}
         Set (RentCoordinates n)) := by
   exact mem_affineSpan_prefixVertexPoints_of_mem_coordinateFace (hu.prefix_vertices hv)
 
-def section5LowerPrefixVertices {n : ℕ} (u : Section5Node n) : Finset (RentSimplex n) := by
+def section5FacetLowerPrefixVertices {n : ℕ} (u : Section5Node n)
+    (τ : SimplexFacet n) : Finset (RentSimplex n) := by
   classical
-  exact u.cell.vertices.filter fun v => v ∈ coordinateFace (prefixRooms n u.level)
+  exact τ.vertices.filter fun v => v ∈ coordinateFace (prefixRooms n u.level)
 
-theorem section5LowerPrefixVertices_isSubface {n : ℕ} (u : Section5Node n) :
-    (⟨section5LowerPrefixVertices u⟩ : SimplexFacet n).IsSubfaceOf u.cell := by
+theorem section5FacetLowerPrefixVertices_isSubface {n : ℕ} (u : Section5Node n)
+    (τ : SimplexFacet n) :
+    (⟨section5FacetLowerPrefixVertices u τ⟩ : SimplexFacet n).IsSubfaceOf τ := by
   classical
   intro v hv
   exact (Finset.mem_filter.mp hv).1
 
-theorem mem_realization_section5LowerPrefixVertices_of_mem_realization_of_mem_coordinateFace
-    {n : ℕ} {u : Section5Node n} {x : RentSimplex n}
-    (hxτ : ((x : RentSimplex n) : RentCoordinates n) ∈ u.cell.realization)
+theorem mem_realization_section5FacetLowerPrefixVertices_of_mem_realization_of_mem_coordinateFace
+    {n : ℕ} {u : Section5Node n} {τ : SimplexFacet n} {x : RentSimplex n}
+    (hxτ : ((x : RentSimplex n) : RentCoordinates n) ∈ τ.realization)
     (hxFace : x ∈ coordinateFace (prefixRooms n u.level)) :
     ((x : RentSimplex n) : RentCoordinates n) ∈
-      (⟨section5LowerPrefixVertices u⟩ : SimplexFacet n).realization := by
+      (⟨section5FacetLowerPrefixVertices u τ⟩ : SimplexFacet n).realization := by
   classical
   let s : Finset (RentCoordinates n) :=
-    u.cell.vertices.image fun v : RentSimplex n => ((v : RentSimplex n) : RentCoordinates n)
+    τ.vertices.image fun v : RentSimplex n => ((v : RentSimplex n) : RentCoordinates n)
   have hxconv :
       ((x : RentSimplex n) : RentCoordinates n) ∈ convexHull ℝ (s : Set (RentCoordinates n)) := by
     simpa [s, SimplexFacet.realization, SimplexFacet.pointSet] using hxτ
@@ -1687,7 +1689,7 @@ theorem mem_realization_section5LowerPrefixVertices_of_mem_realization_of_mem_co
       hw_nonneg hw_sum hw_center (Finset.mem_filter.mp hy).1 (Finset.mem_filter.mp hy).2
   have hsupp_subset :
       (supp : Set (RentCoordinates n)) ⊆
-        (⟨section5LowerPrefixVertices u⟩ : SimplexFacet n).pointSet := by
+        (⟨section5FacetLowerPrefixVertices u τ⟩ : SimplexFacet n).pointSet := by
     intro y hy
     rcases Finset.mem_image.mp (Finset.mem_filter.mp hy).1 with ⟨v, hv, rfl⟩
     have hvFace : v ∈ coordinateFace (prefixRooms n u.level) :=
@@ -1695,6 +1697,50 @@ theorem mem_realization_section5LowerPrefixVertices_of_mem_realization_of_mem_co
     exact Set.mem_image_of_mem ((↑) : RentSimplex n → RentCoordinates n)
       (Finset.mem_filter.mpr ⟨hv, hvFace⟩)
   exact convexHull_mono hsupp_subset hsupp_conv
+
+def section5LowerPrefixVertices {n : ℕ} (u : Section5Node n) : Finset (RentSimplex n) := by
+  classical
+  exact u.cell.vertices.filter fun v => v ∈ coordinateFace (prefixRooms n u.level)
+
+theorem section5LowerPrefixVertices_isSubface {n : ℕ} (u : Section5Node n) :
+    (⟨section5LowerPrefixVertices u⟩ : SimplexFacet n).IsSubfaceOf u.cell := by
+  classical
+  intro v hv
+  exact (Finset.mem_filter.mp hv).1
+
+theorem mem_realization_section5LowerPrefixVertices_of_mem_realization_of_mem_coordinateFace
+    {n : ℕ} {u : Section5Node n} {x : RentSimplex n}
+    (hxτ : ((x : RentSimplex n) : RentCoordinates n) ∈ u.cell.realization)
+    (hxFace : x ∈ coordinateFace (prefixRooms n u.level)) :
+    ((x : RentSimplex n) : RentCoordinates n) ∈
+      (⟨section5LowerPrefixVertices u⟩ : SimplexFacet n).realization := by
+  simpa [section5LowerPrefixVertices, section5FacetLowerPrefixVertices] using
+    (mem_realization_section5FacetLowerPrefixVertices_of_mem_realization_of_mem_coordinateFace
+      (u := u) (τ := u.cell) hxτ hxFace)
+
+def minimal_section5SegmentSubface_lowerBoundaryGeometry_of_facetLowerPrefixVertices_card_eq
+    {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    (hfpl : IsPiecewiseAffineOn T f) {u : Section5Node n} (hu : IsSection5GraphNode T f u)
+    (hulevel : 0 < u.level)
+    {τ : SimplexFacet n} (hτ : τ ∈ section5SegmentSubfaces u f)
+    (hmin : ∀ σ ∈ section5SegmentSubfaces u f, τ.vertices.card ≤ σ.vertices.card)
+    {x : RentSimplex n}
+    (hxτ : ((x : RentSimplex n) : RentCoordinates n) ∈ τ.realization)
+    (hxFace : x ∈ coordinateFace (prefixRooms n u.level))
+    (hfxSeg : f x ∈ prefixBarycenterSegment n u.level)
+    (hρcard : (section5FacetLowerPrefixVertices u τ).card = u.level) :
+    Section5MinimalSliceLowerBoundaryGeometry u f := by
+  classical
+  exact minimal_section5SegmentSubface_lowerBoundaryGeometry_of_lower_boundary_face
+    hfpl hu hulevel hτ hmin
+    (section5FacetLowerPrefixVertices_isSubface u τ)
+    hρcard
+    (by
+      intro w hw
+      exact (Finset.mem_filter.mp hw).2)
+    (mem_realization_section5FacetLowerPrefixVertices_of_mem_realization_of_mem_coordinateFace
+      (u := u) (τ := τ) hxτ hxFace)
+    hfxSeg
 
 theorem IsPiecewiseAffineOn.facetImageContains_section5LowerPrefixVertices_of_mem_realization
     {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
