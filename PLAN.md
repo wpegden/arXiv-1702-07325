@@ -241,10 +241,13 @@
   route explicit: for each cell `u.cell` there is a finite family `section5SegmentSubfaces u f`
   of nonempty subfaces whose image meets `[b_k,b_{k+1}]`, a minimal-cardinality member of that
   family exists, and the existing piecewise-affine API extracts an actual point of that minimal
-  face mapping to the segment. So the remaining lower-step work is now best phrased as one local
-  contradiction lemma on this chosen minimal face: show every one of its vertices already lies in
-  the lower prefix face, then upgrade the resulting face to the predecessor step. The older
-  `section5LowerPrefixVertices` route remains available as a fallback, and the new local
+  face mapping to the segment. The newest refinement is that this witness can now be chosen with
+  nonzero barycentric weight on every vertex of the minimal face, via
+  `IsPiecewiseAffineOn.exists_point_with_nonzero_weights_of_minimal_section5SegmentSubface`, so
+  the remaining lower-step work is now best phrased as one local contradiction lemma on a
+  canonical relative-interior point of this chosen face: show every one of its vertices already
+  lies in the lower prefix face, then upgrade the resulting face to the predecessor step. The
+  older `section5LowerPrefixVertices` route remains available as a fallback, and the new local
   obstruction theorem still records that if the
   filtered lower subface already hits `b_k`, then every room in `prefixRooms n k` appears in the
   support of some lower-prefix vertex, while any actual lower-face preimage of `b_k` has simplex

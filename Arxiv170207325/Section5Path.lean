@@ -907,6 +907,108 @@ theorem IsPiecewiseAffineOn.exists_point_in_realization_of_mem_section5SegmentSu
   refine ⟨x, hx, ?_⟩
   simpa [hfx] using hySeg
 
+theorem IsPiecewiseAffineOn.exists_point_with_nonzero_weights_of_minimal_section5SegmentSubface
+    {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    (hfpl : IsPiecewiseAffineOn T f) {u : Section5Node n} (hu : IsSection5GraphNode T f u)
+    {τ : SimplexFacet n} (hτ : τ ∈ section5SegmentSubfaces u f)
+    (hmin : ∀ σ ∈ section5SegmentSubfaces u f, τ.vertices.card ≤ σ.vertices.card) :
+    ∃ x : RentSimplex n, ((x : RentSimplex n) : RentCoordinates n) ∈ τ.realization ∧
+      f x ∈ prefixBarycenterSegment n u.level ∧
+      ∃ w : RentCoordinates n → ℝ,
+        (∀ y ∈ τ.vertices.image fun v : RentSimplex n => ((v : RentSimplex n) : RentCoordinates n),
+          0 ≤ w y) ∧
+        (∑ y ∈ τ.vertices.image fun v : RentSimplex n => ((v : RentSimplex n) : RentCoordinates n),
+          w y = 1) ∧
+        ((τ.vertices.image fun v : RentSimplex n => ((v : RentSimplex n) : RentCoordinates n)).centerMass
+          w id = ((x : RentSimplex n) : RentCoordinates n)) ∧
+        (∀ y ∈ τ.vertices.image fun v : RentSimplex n => ((v : RentSimplex n) : RentCoordinates n),
+          w y ≠ 0) := by
+  classical
+  rcases hfpl.exists_point_in_realization_of_mem_section5SegmentSubfaces hu hτ with
+    ⟨x, hxτ, hfxSeg⟩
+  let s : Finset (RentCoordinates n) :=
+    τ.vertices.image fun v : RentSimplex n => ((v : RentSimplex n) : RentCoordinates n)
+  have hxconv : ((x : RentSimplex n) : RentCoordinates n) ∈ convexHull ℝ (s : Set (RentCoordinates n)) := by
+    simpa [s, SimplexFacet.realization, SimplexFacet.pointSet] using hxτ
+  obtain ⟨w, hw_nonneg, hw_sum, hw_center⟩ := (Finset.mem_convexHull).mp hxconv
+  let σ : SimplexFacet n := ⟨τ.vertices.filter fun v => w ((v : RentSimplex n) : RentCoordinates n) ≠ 0⟩
+  have hσsubτ : σ.IsSubfaceOf τ := by
+    intro v hv
+    exact (Finset.mem_filter.mp hv).1
+  have hσreal :
+      ((x : RentSimplex n) : RentCoordinates n) ∈ σ.realization := by
+    let supp : Finset (RentCoordinates n) := s.filter fun y => w y ≠ 0
+    have hsupp_sum : ∑ y ∈ supp, w y = 1 := by
+      calc
+        ∑ y ∈ supp, w y = ∑ y ∈ s, w y := by
+          simpa [supp] using (Finset.sum_filter_ne_zero (s := s) (f := w))
+        _ = 1 := hw_sum
+    have hsupp_center :
+        supp.centerMass w id = ((x : RentSimplex n) : RentCoordinates n) := by
+      calc
+        supp.centerMass w id = s.centerMass w id := by
+          simpa [supp] using (Finset.centerMass_filter_ne_zero (t := s) (w := w) (z := id))
+        _ = ((x : RentSimplex n) : RentCoordinates n) := hw_center
+    have hsupp_conv :
+        ((x : RentSimplex n) : RentCoordinates n) ∈ convexHull ℝ (supp : Set (RentCoordinates n)) := by
+      rw [← hsupp_center]
+      refine Finset.centerMass_id_mem_convexHull supp ?_ ?_
+      · intro y hy
+        exact hw_nonneg _ (Finset.mem_filter.mp hy).1
+      · rw [hsupp_sum]
+        norm_num
+    have hsupp_subset : (supp : Set (RentCoordinates n)) ⊆ σ.pointSet := by
+      intro y hy
+      rcases Finset.mem_image.mp (Finset.mem_filter.mp hy).1 with ⟨v, hv, rfl⟩
+      exact Set.mem_image_of_mem ((↑) : RentSimplex n → RentCoordinates n)
+        (Finset.mem_filter.mpr ⟨hv, (Finset.mem_filter.mp hy).2⟩)
+    exact convexHull_mono hsupp_subset hsupp_conv
+  have hτsubu : τ.IsSubfaceOf u.cell :=
+    (mem_section5SegmentSubfaces_iff (u := u) (f := f) (τ := τ)).mp hτ |>.1
+  have hσsubu : σ.IsSubfaceOf u.cell := hσsubτ.trans hτsubu
+  have hσface : T.IsFace σ := by
+    rcases hu.isFace with ⟨ρ, hρ, hρsub⟩
+    exact ⟨ρ, hρ, hσsubu.trans hρsub⟩
+  have hσhit :
+      (FacetImageHull f σ ∩ prefixBarycenterSegment n u.level).Nonempty := by
+    refine ⟨f x, hfpl.facetImageContains_of_mem_realization hσface hσreal, hfxSeg⟩
+  have hσmem : σ ∈ section5SegmentSubfaces u f := by
+    exact (mem_section5SegmentSubfaces_iff (u := u) (f := f) (τ := σ)).mpr
+      ⟨hσsubu, by
+        have : 0 < ∑ y ∈ s, w y := by simpa [hw_sum]
+        have hnonempty : (σ.vertices).Nonempty := by
+          by_contra hσempty
+          have hsupp_empty : (s.filter fun y => w y ≠ 0) = ∅ := by
+            ext y
+            constructor
+            · intro hy
+              rcases Finset.mem_image.mp (Finset.mem_filter.mp hy).1 with ⟨v, hv, rfl⟩
+              have hvσ : v ∈ σ.vertices := Finset.mem_filter.mpr ⟨hv, (Finset.mem_filter.mp hy).2⟩
+              exact False.elim (hσempty ⟨v, hvσ⟩)
+            · intro hy
+              exact False.elim (by simpa using hy)
+          have : ∑ y ∈ s, w y = 0 := by
+            rw [← Finset.sum_filter_ne_zero (s := s) (f := w), hsupp_empty]
+            simp
+          linarith
+        exact hnonempty, hσhit⟩
+  have hcard_min : τ.vertices.card ≤ σ.vertices.card := hmin σ hσmem
+  have hcard_le : σ.vertices.card ≤ τ.vertices.card := Finset.card_le_card hσsubτ
+  have hcard_eq : σ.vertices.card = τ.vertices.card := le_antisymm hcard_le hcard_min
+  refine ⟨x, hxτ, hfxSeg, w, hw_nonneg, hw_sum, hw_center, ?_⟩
+  intro y hy
+  rcases Finset.mem_image.mp hy with ⟨v, hv, rfl⟩
+  by_contra hzero
+  have hv_notinσ : v ∉ σ.vertices := by
+    intro hvσ
+    exact (Finset.mem_filter.mp hvσ).2 hzero
+  have hproper : σ.vertices ⊂ τ.vertices := by
+    refine ⟨hσsubτ, ?_⟩
+    intro hτσ
+    exact hv_notinσ (hτσ hv)
+  have : σ.vertices.card < τ.vertices.card := Finset.card_lt_card hproper
+  omega
+
 theorem IsSection5GraphNode.vertex_mem_affineSpan_prefixVertexPoints {n : ℕ}
     {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n} {u : Section5Node n}
     (hu : IsSection5GraphNode T f u) {v : RentSimplex n} (hv : v ∈ u.cell.vertices) :
