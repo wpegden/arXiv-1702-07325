@@ -1292,6 +1292,68 @@ theorem section5_levelZero_eq_startNode {n : ℕ} [NeZero n]
         section5_levelZero_cell_eq_startCell (u := ⟨0, uc⟩) hu rfl
       simp [section5StartNode, hcell]
 
+theorem exists_section5LowerStep_of_subface_card_eq_and_facetImageContains
+    {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    {u : Section5Node n} (hu : IsSection5GraphNode T f u) (hulevel : 0 < u.level)
+    {τ : SimplexFacet n} (hτsub : τ.IsSubfaceOf u.cell)
+    (hτcard : τ.vertices.card = u.level)
+    (hτface : ∀ ⦃w : RentSimplex n⦄, w ∈ τ.vertices → w ∈ coordinateFace (prefixRooms n u.level))
+    (hhit : FacetImageContains f τ (prefixBarycenter n u.level)) :
+    ∃ v : Section5Node n, IsSection5GraphNode T f v ∧ Section5Step f v u := by
+  let v : Section5Node n := ⟨u.level - 1, τ⟩
+  have hlevel : v.level + 1 = u.level := by
+    dsimp [v]
+    exact Nat.sub_add_cancel (Nat.succ_le_of_lt hulevel)
+  have hv : IsSection5GraphNode T f v := by
+    refine ⟨?_, ?_, ?_, ?_, ?_⟩
+    · simpa [hlevel] using le_trans (Nat.le_succ u.level) hu.level_le
+    · rcases hu.isFace with ⟨σ, hσ, hσsub⟩
+      exact ⟨σ, hσ, hτsub.trans hσsub⟩
+    · calc
+        v.cell.vertices.card = τ.vertices.card := by rfl
+        _ = u.level := hτcard
+        _ = v.level + 1 := hlevel.symm
+    · intro w hw
+      simpa [hlevel] using hτface hw
+    · refine ⟨prefixBarycenter n u.level, hhit, ?_⟩
+      simpa [prefixBarycenterSegment, hlevel] using
+        right_mem_segment ℝ (prefixBarycenter n (u.level - 1)) (prefixBarycenter n u.level)
+  refine ⟨v, hv, ?_⟩
+  exact ⟨hlevel, hτsub, hhit⟩
+
+theorem exists_section5StartComponentLowerStep_of_subface_card_eq_and_facetImageContains
+    {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    {hstart : IsSection5GraphNode T f (section5StartNode n)}
+    {u : section5StartComponent hstart}
+    (hu_ne : u ≠ section5StartVertexInComponent hstart)
+    {τ : SimplexFacet n} (hτsub : τ.IsSubfaceOf u.1.1.cell)
+    (hτcard : τ.vertices.card = u.1.1.level)
+    (hτface :
+      ∀ ⦃w : RentSimplex n⦄, w ∈ τ.vertices →
+        w ∈ coordinateFace (prefixRooms n u.1.1.level))
+    (hhit : FacetImageContains f τ (prefixBarycenter n u.1.1.level)) :
+    ∃ v : section5StartComponent hstart, Section5Step f v.1.1 u.1.1 := by
+  have hu_node : IsSection5GraphNode T f u.1.1 := (mem_section5Nodes_iff).mp u.1.2
+  have hulevel : 0 < u.1.1.level := by
+    by_contra hzero
+    have hu0 : u.1.1.level = 0 := Nat.eq_zero_of_not_pos hzero
+    have hu_eq_start : u.1.1 = section5StartNode n := section5_levelZero_eq_startNode hu_node hu0
+    apply hu_ne
+    exact Subtype.ext (Subtype.ext hu_eq_start)
+  rcases exists_section5LowerStep_of_subface_card_eq_and_facetImageContains
+      hu_node hulevel hτsub hτcard hτface hhit with ⟨v0, hv0, hv0_step⟩
+  let vnode : section5Nodes T f := ⟨v0, hv0.mem_section5Nodes⟩
+  have hu_reach :
+      (section5NodeGraph T f).Reachable (section5StartNodeInNodes hstart) u.1 := by
+    exact (mem_section5StartComponent_iff_reachable (hstart := hstart)).mp u.2
+  have hv0_adj : (section5NodeGraph T f).Adj vnode u.1 := by
+    simpa [section5NodeGraph, section5SimpleGraph, vnode] using
+      (Or.inl hv0_step : Section5Adjacent f v0 u.1.1)
+  have hv_reach :
+      (section5NodeGraph T f).Reachable (section5StartNodeInNodes hstart) vnode := by
+    exact hu_reach.trans <| (SimpleGraph.reachable_comm.mp (SimpleGraph.Adj.reachable hv0_adj))
+  refine ⟨⟨vnode, (mem_section5StartComponent_iff_reachable (hstart := hstart)).mpr hv_reach⟩, hv0_step⟩
+
 theorem exists_section5LowerStep_of_card_eq_and_mem_realization_map_prefixBarycenter
     {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
     (hfpl : IsPiecewiseAffineOn T f) {u : Section5Node n} (hu : IsSection5GraphNode T f u)

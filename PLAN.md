@@ -229,14 +229,16 @@
   place: if a point of one Section 5 cell already lies in the lower prefix face and its image
   still lies on `[b_k,b_{k+1}]`, the new endpoint lemma forces that image to be exactly `b_k`;
   then the filtered subface `section5LowerPrefixVertices` already realizes that point and its
-  image hull contains `b_k`, giving a genuine predecessor `Section5Step` as soon as the filtered
-  subface has cardinality `k`. The new local obstruction theorem now also proves that if this
+  image hull contains `b_k`. More importantly, `Section5Path.lean` now has the direct
+  manuscript-shaped predecessor theorem: if the geometry produces an actual codimension-one lower
+  face `τ ≤ u.cell` with `τ.vertices.card = u.level`, all vertices of `τ` in the lower prefix
+  face, and `b_k ∈ λ(τ)`, then that face already gives the predecessor `Section5Step`. So the
+  remaining lower-step work is best phrased geometrically: identify the concrete entering lower
+  face of a cell that meets `[b_k,b_{k+1}]`. The older `section5LowerPrefixVertices` route remains
+  available as a fallback, and the new local obstruction theorem still records that if the
   filtered lower subface already hits `b_k`, then every room in `prefixRooms n k` appears in the
-  support of some lower-prefix vertex, and any actual lower-face preimage of `b_k` has simplex
-  support exactly `prefixRooms n k`. So the remaining lower-step work is even sharper: construct
-  the needed lower-face point whose image remains on `[b_k,b_{k+1}]`, and then upgrade the new
-  room-coverage statement to the exact cardinality equality
-  `(section5LowerPrefixVertices u).card = u.level`.
+  support of some lower-prefix vertex, while any actual lower-face preimage of `b_k` has simplex
+  support exactly `prefixRooms n k`.
 - First prove the barycenter-specialized version if that is the easiest entry point.
 - Then generalize to arbitrary interior targets if Section 6 needs it.
 - If full surjectivity is still awkward, keep the theorem in the "target in interior" form first; that already covers the barycenter and the interior `y` used in the first Section 6 theorem.
