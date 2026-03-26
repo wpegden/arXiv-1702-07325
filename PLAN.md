@@ -271,7 +271,16 @@
   pipeline forces the minimizer into the lower prefix face and yields
   `Section5MinimalSubfaceLowerBoundaryGenericity u f`. The older slice-endpoint theorem remains
   a backup route if this affine-fiber contradiction proves harder than expected.
-  that an outside-prefix-mass minimizer on a minimal slice cannot retain positive outside mass.
+  The codomain side is now normalized explicitly: the new lemmas
+  `mem_prefixBarycenterSegment_levelCoord_le`,
+  `mem_prefixBarycenterSegment_apply_of_lt`, and
+  `mem_prefixBarycenterSegment_iff_mem_ambientCoordinateFace_and_eq_levelCoord`
+  identify `[b_k,b_{k+1}]` with the subset of
+  `ambientCoordinateFace (prefixRooms n (k + 1))` where the level-`k` coordinate is at most
+  `1 / (k + 1)` and every lower coordinate is `1 / k - y_k / k`. So the remaining optimizer
+  contradiction is no longer an abstract same-image problem: the honest next check is to show
+  that the erased-face point produced from a positive outside-prefix barycentric weight still
+  satisfies exactly those upper-prefix support and coordinate equations.
   This support layer is now also named globally on the real start component:
   `Section5BoundaryFaceGenericity` asks for that exact lower-boundary-face datum on every
   non-start node, keeps the existing upper-step uniqueness and endpoint fields, and then compiles

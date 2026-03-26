@@ -349,6 +349,104 @@ theorem prefixBarycenterSegment_subset_ambientCoordinateFace {n k : ℕ} [NeZero
       (prefixBarycenter_mem_ambientCoordinateFace hk')
   · exact prefixBarycenter_mem_ambientCoordinateFace hk
 
+theorem mem_prefixBarycenterSegment_levelCoord_le {n k : ℕ} [NeZero k]
+    (hk : k + 1 ≤ n) {y : RentCoordinates n}
+    (hySeg : y ∈ prefixBarycenterSegment n k) :
+    let ik : RoomIndex n := ⟨k, lt_of_lt_of_le (Nat.lt_succ_self k) hk⟩
+    y ik ≤ ((k + 1 : ℝ)⁻¹) := by
+  let ik : RoomIndex n := ⟨k, lt_of_lt_of_le (Nat.lt_succ_self k) hk⟩
+  rw [prefixBarycenterSegment, segment_eq_image_lineMap ℝ
+    (prefixBarycenter n k) (prefixBarycenter n (k + 1))] at hySeg
+  rcases hySeg with ⟨θ, hθ, rfl⟩
+  have hk1_nonneg : 0 ≤ ((k + 1 : ℝ)⁻¹) := by positivity
+  have hθ_le : θ * ((k + 1 : ℝ)⁻¹) ≤ ((k + 1 : ℝ)⁻¹) := by
+    nlinarith [hθ.1, hθ.2, hk1_nonneg]
+  simpa [ik, AffineMap.lineMap_apply_module, prefixBarycenter]
+    using hθ_le
+
+theorem mem_prefixBarycenterSegment_apply_of_lt {n k : ℕ} [NeZero k]
+    (hk : k + 1 ≤ n) {y : RentCoordinates n}
+    (hySeg : y ∈ prefixBarycenterSegment n k) {i : RoomIndex n} (hi : i.1 < k) :
+    let ik : RoomIndex n := ⟨k, lt_of_lt_of_le (Nat.lt_succ_self k) hk⟩
+    y i = (k : ℝ)⁻¹ - y ik / k := by
+  let ik : RoomIndex n := ⟨k, lt_of_lt_of_le (Nat.lt_succ_self k) hk⟩
+  rw [prefixBarycenterSegment, segment_eq_image_lineMap ℝ
+    (prefixBarycenter n k) (prefixBarycenter n (k + 1))] at hySeg
+  rcases hySeg with ⟨θ, _hθ0, _hθ1, rfl⟩
+  have hkR : (k : ℝ) ≠ 0 := by exact_mod_cast (NeZero.ne k)
+  have hk1R : ((k + 1 : ℕ) : ℝ) ≠ 0 := by positivity
+  have hyi :
+      AffineMap.lineMap (prefixBarycenter n k) (prefixBarycenter n (k + 1)) θ i =
+        (1 - θ) * (k : ℝ)⁻¹ + θ * ((k + 1 : ℝ)⁻¹) := by
+    simp [AffineMap.lineMap_apply_module, prefixBarycenter, hi,
+      show i.1 < k + 1 by omega]
+  have hyk :
+      AffineMap.lineMap (prefixBarycenter n k) (prefixBarycenter n (k + 1)) θ ik =
+        θ * ((k + 1 : ℝ)⁻¹) := by
+    simp [AffineMap.lineMap_apply_module, prefixBarycenter, ik]
+  rw [hyi]
+  change
+    (1 - θ) * (k : ℝ)⁻¹ + θ * ((k + 1 : ℝ)⁻¹) =
+      (k : ℝ)⁻¹ -
+        (AffineMap.lineMap (prefixBarycenter n k) (prefixBarycenter n (k + 1)) θ ik) / k
+  rw [hyk]
+  field_simp [hkR, hk1R]
+  ring
+
+theorem mem_prefixBarycenterSegment_iff_mem_ambientCoordinateFace_and_eq_levelCoord
+    {n k : ℕ} [NeZero k] (hk : k + 1 ≤ n) {y : RentCoordinates n} :
+    y ∈ prefixBarycenterSegment n k ↔
+      y ∈ ambientCoordinateFace (prefixRooms n (k + 1)) ∧
+        let ik : RoomIndex n := ⟨k, lt_of_lt_of_le (Nat.lt_succ_self k) hk⟩
+        y ik ≤ ((k + 1 : ℝ)⁻¹) ∧
+          ∀ {i : RoomIndex n}, i.1 < k → y i = (k : ℝ)⁻¹ - y ik / k := by
+  constructor
+  · intro hySeg
+    refine ⟨prefixBarycenterSegment_subset_ambientCoordinateFace hk hySeg, ?_⟩
+    exact ⟨mem_prefixBarycenterSegment_levelCoord_le hk hySeg, fun hi =>
+      mem_prefixBarycenterSegment_apply_of_lt hk hySeg hi⟩
+  · intro hy
+    let ik : RoomIndex n := ⟨k, lt_of_lt_of_le (Nat.lt_succ_self k) hk⟩
+    rcases hy with ⟨hyFace, hyk_le, hprefix⟩
+    let θ : ℝ := (k + 1 : ℝ) * y ik
+    have hθ_nonneg : 0 ≤ θ := by
+      dsimp [θ]
+      have hyk_nonneg : 0 ≤ y ik := hyFace.1.1 ik
+      positivity
+    have hk1R : ((k + 1 : ℕ) : ℝ) ≠ 0 := by positivity
+    have hθ_le : θ ≤ 1 := by
+      calc
+        θ = (k + 1 : ℝ) * y ik := by rfl
+        _ ≤ (k + 1 : ℝ) * ((k + 1 : ℝ)⁻¹) := by
+          gcongr
+        _ = 1 := by field_simp [hk1R]
+    rw [prefixBarycenterSegment, segment_eq_image_lineMap ℝ
+      (prefixBarycenter n k) (prefixBarycenter n (k + 1))]
+    refine ⟨θ, ⟨hθ_nonneg, hθ_le⟩, ?_⟩
+    ext i
+    by_cases hi : i.1 < k
+    · have hkR : (k : ℝ) ≠ 0 := by exact_mod_cast (NeZero.ne k)
+      have hk1R : ((k + 1 : ℕ) : ℝ) ≠ 0 := by positivity
+      have hyi : y i = (k : ℝ)⁻¹ - y ik / k := hprefix hi
+      rw [hyi]
+      simp [AffineMap.lineMap_apply_module, prefixBarycenter, hi,
+        show i.1 < k + 1 by omega, θ]
+      field_simp [hkR, hk1R]
+      ring
+    · by_cases hik : i = ik
+      · subst hik
+        simp [AffineMap.lineMap_apply_module, prefixBarycenter, ik, θ]
+        field_simp [hk1R]
+      · have hik_notin : i ∉ prefixRooms n (k + 1) := by
+          rw [mem_prefixRooms_iff]
+          by_contra hik_mem
+          have : i.1 = k := by omega
+          exact hik (Fin.ext this)
+        have hyi_zero : y i = 0 := (coordSupport_subset_iff.mp hyFace.2) i hik_notin
+        rw [hyi_zero]
+        simp [AffineMap.lineMap_apply_module, prefixBarycenter, hi,
+          show ¬ i.1 < k + 1 by simpa [mem_prefixRooms_iff] using hik_notin]
+
 theorem eq_prefixBarycenter_of_mem_prefixBarycenterSegment_of_mem_ambientCoordinateFace
     {n k : ℕ} [NeZero k] (hk : k + 1 ≤ n) {y : RentCoordinates n}
     (hySeg : y ∈ prefixBarycenterSegment n k)
