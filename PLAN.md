@@ -324,6 +324,13 @@
   `FacetImageContains f (⟨section5LowerPrefixVertices u⟩ : SimplexFacet n)
     (prefixBarycenter n u.level)`. So the remaining geometry can now be phrased entirely on the
   canonical lower-prefix face itself, without separately carrying an explicit slice witness.
+  In addition, the older manuscript-shaped support packages are now wired straight into this
+  canonical route: `Section5MinimalSliceLowerBoundaryGeometry`,
+  `Section5SimplexSliceBoundaryGeometry`, `Section5BoundaryFaceGenericity`, and
+  `Section5SimplexSliceGenericity` all convert directly to
+  `Section5CanonicalLowerEntryData` / `Section5CanonicalLowerEntryGenericity`, and hence already
+  inherit the canonical target-facet theorem. So no further package translation remains between
+  the boundary-face language and the new canonical branch.
   So the remaining honest geometry on `u.cell` is now: prove that the slice reaches the lower
   prefix face, and prove that the canonical lower-prefix face has exactly `u.level` vertices.
   The older `Section5OneComplexGeometry` layer remains useful as cleanup, but it is no longer the

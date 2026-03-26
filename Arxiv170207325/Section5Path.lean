@@ -3425,6 +3425,19 @@ theorem section5CanonicalLowerEntryData_nonempty_iff_lowerEntryFaceData_nonempty
     hf hfpl hu hulevel]
   rw [section5LowerEntryFaceData_nonempty_iff_card_eq_and_facetImageContains_lowerPrefixVertices hu]
 
+def Section5MinimalSliceLowerBoundaryGeometry.toCanonicalLowerEntryData
+    {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    (hf : IsFaceRespecting f) (hfpl : IsPiecewiseAffineOn T f)
+    {u : Section5Node n} (hu : IsSection5GraphNode T f u) (hulevel : 0 < u.level)
+    (hgeom : Section5MinimalSliceLowerBoundaryGeometry u f) :
+    Section5CanonicalLowerEntryData u f := by
+  classical
+  have hnonempty : Nonempty (Section5CanonicalLowerEntryData u f) := by
+    rcases hgeom.card_eq_lowerPrefixVertices_and_exists_point hf hfpl hu hulevel with
+      ⟨hcard, x, hxSlice, hxFace⟩
+    exact ⟨⟨hcard, x, hxSlice, hxFace⟩⟩
+  exact Classical.choice hnonempty
+
 theorem exists_section5LowerStep_of_card_eq_and_mem_realization_map_prefixBarycenter
     {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
     (hfpl : IsPiecewiseAffineOn T f) {u : Section5Node n} (hu : IsSection5GraphNode T f u)
@@ -4648,6 +4661,21 @@ theorem Section5SimplexSliceGenericity.card_eq_lowerPrefixVertices_and_exists_po
   have hu_node : IsSection5GraphNode T f u.1.1 := (mem_section5Nodes_iff).mp u.1.2
   exact hfpl.section5Step_card_eq_lowerPrefixVertices_and_exists_point hv_node hu_node huStep
 
+def Section5SimplexSliceGenericity.toCanonicalLowerEntryGenericity {n : ℕ} [NeZero n]
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    (hf : IsFaceRespecting f) (hfpl : IsPiecewiseAffineOn T f)
+    {hstart : IsSection5GraphNode T f (section5StartNode n)}
+    (hslice : Section5SimplexSliceGenericity T f hstart) :
+    Section5CanonicalLowerEntryGenericity T f hstart := by
+  classical
+  refine ⟨?_, hslice.upper_step_unique, hslice.no_upper_step_is_endpoint⟩
+  intro v hv
+  have hnonempty : Nonempty (Section5CanonicalLowerEntryData v.1.1 f) := by
+    rcases hslice.card_eq_lowerPrefixVertices_and_exists_point hf hfpl v hv with
+      ⟨hcard, x, hxSlice, hxFace⟩
+    exact ⟨⟨hcard, x, hxSlice, hxFace⟩⟩
+  exact Classical.choice hnonempty
+
 theorem Section5SimplexSliceBoundaryGeometry.card_eq_lowerPrefixVertices_and_exists_point
     {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
     {hstart : IsSection5GraphNode T f (section5StartNode n)}
@@ -4665,6 +4693,19 @@ theorem Section5SimplexSliceBoundaryGeometry.card_eq_lowerPrefixVertices_and_exi
     (hgeom.lower_boundary_geometry_of_ne_start v hv).card_eq_lowerPrefixVertices_and_exists_point
       hf hfpl hv_node hv_level
 
+def Section5SimplexSliceBoundaryGeometry.toCanonicalLowerEntryGenericity {n : ℕ} [NeZero n]
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    (hf : IsFaceRespecting f) (hfpl : IsPiecewiseAffineOn T f)
+    {hstart : IsSection5GraphNode T f (section5StartNode n)}
+    (hgeom : Section5SimplexSliceBoundaryGeometry T f hstart) :
+    Section5CanonicalLowerEntryGenericity T f hstart := by
+  refine ⟨?_, hgeom.upper_step_unique, hgeom.no_upper_step_is_endpoint⟩
+  intro v hv
+  have hv_node : IsSection5GraphNode T f v.1.1 := (mem_section5Nodes_iff).mp v.1.2
+  have hv_level : 0 < v.1.1.level := section5StartComponent_pos_level_of_ne_start hv
+  exact (hgeom.lower_boundary_geometry_of_ne_start v hv).toCanonicalLowerEntryData
+    hf hfpl hv_node hv_level
+
 def Section5BoundaryFaceGenericity.toSimplexSliceBoundaryGeometry {n : ℕ} [NeZero n]
     {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
     (hfpl : IsPiecewiseAffineOn T f)
@@ -4677,6 +4718,14 @@ def Section5BoundaryFaceGenericity.toSimplexSliceBoundaryGeometry {n : ℕ} [NeZ
   have hv_level : 0 < v.1.1.level := section5StartComponent_pos_level_of_ne_start hv
   exact (hface.lower_boundary_face_data_of_ne_start v hv).toLowerBoundaryGeometry
     hfpl hv_node hv_level
+
+def Section5BoundaryFaceGenericity.toCanonicalLowerEntryGenericity {n : ℕ} [NeZero n]
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    (hf : IsFaceRespecting f) (hfpl : IsPiecewiseAffineOn T f)
+    {hstart : IsSection5GraphNode T f (section5StartNode n)}
+    (hface : Section5BoundaryFaceGenericity T f hstart) :
+    Section5CanonicalLowerEntryGenericity T f hstart := by
+  exact (hface.toSimplexSliceBoundaryGeometry hfpl).toCanonicalLowerEntryGenericity hf hfpl
 
 def Section5SimplexSliceBoundaryGeometry.toSimplexSliceGenericity {n : ℕ} [NeZero n]
     {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
@@ -5440,6 +5489,36 @@ theorem Section5CanonicalBoundarySuccessorData.exists_targetFacet_of_canonicalLo
   exact hsucc.exists_targetFacet_of_perturbationGenericity hf
     (hcanon.toPerturbationGenericity hf hfpl)
 
+theorem Section5CanonicalBoundarySuccessorData.exists_targetFacet_of_simplexSliceGenericity
+    {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    (hf : IsFaceRespecting f) (hfpl : IsPiecewiseAffineOn T f)
+    (hsucc : Section5CanonicalBoundarySuccessorData T f hf)
+    (hslice : Section5SimplexSliceGenericity T f hf.section5StartNode_isGraphNode) :
+    ∃ τ ∈ T.facets,
+      FacetImageContains f τ ((rentBarycenter n : RentSimplex n) : RentCoordinates n) := by
+  exact hsucc.exists_targetFacet_of_canonicalLowerEntryGenericity hf hfpl
+    (hslice.toCanonicalLowerEntryGenericity hf hfpl)
+
+theorem Section5CanonicalBoundarySuccessorData.exists_targetFacet_of_simplexSliceBoundaryGeometry
+    {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    (hf : IsFaceRespecting f) (hfpl : IsPiecewiseAffineOn T f)
+    (hsucc : Section5CanonicalBoundarySuccessorData T f hf)
+    (hgeom : Section5SimplexSliceBoundaryGeometry T f hf.section5StartNode_isGraphNode) :
+    ∃ τ ∈ T.facets,
+      FacetImageContains f τ ((rentBarycenter n : RentSimplex n) : RentCoordinates n) := by
+  exact hsucc.exists_targetFacet_of_canonicalLowerEntryGenericity hf hfpl
+    (hgeom.toCanonicalLowerEntryGenericity hf hfpl)
+
+theorem Section5CanonicalBoundarySuccessorData.exists_targetFacet_of_boundaryFaceGenericity
+    {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    (hf : IsFaceRespecting f) (hfpl : IsPiecewiseAffineOn T f)
+    (hsucc : Section5CanonicalBoundarySuccessorData T f hf)
+    (hface : Section5BoundaryFaceGenericity T f hf.section5StartNode_isGraphNode) :
+    ∃ τ ∈ T.facets,
+      FacetImageContains f τ ((rentBarycenter n : RentSimplex n) : RentCoordinates n) := by
+  exact hsucc.exists_targetFacet_of_canonicalLowerEntryGenericity hf hfpl
+    (hface.toCanonicalLowerEntryGenericity hf hfpl)
+
 theorem IsFaceRespecting.exists_barycenter_targetFacet_of_two_le_and_perturbationGenericity
     {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
     (hn : 2 ≤ n) (hf : IsFaceRespecting f)
@@ -5457,6 +5536,34 @@ theorem IsFaceRespecting.exists_barycenter_targetFacet_of_two_le_and_canonicalLo
       FacetImageContains f τ ((rentBarycenter n : RentSimplex n) : RentCoordinates n) := by
   exact Section5CanonicalBoundarySuccessorData.exists_targetFacet_of_canonicalLowerEntryGenericity
     (T := T) (f := f) hf hfpl (hf.section5CanonicalBoundarySuccessorData_of_two_le hn) hcanon
+
+theorem IsFaceRespecting.exists_barycenter_targetFacet_of_two_le_and_simplexSliceGenericity
+    {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    (hn : 2 ≤ n) (hf : IsFaceRespecting f) (hfpl : IsPiecewiseAffineOn T f)
+    (hslice : Section5SimplexSliceGenericity T f hf.section5StartNode_isGraphNode) :
+    ∃ τ ∈ T.facets,
+      FacetImageContains f τ ((rentBarycenter n : RentSimplex n) : RentCoordinates n) := by
+  exact Section5CanonicalBoundarySuccessorData.exists_targetFacet_of_simplexSliceGenericity
+    (T := T) (f := f) hf hfpl (hf.section5CanonicalBoundarySuccessorData_of_two_le hn) hslice
+
+theorem IsFaceRespecting.exists_barycenter_targetFacet_of_two_le_and_simplexSliceBoundaryGeometry
+    {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    (hn : 2 ≤ n) (hf : IsFaceRespecting f) (hfpl : IsPiecewiseAffineOn T f)
+    (hgeom : Section5SimplexSliceBoundaryGeometry T f hf.section5StartNode_isGraphNode) :
+    ∃ τ ∈ T.facets,
+      FacetImageContains f τ ((rentBarycenter n : RentSimplex n) : RentCoordinates n) := by
+  exact
+    Section5CanonicalBoundarySuccessorData.exists_targetFacet_of_simplexSliceBoundaryGeometry
+      (T := T) (f := f) hf hfpl (hf.section5CanonicalBoundarySuccessorData_of_two_le hn) hgeom
+
+theorem IsFaceRespecting.exists_barycenter_targetFacet_of_two_le_and_boundaryFaceGenericity
+    {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    (hn : 2 ≤ n) (hf : IsFaceRespecting f) (hfpl : IsPiecewiseAffineOn T f)
+    (hface : Section5BoundaryFaceGenericity T f hf.section5StartNode_isGraphNode) :
+    ∃ τ ∈ T.facets,
+      FacetImageContains f τ ((rentBarycenter n : RentSimplex n) : RentCoordinates n) := by
+  exact Section5CanonicalBoundarySuccessorData.exists_targetFacet_of_boundaryFaceGenericity
+    (T := T) (f := f) hf hfpl (hf.section5CanonicalBoundarySuccessorData_of_two_le hn) hface
 
 theorem IsFaceRespecting.exists_barycenter_targetFacet_of_boundarySegmentGenericity
     {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
