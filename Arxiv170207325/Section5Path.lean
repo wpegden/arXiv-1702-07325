@@ -814,6 +814,33 @@ theorem eq_prefixBarycenter_of_mem_prefixBarycenterSegment_of_mem_ambientCoordin
       exact hk1 (inv_eq_zero.mp hinv)
   simp [htheta_zero]
 
+theorem eq_prefixBarycenter_of_mem_prefixBarycenterSegment_of_levelCoord_eq_zero
+    {n k : ℕ} [NeZero k] (hk : k + 1 ≤ n) {y : RentCoordinates n}
+    (hySeg : y ∈ prefixBarycenterSegment n k)
+    (hyk0 :
+      let ik : RoomIndex n := ⟨k, lt_of_lt_of_le (Nat.lt_succ_self k) hk⟩
+      y ik = 0) :
+    y = prefixBarycenter n k := by
+  let ik : RoomIndex n := ⟨k, lt_of_lt_of_le (Nat.lt_succ_self k) hk⟩
+  have hyFace_succ : y ∈ ambientCoordinateFace (prefixRooms n (k + 1)) :=
+    prefixBarycenterSegment_subset_ambientCoordinateFace hk hySeg
+  have hyFace : y ∈ ambientCoordinateFace (prefixRooms n k) := by
+    refine ⟨hyFace_succ.1, ?_⟩
+    rw [coordSupport_subset_iff]
+    intro i hi
+    by_cases hik : i = ik
+    · subst hik
+      simpa [ik] using hyk0
+    · have hi_notin_succ : i ∉ prefixRooms n (k + 1) := by
+        rw [mem_prefixRooms_iff]
+        by_contra hi_mem
+        have hi_not_lt : ¬ i.1 < k := by simpa [mem_prefixRooms_iff] using hi
+        have : i.1 = k := by omega
+        exact hik (Fin.ext this)
+      exact (coordSupport_subset_iff.mp hyFace_succ.2) i hi_notin_succ
+  exact eq_prefixBarycenter_of_mem_prefixBarycenterSegment_of_mem_ambientCoordinateFace
+    hk hySeg hyFace
+
 theorem IsFaceRespecting.eq_prefixBarycenter_of_mem_coordinateFace_of_map_mem_prefixBarycenterSegment
     {n k : ℕ} [NeZero k] {f : SelfMapOnRentSimplex n} (hf : IsFaceRespecting f)
     (hk : k + 1 ≤ n) {x : RentSimplex n}
@@ -1566,6 +1593,41 @@ theorem exists_isMinOn_outsideMass_section5SubfaceSliceSet {n : ℕ} (u : Sectio
       IsMinOn (outsideMass (prefixRooms n u.level)) (section5SubfaceSliceSet u τ g) y := by
   exact (isCompact_section5SubfaceSliceSet u τ g).exists_isMinOn
     hne continuous_outsideMass.continuousOn
+
+theorem exists_isMinOn_levelCoord_section5SubfaceSliceSet {n : ℕ} (u : Section5Node n)
+    (hulevel : u.level + 1 ≤ n) (τ : SimplexFacet n)
+    (g : RentCoordinates n →ᵃ[ℝ] RentCoordinates n)
+    (hne : (section5SubfaceSliceSet u τ g).Nonempty) :
+    let ik : RoomIndex n := ⟨u.level, lt_of_lt_of_le (Nat.lt_succ_self u.level) hulevel⟩
+    ∃ y ∈ section5SubfaceSliceSet u τ g,
+      IsMinOn (fun z : RentCoordinates n => (g z) ik) (section5SubfaceSliceSet u τ g) y := by
+  let ik : RoomIndex n := ⟨u.level, lt_of_lt_of_le (Nat.lt_succ_self u.level) hulevel⟩
+  have hcont : Continuous fun z : RentCoordinates n => (g z) ik := by
+    exact (continuous_apply ik).comp g.continuous_of_finiteDimensional
+  exact (isCompact_section5SubfaceSliceSet u τ g).exists_isMinOn hne hcont.continuousOn
+
+theorem map_eq_prefixBarycenter_of_isMinOn_levelCoord_section5SubfaceSliceSet
+    {n : ℕ} {u : Section5Node n} [NeZero u.level] (hulevel : u.level + 1 ≤ n)
+    {τ : SimplexFacet n} {g : RentCoordinates n →ᵃ[ℝ] RentCoordinates n}
+    {y : RentCoordinates n}
+    (hy : y ∈ section5SubfaceSliceSet u τ g)
+    (hmin :
+      let ik : RoomIndex n := ⟨u.level, lt_of_lt_of_le (Nat.lt_succ_self u.level) hulevel⟩
+      IsMinOn (fun z : RentCoordinates n => (g z) ik) (section5SubfaceSliceSet u τ g) y)
+    (hx :
+      ∃ x ∈ section5SubfaceSliceSet u τ g, g x = prefixBarycenter n u.level) :
+    g y = prefixBarycenter n u.level := by
+  let ik : RoomIndex n := ⟨u.level, lt_of_lt_of_le (Nat.lt_succ_self u.level) hulevel⟩
+  rcases hx with ⟨x, hx, hxg⟩
+  have hySeg : g y ∈ prefixBarycenterSegment n u.level := hy.2
+  have hy_nonneg : 0 ≤ g y ik := by
+    exact (prefixBarycenterSegment_subset_ambientCoordinateFace hulevel hySeg).1.1 ik
+  have hy_le_zero : g y ik ≤ 0 := by
+    have := hmin hx
+    simpa [ik, hxg, prefixBarycenter] using this
+  have hyk0 : g y ik = 0 := le_antisymm hy_le_zero hy_nonneg
+  exact eq_prefixBarycenter_of_mem_prefixBarycenterSegment_of_levelCoord_eq_zero
+    hulevel hySeg (by simpa [ik] using hyk0)
 
 theorem IsPiecewiseAffineOn.exists_outsideMass_minimizer_on_section5SegmentSubface
     {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}

@@ -258,6 +258,12 @@
   nonempty. This is exactly the right object for the manuscript's "preimage segment inside one
   simplex" picture. The next proof step is to extract an actual endpoint mapping to `b_k` and
   identify the minimal face of `τ` containing that endpoint.
+  The first codomain endpoint step is now also checked: on `[b_k,b_{k+1}]`, vanishing of the
+  level-`k` coordinate already forces a point to equal `b_k`. Consequently, once the slice
+  contains one point mapping to `b_k`, any minimizer of the level-`k` coordinate on
+  `section5SubfaceSliceSet u τ g` automatically maps to that left endpoint. So the endpoint route
+  has narrowed to proving existence of a single `b_k`-preimage in the minimal-face slice, rather
+  than re-deriving which codomain point the minimizer hits.
   The next sharper naming step is now checked too:
   `Section5MinimalSubfaceLowerBoundaryGenericity u f` is the exact theorem on a minimal
   `τ ∈ section5SegmentSubfaces u f` that the quoted sentence still has to supply. It says such a
