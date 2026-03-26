@@ -302,7 +302,12 @@
   final barycenter. The small search did not find a counterexample to `upper_step_unique`, so the
   next genuine proof target is now that uniqueness field alone, together with a decision to treat
   the left level-1 and right endpoint assertions as extra local genericity whenever the paper's
-  perturbation sentence is invoked.
+  perturbation sentence is invoked. A richer `n = 4` tetrahedral diagnostic now still finds no
+  `upper_step_unique` counterexample in a fixed 4-room search, so the best current proof route is
+  to stop treating that field as another hidden genericity axiom and instead prove a structural
+  boundary-coface lemma: a level-`k` Section 5 node is already a full-dimensional simplex in the
+  boundary face `coordinateFace (prefixRooms n (k + 1))`, hence it should have at most one
+  incident `(k+1)`-cell on the `coordinateFace (prefixRooms n (k + 2))` side.
   On the packaging side, the remaining graph-theoretic conversion gap is now gone: the support
   layer proves `Section5PerturbationGenericity.toBoundarySegmentGenericity`, and the existing
   local-left/upper-endpoint wrapper is rerouted through

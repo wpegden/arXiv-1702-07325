@@ -95,7 +95,15 @@
   upper `Section5Step`, but its image does not contain the final barycenter, so
   `Section5LocalUpperEndpointGenericity.no_upper_step_is_endpoint` fails. By contrast, the same
   small search did not produce a counterexample to `upper_step_unique`, so that field remains
-  mathematically open rather than falsified.
+  mathematically open rather than falsified. A second, genuinely higher-dimensional diagnostic now
+  strengthens that evidence: on a fixed `n = 4` tetrahedral subdivision whose boundary face
+  `[e₁,e₂,e₃]` is itself triangulated, a search over 105 small face-respecting simplicial maps
+  again found no `upper_step_unique` counterexample. This suggests the surviving theorem is better
+  understood as a boundary-coface uniqueness statement inside the next prefix face
+  `coordinateFace (prefixRooms n (k + 2))`: a level-`k` Section 5 cell is already full-dimensional
+  in the boundary face `coordinateFace (prefixRooms n (k + 1))`, so the missing proof is likely a
+  structural lemma saying such a boundary simplex has at most one incident `(k+1)`-cell on the
+  prefix-face side, rather than another extra perturbation hypothesis.
 - Section 5, current formalization status: this remaining manuscript sentence is now represented directly by the support-layer structure `Section5BoundarySegmentGenericity`. That package is already sufficient, together with the canonical start-successor theorem, to derive the paper-facing Section 5 target-facet conclusion; the unresolved work is therefore the actual geometric proof of `Section5BoundarySegmentGenericity`, not any further graph-theoretic packaging.
 - Section 5, current proof boundary: the Lean development now also has the more literal step-level perturbation package `Section5PerturbationGenericity`, whose fields say that a non-start cell is entered from a lower face, has at most one upper continuation as a `Section5Step`, and if there is no such continuation then it already contains the barycenter. This matches the manuscript's segment-intersection language more closely than the older neighbor-cardinality packaging, so the remaining work is best understood as proving `Section5PerturbationGenericity` from the paper's genericity/perturbation claim.
 - Section 5, interface status after the latest cleanup: the step-level and boundary-segment
