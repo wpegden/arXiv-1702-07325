@@ -332,22 +332,54 @@ theorem collinear_boundary_vertices {n : ℕ} [NeZero n] (hn : 2 ≤ n)
     rw [section5Boundary_eq_lineMap_of_mem_coordinateFace_two hn hz, AffineMap.lineMap_apply]
     simp
 
-/-- The triangulation vertices of one facet that lie on the boundary edge `[e₁,e₂]`. -/
-def SimplexFacet.section5BoundaryVertices {n : ℕ}
-    (τ : SimplexFacet n) : Finset (RentSimplex n) := by
+/-- The triangulation vertices of one facet that lie on the prefix face
+`conv{e₁, ..., e_{k+1}}`. -/
+def SimplexFacet.section5PrefixVertices {n : ℕ}
+    (τ : SimplexFacet n) (k : ℕ) : Finset (RentSimplex n) := by
   classical
-  exact τ.vertices.filter fun v => v ∈ coordinateFace (prefixRooms n 2)
+  exact τ.vertices.filter fun v => v ∈ coordinateFace (prefixRooms n (k + 1))
+
+@[simp]
+theorem SimplexFacet.mem_section5PrefixVertices_iff {n : ℕ} {τ : SimplexFacet n} {k : ℕ}
+    {v : RentSimplex n} :
+    v ∈ τ.section5PrefixVertices k ↔
+      v ∈ τ.vertices ∧ v ∈ coordinateFace (prefixRooms n (k + 1)) := by
+  classical
+  simp [SimplexFacet.section5PrefixVertices]
+
+/-- The induced face of one facet lying on the prefix face `conv{e₁, ..., e_{k+1}}`. -/
+def SimplexFacet.section5PrefixFace {n : ℕ} (τ : SimplexFacet n) (k : ℕ) : SimplexFacet n where
+  vertices := τ.section5PrefixVertices k
+
+@[simp]
+theorem SimplexFacet.section5PrefixFace_vertices {n : ℕ} (τ : SimplexFacet n) (k : ℕ) :
+    (τ.section5PrefixFace k).vertices = τ.section5PrefixVertices k :=
+  rfl
+
+theorem SimplexFacet.section5PrefixFace_isSubface {n : ℕ} (τ : SimplexFacet n) (k : ℕ) :
+    (τ.section5PrefixFace k).IsSubfaceOf τ := by
+  intro v hv
+  exact (τ.mem_section5PrefixVertices_iff.mp hv).1
+
+theorem SimplexTriangulation.section5PrefixFace_isFace {n : ℕ} {T : SimplexTriangulation n}
+    {τ : SimplexFacet n} (hτ : τ ∈ T.facets) (k : ℕ) :
+    T.IsFace (τ.section5PrefixFace k) :=
+  ⟨τ, hτ, τ.section5PrefixFace_isSubface k⟩
+
+/-- The triangulation vertices of one facet that lie on the boundary edge `[e₁,e₂]`. -/
+abbrev SimplexFacet.section5BoundaryVertices {n : ℕ}
+    (τ : SimplexFacet n) : Finset (RentSimplex n) :=
+  τ.section5PrefixVertices 1
 
 /-- The induced face of one facet lying on the boundary edge `[e₁,e₂]`. -/
-def SimplexFacet.section5BoundaryFace {n : ℕ} (τ : SimplexFacet n) : SimplexFacet n where
-  vertices := τ.section5BoundaryVertices
+abbrev SimplexFacet.section5BoundaryFace {n : ℕ} (τ : SimplexFacet n) : SimplexFacet n :=
+  τ.section5PrefixFace 1
 
 @[simp]
 theorem SimplexFacet.mem_section5BoundaryVertices_iff {n : ℕ} {τ : SimplexFacet n}
     {v : RentSimplex n} :
     v ∈ τ.section5BoundaryVertices ↔ v ∈ τ.vertices ∧ v ∈ coordinateFace (prefixRooms n 2) := by
-  classical
-  simp [SimplexFacet.section5BoundaryVertices]
+  simp [SimplexFacet.section5BoundaryVertices, SimplexFacet.section5PrefixVertices]
 
 @[simp]
 theorem SimplexFacet.section5BoundaryFace_vertices {n : ℕ} (τ : SimplexFacet n) :
@@ -356,13 +388,12 @@ theorem SimplexFacet.section5BoundaryFace_vertices {n : ℕ} (τ : SimplexFacet 
 
 theorem SimplexFacet.section5BoundaryFace_isSubface {n : ℕ} (τ : SimplexFacet n) :
     τ.section5BoundaryFace.IsSubfaceOf τ := by
-  intro v hv
-  exact (τ.mem_section5BoundaryVertices_iff.mp hv).1
+  simpa [SimplexFacet.section5BoundaryFace] using τ.section5PrefixFace_isSubface 1
 
 theorem SimplexTriangulation.section5BoundaryFace_isFace {n : ℕ} {T : SimplexTriangulation n}
     {τ : SimplexFacet n} (hτ : τ ∈ T.facets) :
-    T.IsFace τ.section5BoundaryFace :=
-  ⟨τ, hτ, τ.section5BoundaryFace_isSubface⟩
+    T.IsFace τ.section5BoundaryFace := by
+  simpa [SimplexFacet.section5BoundaryFace] using T.section5PrefixFace_isFace hτ 1
 
 theorem SimplexTriangulation.boundaryVertices_card_le_two {n : ℕ} [NeZero n]
     (hn : 2 ≤ n) (T : SimplexTriangulation n) {τ : SimplexFacet n} (hτ : τ ∈ T.facets) :
@@ -537,16 +568,18 @@ theorem secondCoord_lower_bound_of_mem_realization {n : ℕ} [NeZero n] (hn : 2 
   exact secondCoord_lower_bound_of_mem_convexHull hn
     (by simpa [SimplexFacet.realization, SimplexFacet.pointSet] using hxτ) hbound
 
-theorem SimplexFacet.mem_section5BoundaryFace_realization_of_mem_realization_of_mem_coordinateFace_two
+theorem
+    SimplexFacet.mem_section5PrefixFace_realization_of_mem_realization_of_mem_coordinateFace
     {n : ℕ} [NeZero n] {τ : SimplexFacet n} {x : RentSimplex n}
-    (hx : x ∈ coordinateFace (prefixRooms n 2))
+    {k : ℕ} (hx : x ∈ coordinateFace (prefixRooms n (k + 1)))
     (hxτ : ((x : RentSimplex n) : RentCoordinates n) ∈ τ.realization) :
-    ((x : RentSimplex n) : RentCoordinates n) ∈ τ.section5BoundaryFace.realization := by
+    ((x : RentSimplex n) : RentCoordinates n) ∈ (τ.section5PrefixFace k).realization := by
   classical
   let s' : Finset (RentCoordinates n) :=
     τ.vertices.image fun v : RentSimplex n => ((v : RentSimplex n) : RentCoordinates n)
   let b' : Finset (RentCoordinates n) :=
-    τ.section5BoundaryVertices.image fun v : RentSimplex n => ((v : RentSimplex n) : RentCoordinates n)
+    (τ.section5PrefixVertices k).image fun v : RentSimplex n =>
+      ((v : RentSimplex n) : RentCoordinates n)
   have hxConv : ((x : RentSimplex n) : RentCoordinates n) ∈ convexHull ℝ (s' : Set _) := by
     simpa [s'] using hxτ
   rcases (Finset.mem_convexHull (R := ℝ) (s := s')
@@ -556,13 +589,13 @@ theorem SimplexFacet.mem_section5BoundaryFace_realization_of_mem_realization_of_
   have hbSubset : b' ⊆ s' := by
     intro p hp
     rcases Finset.mem_image.mp hp with ⟨v, hv, rfl⟩
-    exact Finset.mem_image.mpr ⟨v, (τ.mem_section5BoundaryVertices_iff.mp hv).1, rfl⟩
+    exact Finset.mem_image.mpr ⟨v, (τ.mem_section5PrefixVertices_iff.mp hv).1, rfl⟩
   have hw_zero_outside :
       ∀ p ∈ s', p ∉ b' → w p = 0 := by
     intro p hp hpb
     by_contra hwp
     rcases Finset.mem_image.mp hp with ⟨v, hv, rfl⟩
-    have hvFace : v ∈ coordinateFace (prefixRooms n 2) := by
+    have hvFace : v ∈ coordinateFace (prefixRooms n (k + 1)) := by
       rw [mem_coordinateFace_iff]
       intro i hi
       have hcoord_i :
@@ -578,7 +611,8 @@ theorem SimplexFacet.mem_section5BoundaryFace_realization_of_mem_realization_of_
         exact mul_nonneg (hw0 _ (by exact Finset.mem_image.mpr ⟨u, hu, rfl⟩)) (u.2.1 i)
       have hterms := (Finset.sum_eq_zero_iff_of_nonneg hnonneg).mp hcoord_i
       exact (mul_eq_zero.mp (hterms _ hp)).resolve_left hwp
-    exact hpb <| Finset.mem_image.mpr ⟨v, τ.mem_section5BoundaryVertices_iff.mpr ⟨hv, hvFace⟩, rfl⟩
+    exact hpb <| Finset.mem_image.mpr
+      ⟨v, τ.mem_section5PrefixVertices_iff.mpr ⟨hv, hvFace⟩, rfl⟩
   have hw0b : ∀ p ∈ b', 0 ≤ w p := by
     intro p hp
     exact hw0 _ (hbSubset hp)
@@ -602,8 +636,18 @@ theorem SimplexFacet.mem_section5BoundaryFace_realization_of_mem_realization_of_
           simp [hw_zero_outside p hp hpb])
       _ = ((x : RentSimplex n) : RentCoordinates n) := by
         simpa using hcenter
-  rw [SimplexFacet.section5BoundaryFace, SimplexFacet.realization, SimplexFacet.pointSet]
+  rw [SimplexFacet.section5PrefixFace, SimplexFacet.realization, SimplexFacet.pointSet]
   simpa [b'] using hxBoundary
+
+theorem
+    SimplexFacet.mem_section5BoundaryFace_realization_of_mem_realization_of_mem_coordinateFace_two
+    {n : ℕ} [NeZero n] {τ : SimplexFacet n} {x : RentSimplex n}
+    (hx : x ∈ coordinateFace (prefixRooms n 2))
+    (hxτ : ((x : RentSimplex n) : RentCoordinates n) ∈ τ.realization) :
+    ((x : RentSimplex n) : RentCoordinates n) ∈ τ.section5BoundaryFace.realization := by
+  simpa [SimplexFacet.section5BoundaryFace] using
+    (τ.mem_section5PrefixFace_realization_of_mem_realization_of_mem_coordinateFace
+      (k := 1) hx hxτ)
 
 theorem section5SecondVertex_ne_start {n : ℕ} [NeZero n] (hn : 2 ≤ n) :
     section5SecondVertex n hn ≠ section5StartVertex n := by
@@ -654,9 +698,13 @@ def section5StartSegmentMidpoint {n : ℕ} [NeZero n] (v : RentSimplex n) : Rent
   have hs : Convex ℝ (scaledSimplex 1 n) := by
     simpa [scaledSimplex, RentSimplex] using (convex_stdSimplex ℝ (RoomIndex n))
   have hstartSimplex : (section5StartVertex n : RentCoordinates n) ∈ scaledSimplex 1 n := by
-    simpa [RentSimplex, scaledSimplex] using (section5StartVertex n).2
+    refine ⟨(section5StartVertex n).2.1, ?_⟩
+    convert (section5StartVertex n).2.2 using 1
+    simp
   have hvSimplex : (v : RentCoordinates n) ∈ scaledSimplex 1 n := by
-    simpa [RentSimplex, scaledSimplex] using v.2
+    refine ⟨v.2.1, ?_⟩
+    convert v.2.2 using 1
+    simp
   have hmidSimplex :
       (AffineMap.lineMap (section5StartVertex n : RentCoordinates n)
         (v : RentCoordinates n) ((1 : ℝ) / 2)) ∈ scaledSimplex 1 n := by
@@ -733,7 +781,7 @@ theorem section5StartSegmentMidpoint_ne_start {n : ℕ} [NeZero n] (hn : 2 ≤ n
   rw [hmid] at hmidPos
   linarith
 
-theorem SimplexTriangulation.section5StartVertex_mem_boundaryFace_of_midpoint_realization_of_minSecondCoord
+theorem SimplexTriangulation.section5StartVertex_mem_boundaryFace_of_midpoint_realization
     {n : ℕ} [NeZero n] (hn : 2 ≤ n) (T : SimplexTriangulation n)
     {τ : SimplexFacet n} (hτ : τ ∈ T.facets) {v : RentSimplex n}
     (hvFace : v ∈ coordinateFace (prefixRooms n 2))
@@ -1629,7 +1677,7 @@ theorem section5StartComponent_existsLevelOneSuccessor_of_faceRespecting {n : �
     exact τ.mem_section5BoundaryFace_realization_of_mem_realization_of_mem_coordinateFace_two
       hmFace hmτ
   have hstartMem : section5StartVertex n ∈ τ.section5BoundaryFace.vertices := by
-    exact T.section5StartVertex_mem_boundaryFace_of_midpoint_realization_of_minSecondCoord
+    exact T.section5StartVertex_mem_boundaryFace_of_midpoint_realization
       hn hτ hvFace hvNe hmin (by simpa [m] using hmBoundary)
   rcases exists_nonstart_boundary_vertex_of_mem_convexHull hn hmFace hmNe
       (by simpa [SimplexFacet.realization, SimplexFacet.pointSet, m] using hmBoundary) with

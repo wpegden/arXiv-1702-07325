@@ -144,24 +144,29 @@
   `face_intersection`, and now an actual midpoint/minimal-second-coordinate existence argument
   showing some induced boundary face on `[e_1,e_2]` gives a genuine level-1 cell through
   `e_1`. As a result, the unique boundary successor and start-degree-one packages are now
-  available unconditionally under face preservation plus `2 ≤ n`, and the remaining Section 5
-  reduction is collapsed to the two local-degree hypotheses needed to finish the endpoint
-  argument.
+  available unconditionally under face preservation plus `2 ≤ n`. The induced-face API has also
+  now been generalized from the special edge `[e_1,e_2]` to arbitrary prefix faces
+  `conv{e_1, ..., e_{k+1}}`, including induced realizations for points already lying in those
+  coordinate faces, so the next degree arguments can be formulated without hard-coding `k = 1`.
+  The remaining Section 5 reduction is therefore collapsed to the two local-degree hypotheses
+  needed to finish the endpoint argument.
 - Next local objective:
   discharge `Section5SegmentGeometry` from the actual Section 5 geometry:
   prove that every graph node in the actual start component has at most two neighbors while every
   non-start degree-one node is a barycenter-hitting endpoint, all under the paper's generic
-  segment-intersection assumptions. The start-boundary entrance geometry is now complete:
-  `section5StartNode` is concrete, `e_1 ↦ b_1`, the first boundary edge through `e_1` exists, and
-  the level-1 successor/degree-one data are now packaged directly from face preservation.
+  segment-intersection assumptions. The start-boundary entrance geometry is now complete and the
+  prefix-face infrastructure is no longer tied to the first boundary edge, so the remaining work
+  should proceed by showing that the segment `[b_k,b_{k+1}]` can meet a `k`-face in at most two
+  induced prefix subfaces and in exactly one only when a barycenter endpoint is hit.
 - Current structural blocker:
-  the present `SimplexTriangulation` wrapper does not yet expose the induced simplicial
-  subdivision of the prefix faces, especially the boundary edge `[e_1,e_2]`, and it also does
-  not formalize the perturbation/genericity argument that makes the barycenter-chain preimage a
-  finite 1-dimensional cell complex. The boundary-edge existence/uniqueness entrance step is now
-  complete, so the immediate blocker is no longer on `[e_1,e_2]` itself. The remaining work is to
-  express enough local geometry of the barycenter-chain preimage to prove degree-at-most-two and
-  non-start endpoint lemmas on the actual start component.
+  the present `SimplexTriangulation` wrapper now exposes induced prefix faces and their induced
+  realizations, but it still does not expose the full simplicial-subdivision combinatorics of
+  how the barycenter chain meets those induced faces, and it also does not formalize the
+  perturbation/genericity argument that makes the barycenter-chain preimage a finite
+  1-dimensional cell complex. The boundary-edge existence/uniqueness entrance step is now
+  complete, so the immediate blocker is no longer on `[e_1,e_2]` itself. The remaining work is
+  to express enough local geometry of the barycenter-chain preimage to prove degree-at-most-two
+  and non-start endpoint lemmas on the actual start component.
 - First prove the barycenter-specialized version if that is the easiest entry point.
 - Then generalize to arbitrary interior targets if Section 6 needs it.
 - If full surjectivity is still awkward, keep the theorem in the "target in interior" form first; that already covers the barycenter and the interior `y` used in the first Section 6 theorem.
