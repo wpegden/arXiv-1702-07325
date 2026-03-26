@@ -37,7 +37,8 @@
 - [x] Prove the first concrete one-complex fragment on the real start component: any level-0 node is the start node, so any lower neighbor of a level-1 node is uniquely the start vertex.
 - [x] Add the prefix-face affine-span infrastructure for the next uniqueness step: define the finite set `prefixVertexPoints`, prove every point of `coordinateFace (prefixRooms n k)` lies in its convex hull and affine span, and specialize that fact to Section 5 graph-node vertices.
 - [ ] Prove the actual `Section5OneComplexGeometry` axioms from the manuscript's generic segment-intersection picture on the barycenter-chain preimage.
-- [ ] Use the new `prefixVertexPoints` affine-span lemmas together with facet affine independence to bound the number of lower-face vertices inside a higher-level Section 5 cell, and turn that bound into concrete lower/upper continuation uniqueness statements.
+- [x] Use the `prefixVertexPoints` affine-span lemmas together with facet affine independence to bound the number of lower-face vertices inside a higher-level Section 5 cell, and use that bound to prove concrete lower-continuation uniqueness on the real start component.
+- [ ] Finish the continuation geometry by proving the remaining upper-continuation uniqueness and no-upper-neighbor endpoint statements from actual simplex-image segment intersections.
 - [ ] Discharge `Section5SegmentGeometry` from actual Section 5 lemmas on the barycenter-chain preimage by combining the canonical start-successor theorem with the new one-complex geometry.
 
 ## Completed

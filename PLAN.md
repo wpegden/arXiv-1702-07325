@@ -170,16 +170,24 @@
   the first `k` standard simplex vertices, and every Section 5 graph-node vertex inherits this
   affine-span membership at level `u.level + 1`. The intended next use is to combine these span
   lemmas with `SimplexTriangulation.facet_affineIndependent` to bound how many lower-prefix
-  vertices can occur in one higher-level cell, giving the missing uniqueness of lower and upper
-  continuation.
+  vertices can occur in one higher-level cell. That affine/cardinality step is now carried out:
+  `Section5Path.lean` defines `section5LowerPrefixVertices`, proves
+  `SimplexTriangulation.card_le_prefixVertexPoints_of_subset_coordinateFace`,
+  upgrades it to `IsSection5GraphNode.card_lowerPrefixVertices_le`, and then shows any actual
+  lower continuation `u -> v` must satisfy
+  `u.cell.vertices = section5LowerPrefixVertices v`. As a consequence,
+  `section5StartComponentGraph_lower_neighbor_unique` is now proved on the real start component
+  without assuming any genericity package. The remaining local geometry is therefore the upper
+  continuation uniqueness and the endpoint rule for nodes with no higher continuation.
 - Current structural blocker:
   the present `SimplexTriangulation` wrapper does not yet expose the induced simplicial
   subdivision of the prefix faces, especially the boundary edge `[e_1,e_2]`, and it also does
   not formalize the perturbation/genericity argument that makes the barycenter-chain preimage a
   finite 1-dimensional cell complex. The start-successor existence claim has now been recovered
   directly from boundary-edge geometry, and the residual local graph obligations have been reduced
-  to `Section5OneComplexGeometry`; one of the two missing upgrades is still needed to prove that
-  structure from the actual Section 5 geometry rather than assume it.
+  to the remaining fields of `Section5OneComplexGeometry`; one of the two missing upgrades is
+  still needed to prove upper continuation uniqueness and the no-upper-neighbor endpoint rule from
+  the actual Section 5 geometry rather than assume them.
 - First prove the barycenter-specialized version if that is the easiest entry point.
 - Then generalize to arbitrary interior targets if Section 6 needs it.
 - If full surjectivity is still awkward, keep the theorem in the "target in interior" form first; that already covers the barycenter and the interior `y` used in the first Section 6 theorem.
