@@ -110,7 +110,12 @@
   ambient facets, lying in the upper prefix face but outside the lower one, the two upper Section 5
   cells must already share the same extra vertex and hence coincide. So the remaining right-side
   issue is now exactly the construction of that overlap point, not the lower-face span computation
-  or the common-vertex extraction step.
+  or the common-vertex extraction step. The latest Lean theorem sharpens this one more step:
+  the extra vertex of one upper step has an affine-combination expansion over the other upper cell
+  with strictly positive coefficient on the other step's extra vertex. So the only missing
+  right-side geometry is the small-parameter convexity argument that mixes those affine weights
+  with a source-cell interior barycentric vector while keeping all merged source coefficients
+  nonnegative, thereby creating the required overlap point beyond the lower prefix face.
 - Section 5, current formalization status: this remaining manuscript sentence is now represented directly by the support-layer structure `Section5BoundarySegmentGenericity`. That package is already sufficient, together with the canonical start-successor theorem, to derive the paper-facing Section 5 target-facet conclusion; the unresolved work is therefore the actual geometric proof of `Section5BoundarySegmentGenericity`, not any further graph-theoretic packaging.
 - Section 5, current proof boundary: the Lean development now also has the more literal step-level perturbation package `Section5PerturbationGenericity`, whose fields say that a non-start cell is entered from a lower face, has at most one upper continuation as a `Section5Step`, and if there is no such continuation then it already contains the barycenter. This matches the manuscript's segment-intersection language more closely than the older neighbor-cardinality packaging, so the remaining work is best understood as proving `Section5PerturbationGenericity` from the paper's genericity/perturbation claim.
 - Section 5, interface status after the latest cleanup: the step-level and boundary-segment

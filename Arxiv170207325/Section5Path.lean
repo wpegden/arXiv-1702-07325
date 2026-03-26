@@ -439,6 +439,33 @@ theorem exists_section5HitParam_of_mem_ambientCoordinateFace_succ_of_lineMap_eq
     exact hline'.symm.trans hline
   simpa using (eq_right_of_lineMap_eq_lineMap_left hc hsame).symm
 
+theorem mem_coordinateFace_prefixRooms_iff_apply_level_eq_zero_of_mem_succ {n k : ℕ}
+    (hk : k + 1 ≤ n) {x : RentSimplex n}
+    (hx : x ∈ coordinateFace (prefixRooms n (k + 1))) :
+    x ∈ coordinateFace (prefixRooms n k) ↔
+      x ⟨k, lt_of_lt_of_le (Nat.lt_succ_self k) hk⟩ = 0 := by
+  let ik : RoomIndex n := ⟨k, lt_of_lt_of_le (Nat.lt_succ_self k) hk⟩
+  constructor
+  · intro hxk
+    exact (mem_coordinateFace_iff.mp hxk) ik (by simp [ik, mem_prefixRooms_iff])
+  · intro hxik
+    rw [mem_coordinateFace_iff]
+    intro j hj
+    by_cases hji : j = ik
+    · simpa [hji] using hxik
+    · exact (mem_coordinateFace_iff.mp hx) j (by
+        have hjnot : ¬ j.1 < k := by
+          simpa [mem_prefixRooms_iff] using hj
+        have hjge : k ≤ j.1 := by
+          omega
+        have hjne : j.1 ≠ k := by
+          intro hEq
+          apply hji
+          exact Fin.ext hEq
+        have hsucc : ¬ j.1 < k + 1 := by
+          omega
+        simpa [mem_prefixRooms_iff] using hsucc)
+
 theorem eq_hitParamLeft_of_convexCombination {t t' s c : ℝ}
     (hc0 : 0 < c) (hc1 : c < 1)
     (ht' : t ≤ t') (hs : t ≤ s)
@@ -2521,6 +2548,26 @@ theorem section5Step_vertex_not_mem_source_not_mem_coordinateFace {n : ℕ}
   rw [← section5Step_vertices_eq_lowerPrefixVertices hv hu huv] at ha_lower
   exact ha_not ha_lower
 
+theorem section5Step_vertex_not_mem_source_apply_level_pos {n : ℕ}
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n} {v u : Section5Node n}
+    (hv : IsSection5GraphNode T f v) (hu : IsSection5GraphNode T f u)
+    (huv : Section5Step f v u) {a : RentSimplex n}
+    (ha : a ∈ u.cell.vertices) (ha_not : a ∉ v.cell.vertices) :
+    0 <
+      ((a : RentSimplex n) : RentCoordinates n)
+        ⟨u.level, lt_of_lt_of_le (Nat.lt_succ_self u.level) hu.level_le⟩ := by
+  let ik : RoomIndex n := ⟨u.level, lt_of_lt_of_le (Nat.lt_succ_self u.level) hu.level_le⟩
+  have ha_upper : a ∈ coordinateFace (prefixRooms n (u.level + 1)) := hu.prefix_vertices ha
+  have ha_not_lower : a ∉ coordinateFace (prefixRooms n u.level) :=
+    section5Step_vertex_not_mem_source_not_mem_coordinateFace hv hu huv ha ha_not
+  have ha_nonzero :
+      ((a : RentSimplex n) : RentCoordinates n) ik ≠ 0 := by
+    intro hzero
+    apply ha_not_lower
+    exact (mem_coordinateFace_prefixRooms_iff_apply_level_eq_zero_of_mem_succ
+      hu.level_le ha_upper).2 hzero
+  exact lt_of_le_of_ne (a.2.1 ik) (Ne.symm ha_nonzero)
+
 /-- The vertices of one facet that lie in the prefix face `coordinateFace (prefixRooms n k)`. -/
 def facetPrefixVertices {n : ℕ} (τ : SimplexFacet n) (k : ℕ) : Finset (RentSimplex n) := by
   classical
@@ -2633,6 +2680,100 @@ theorem section5Step_same_source_eq_of_commonFace_overlap {n : ℕ} [NeZero n]
     _ = w.cell.vertices := by
       symm
       exact section5Step_cell_vertices_eq_insert_vertex hv hw hvw hc_w hc_not_v
+
+theorem section5Step_same_source_exists_affineCombination_of_extra_vertex
+    {n : ℕ} {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    {v u w : Section5Node n}
+    (hv : IsSection5GraphNode T f v) (hu : IsSection5GraphNode T f u)
+    (hw : IsSection5GraphNode T f w)
+    (huv : Section5Step f v u) (hvw : Section5Step f v w)
+    {a b : RentSimplex n}
+    (ha_u : a ∈ u.cell.vertices) (ha_not_v : a ∉ v.cell.vertices)
+    (hb_w : b ∈ w.cell.vertices) (hb_not_v : b ∉ v.cell.vertices) :
+    ∃ α : w.cell.vertices → ℝ,
+      (∑ i, α i = 1) ∧
+      ((a : RentSimplex n) : RentCoordinates n) =
+        Finset.univ.affineCombination ℝ
+          (fun x : w.cell.vertices => ((x : RentSimplex n) : RentCoordinates n)) α ∧
+      0 < α ⟨b, hb_w⟩ := by
+  classical
+  let p : w.cell.vertices → RentCoordinates n := fun x => ((x : RentSimplex n) : RentCoordinates n)
+  have hsame_level : u.level = w.level := by
+    have huv_level : v.level + 1 = u.level := huv.1
+    have hvw_level : v.level + 1 = w.level := hvw.1
+    omega
+  have ha_u_face : a ∈ coordinateFace (prefixRooms n (u.level + 1)) := hu.prefix_vertices ha_u
+  have ha_w_face : a ∈ coordinateFace (prefixRooms n (w.level + 1)) := by
+    simpa [hsame_level] using ha_u_face
+  have hp_range :
+      Set.range p =
+        (((w.cell.vertices.map (simplexCoordEmbedding n)) : Finset (RentCoordinates n)) :
+          Set (RentCoordinates n)) := by
+    ext y
+    constructor
+    · rintro ⟨x, rfl⟩
+      exact Finset.mem_map.mpr ⟨(x : RentSimplex n), x.2, rfl⟩
+    · intro hy
+      rcases Finset.mem_map.mp hy with ⟨x, hx, rfl⟩
+      exact ⟨⟨x, hx⟩, rfl⟩
+  obtain ⟨α, hαsum, hαcomb⟩ :=
+    eq_affineCombination_of_mem_affineSpan_of_fintype
+      (p := p) (by
+        rw [hp_range]
+        exact hw.mem_affineSpan_cell_vertices_of_mem_coordinateFace ha_w_face)
+  let ib : w.cell.vertices := ⟨b, hb_w⟩
+  let ik : RoomIndex n := ⟨u.level, lt_of_lt_of_le (Nat.lt_succ_self u.level) hu.level_le⟩
+  have hik_notin_lower : ik ∉ prefixRooms n u.level := by
+    simp [ik, mem_prefixRooms_iff]
+  have hb_insert : w.cell.vertices = insert b v.cell.vertices :=
+    section5Step_cell_vertices_eq_insert_vertex hv hw hvw hb_w hb_not_v
+  have hsum_eval :
+      ∑ i : w.cell.vertices, α i * (p i) ik =
+        α ib * ((b : RentSimplex n) : RentCoordinates n) ik := by
+    have hzero :
+        ∀ j : w.cell.vertices, j ≠ ib → α j * (p j) ik = 0 := by
+      intro j hj
+      have hj_cases : (j : RentSimplex n) = b ∨ (j : RentSimplex n) ∈ v.cell.vertices := by
+        have hjw : (j : RentSimplex n) ∈ w.cell.vertices := j.2
+        have hjw' : (j : RentSimplex n) ∈ insert b v.cell.vertices := by
+          simpa [hb_insert] using hjw
+        simpa using hjw'
+      rcases hj_cases with rfl | hj_v
+      · exfalso
+        exact hj (Subtype.ext rfl)
+      · have hj_face : (j : RentSimplex n) ∈ coordinateFace (prefixRooms n u.level) := by
+          have hj_face' : (j : RentSimplex n) ∈ coordinateFace (prefixRooms n (v.level + 1)) :=
+            hv.prefix_vertices hj_v
+          simpa [← huv.1] using hj_face'
+        have hj_zero : ((j : RentSimplex n) : RentCoordinates n) ik = 0 :=
+          (mem_coordinateFace_iff.mp hj_face) ik hik_notin_lower
+        simp [p, hj_zero]
+    simpa [ib, p] using (Fintype.sum_eq_single ib hzero)
+  have hαcoord :
+      ((a : RentSimplex n) : RentCoordinates n) ik =
+        α ib * ((b : RentSimplex n) : RentCoordinates n) ik := by
+    calc
+      ((a : RentSimplex n) : RentCoordinates n) ik =
+          (∑ i : w.cell.vertices, α i • p i) ik := by
+            rw [hαcomb]
+            rw [affineCombination_eq_centerMass hαsum, Finset.centerMass_eq_of_sum_1 _ _ hαsum]
+      _ = ∑ i : w.cell.vertices, α i * (p i) ik := by
+            simp [Pi.smul_apply]
+      _ = α ib * ((b : RentSimplex n) : RentCoordinates n) ik := hsum_eval
+  have ha_ik_pos :
+      0 < ((a : RentSimplex n) : RentCoordinates n) ik :=
+    section5Step_vertex_not_mem_source_apply_level_pos hv hu huv ha_u ha_not_v
+  have hb_ik_pos :
+      0 < ((b : RentSimplex n) : RentCoordinates n) ik := by
+    simpa [ik, hsame_level] using
+      section5Step_vertex_not_mem_source_apply_level_pos hv hw hvw hb_w hb_not_v
+  have hαb_pos :
+      0 < α ib := by
+    have hprod_pos :
+        0 < α ib * ((b : RentSimplex n) : RentCoordinates n) ik := by
+      simpa [hαcoord] using ha_ik_pos
+    exact (mul_pos_iff_of_pos_right hb_ik_pos).mp hprod_pos
+  exact ⟨α, hαsum, hαcomb, hαb_pos⟩
 
 theorem section5Step_same_source_cell_vertices_eq_of_subfaces_same_facet {n : ℕ}
     {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n} {v u w : Section5Node n}

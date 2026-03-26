@@ -420,6 +420,16 @@
   lower predecessor. So the unresolved lower-side work is now precisely that codimension-one
   cardinality upgrade for minimal exact left-endpoint hits; the unresolved upper-side work is the
   corresponding uniqueness / endpoint extraction from minimal exact right-endpoint hits.
+- The right-side uniqueness proof is now pinned down more concretely than the older
+  common-facet / `facetPrefixVertices` reductions. `Section5Path.lean` already proves:
+  every positive-level source cell spans the full affine span of the lower prefix face; any
+  overlap point in the common-face realization of two upper ambient facets, lying in the upper
+  prefix face but outside the lower one, forces the two upper steps to be equal; and the extra
+  vertex of one upper step has an affine-combination expansion over the other upper cell with
+  strictly positive coefficient on that other step's extra vertex. So the only remaining live
+  positive-level `upper_step_unique` task is the explicit small-parameter convexity argument that
+  mixes those affine weights with a source-cell interior barycentric vector to keep all merged
+  source weights nonnegative and thereby produce the required overlap point.
 - First prove the barycenter-specialized version if that is the easiest entry point.
 - Then generalize to arbitrary interior targets if Section 6 needs it.
 - If full surjectivity is still awkward, keep the theorem in the "target in interior" form first; that already covers the barycenter and the interior `y` used in the first Section 6 theorem.
