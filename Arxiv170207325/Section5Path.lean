@@ -282,6 +282,84 @@ theorem eq_prefixBarycenter_of_mem_prefixBarycenterSegment_of_mem_lowerAmbientFa
     _ = prefixBarycenter n k := by
           simp [ht0]
 
+/-- Collapse map for the segment `[b_k,b_{k+1}]`: it remembers only coordinate differences inside
+the first `k` rooms and the coordinates strictly beyond room `k`, so the whole segment collapses
+to a point. -/
+def prefixSegmentCollapseMap (n k : ℕ) [NeZero n] :
+    RentCoordinates n →ₗ[ℝ] RentCoordinates n where
+  toFun := fun x i =>
+    if hi : i.1 < k then x i - x (0 : RoomIndex n)
+    else if i.1 = k then 0
+    else x i
+  map_add' x y := by
+    ext i
+    by_cases hi : i.1 < k
+    · simp [hi, sub_eq_add_neg, add_comm, add_left_comm, add_assoc]
+    · by_cases hik : i.1 = k
+      · simp [hik]
+      · simp [hi, hik]
+  map_smul' c x := by
+    ext i
+    by_cases hi : i.1 < k
+    · simp [hi]
+      ring
+    · by_cases hik : i.1 = k
+      · simp [hik]
+      · simp [hi, hik]
+
+@[simp]
+theorem prefixSegmentCollapseMap_apply_of_lt {n k : ℕ} [NeZero n]
+    {x : RentCoordinates n} {i : RoomIndex n} (hi : i.1 < k) :
+    prefixSegmentCollapseMap n k x i = x i - x (0 : RoomIndex n) := by
+  simp [prefixSegmentCollapseMap, hi]
+
+@[simp]
+theorem prefixSegmentCollapseMap_apply_of_eq {n k : ℕ} [NeZero n]
+    {x : RentCoordinates n} {i : RoomIndex n} (hi : i.1 = k) :
+    prefixSegmentCollapseMap n k x i = 0 := by
+  by_cases hik : i.1 < k
+  · omega
+  · simp [prefixSegmentCollapseMap, hi]
+
+@[simp]
+theorem prefixSegmentCollapseMap_apply_of_gt {n k : ℕ} [NeZero n]
+    {x : RentCoordinates n} {i : RoomIndex n} (hi : k < i.1) :
+    prefixSegmentCollapseMap n k x i = x i := by
+  have hik : ¬ i.1 < k := by omega
+  have hineq : i.1 ≠ k := by omega
+  simp [prefixSegmentCollapseMap, hik, hineq]
+
+@[simp]
+theorem prefixSegmentCollapseMap_prefixBarycenter {n k : ℕ} [NeZero n] :
+    prefixSegmentCollapseMap n k (prefixBarycenter n k) = 0 := by
+  ext i
+  by_cases hi : i.1 < k
+  · have hkpos : 0 < k := Nat.zero_lt_of_lt hi
+    simp [prefixSegmentCollapseMap, prefixBarycenter, hi, hkpos]
+  · by_cases hik : i.1 = k
+    · simp [prefixSegmentCollapseMap, hik]
+    · simp [prefixSegmentCollapseMap, prefixBarycenter, hi, hik]
+
+@[simp]
+theorem prefixSegmentCollapseMap_prefixBarycenter_succ {n k : ℕ} [NeZero n] :
+    prefixSegmentCollapseMap n k (prefixBarycenter n (k + 1)) = 0 := by
+  ext i
+  by_cases hi : i.1 < k
+  · have hi' : i.1 < k + 1 := Nat.lt_trans hi (Nat.lt_succ_self k)
+    have hk1pos : 0 < k + 1 := Nat.succ_pos k
+    simp [prefixSegmentCollapseMap, prefixBarycenter, hi, hi', hk1pos]
+  · by_cases hik : i.1 = k
+    · simp [prefixSegmentCollapseMap, hik]
+    · have hik' : ¬ i.1 < k + 1 := by omega
+      simp [prefixSegmentCollapseMap, prefixBarycenter, hi, hik, hik']
+
+@[simp]
+theorem prefixSegmentCollapseMap_direction_eq_zero {n k : ℕ} [NeZero n] :
+    prefixSegmentCollapseMap n k
+      (prefixBarycenter n (k + 1) - prefixBarycenter n k) = 0 := by
+  rw [LinearMap.map_sub]
+  simp
+
 /-- The first barycenter `b_1`, viewed as a simplex vertex, is the Section 5 start point. -/
 def section5StartVertex (n : ℕ) [NeZero n] : RentSimplex n :=
   ⟨prefixBarycenter n 1, by
@@ -1203,6 +1281,45 @@ theorem
     T.faceHitWitnessOfFacetImageContains hu.isFace hpa hyHull
   exact ⟨y, hySeg, hw,
     hw.eq_under_segmentCollapse_of_mem_prefixBarycenterSegment L hL hySeg⟩
+
+theorem
+    IsSection5GraphNode.exists_faceHitWitness_eq_under_prefixSegmentCollapse_of_piecewiseAffineOn
+    {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    {u : Section5Node n} (hu : IsSection5GraphNode T f u) (hpa : IsPiecewiseAffineOn T f) :
+    ∃ y, y ∈ prefixBarycenterSegment n u.level ∧
+      ∃ hw : FaceHitWitness T f u.cell y,
+        prefixSegmentCollapseMap n u.level (hw.affineMap hw.point) = 0 := by
+  simpa using
+    hu.exists_faceHitWitness_eq_under_segmentCollapse_of_piecewiseAffineOn hpa
+      (prefixSegmentCollapseMap n u.level) (prefixSegmentCollapseMap_direction_eq_zero (n := n)
+        (k := u.level))
+
+theorem IsSection5GraphNode.cell_eq_prefixVertices_of_incidentFacet {n : ℕ}
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n} {u : Section5Node n}
+    (hu : IsSection5GraphNode T f u) {τ : SimplexFacet n} (hτ : τ ∈ T.facets)
+    (huτ : u.cell.IsSubfaceOf τ) :
+    u.cell.vertices = τ.section5PrefixVertices u.level := by
+  have hsub : u.cell.vertices ⊆ τ.section5PrefixVertices u.level := by
+    intro v hv
+    refine τ.mem_section5PrefixVertices_iff.mpr ⟨huτ hv, ?_⟩
+    simpa using hu.prefix_vertices hv
+  have hτcard :
+      (τ.section5PrefixVertices u.level).card ≤ u.level + 1 :=
+    T.prefixVertices_card_le_of_isFace (T.facet_isFace hτ) hu.level_le
+  have hτcard' :
+      (τ.section5PrefixVertices u.level).card ≤ u.cell.vertices.card := by
+    simpa [hu.card_eq] using hτcard
+  exact Finset.eq_of_subset_of_card_le hsub hτcard'
+
+theorem IsSection5GraphNode.cell_eq_prefixFace_of_incidentFacet {n : ℕ}
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n} {u : Section5Node n}
+    (hu : IsSection5GraphNode T f u) {τ : SimplexFacet n} (hτ : τ ∈ T.facets)
+    (huτ : u.cell.IsSubfaceOf τ) :
+    u.cell = τ.section5PrefixFace u.level := by
+  cases huCell : u.cell with
+  | mk uverts =>
+    simpa [huCell, SimplexFacet.section5PrefixFace] using
+      hu.cell_eq_prefixVertices_of_incidentFacet hτ huτ
 
 theorem IsSection5GraphNode.levelOne_cell_eq_boundaryVertices_of_incidentFacet {n : ℕ}
     [NeZero n] (hn : 2 ≤ n) {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}

@@ -166,7 +166,11 @@
   `AffineMap.lineMap`, any linear map annihilating the segment direction is constant on it,
   meeting the smaller ambient prefix face forces the lower endpoint, and
   `IsSection5GraphNode.exists_faceHitWitness_eq_under_segmentCollapse_of_piecewiseAffineOn`
-  packages a real `FaceHitWitness` already lying in such a collapsed fiber.
+  packages a real `FaceHitWitness` already lying in such a collapsed fiber. The collapse map is
+  now no longer abstract either: `prefixSegmentCollapseMap n k` explicitly kills the direction of
+  `prefixBarycenterSegment n k`, sends both endpoints to `0`, and the node cell inside any
+  incident facet is now identified with the honest induced prefix face via
+  `IsSection5GraphNode.cell_eq_prefixFace_of_incidentFacet`.
 - Next local objective:
   discharge `Section5SegmentGeometry` from the actual Section 5 geometry:
   prove that every graph node in the actual start component has at most two neighbors while every
@@ -176,9 +180,9 @@
   lower-neighbor uniqueness and lower-neighbor existence sides are now formal. The remaining work
   should therefore proceed by proving the facet-local collapsed-fiber theorem behind
   `section5LocalOneComplexGeometry_of_uniqueUpperOrEndpoint`: for a start-component node `v`,
-  apply `IsSection5GraphNode.exists_faceHitWitness_eq_under_segmentCollapse_of_piecewiseAffineOn`
-  to a linear map collapsing the direction of `prefixBarycenterSegment n v.level`, then prove
-  that the corresponding fiber inside the incident prefix face has at most one upper
+  apply `IsSection5GraphNode.exists_faceHitWitness_eq_under_prefixSegmentCollapse_of_piecewiseAffineOn`
+  and `IsSection5GraphNode.cell_eq_prefixFace_of_incidentFacet`, then prove that the zero fiber of
+  `prefixSegmentCollapseMap n v.level ∘ g` inside the induced prefix face has at most one upper
   codimension-one continuation and that the no-upper-continuation case already forces the
   barycenter endpoint.
 - Current structural blocker:
@@ -197,9 +201,9 @@
   image witness, and such witnesses agree on shared subfaces. So the unresolved issue is truly the
   local continuation/genericity of the chain preimage, not the existence of pointwise witnesses.
   The new collapsed-segment lemmas sharpen this further: the missing theorem is now specifically a
-  facet-local statement that the collapsed fiber containing a chain-hit witness behaves like a
-  1-dimensional slice of the prefix face, with at most one upper codimension-one exit and an
-  empty upper exit set forcing the barycenter endpoint.
+  facet-local statement that the zero fiber of the explicit map `prefixSegmentCollapseMap n k ∘ g`
+  inside an induced prefix face behaves like a 1-dimensional slice, with at most one upper
+  codimension-one exit and an empty upper exit set forcing the barycenter endpoint.
 - First prove the barycenter-specialized version if that is the easiest entry point.
 - Then generalize to arbitrary interior targets if Section 6 needs it.
 - If full surjectivity is still awkward, keep the theorem in the "target in interior" form first; that already covers the barycenter and the interior `y` used in the first Section 6 theorem.
