@@ -846,6 +846,67 @@ theorem IsSection5GraphNode.level_eq_card_pred {n : ℕ} {T : SimplexTriangulati
   rw [hu.card_eq]
   omega
 
+/-- The nonempty subfaces of one Section 5 cell whose image still meets the current barycenter
+segment. -/
+def section5SegmentSubfaces {n : ℕ} (u : Section5Node n) (f : SelfMapOnRentSimplex n) :
+    Finset (SimplexFacet n) := by
+  classical
+  exact ((u.cell.vertices.powerset.filter fun s =>
+      s.Nonempty ∧ (FacetImageHull f (⟨s⟩ : SimplexFacet n) ∩ prefixBarycenterSegment n u.level).Nonempty)
+    ).image fun s => (⟨s⟩ : SimplexFacet n)
+
+theorem mem_section5SegmentSubfaces_iff {n : ℕ} {u : Section5Node n} {f : SelfMapOnRentSimplex n}
+    {τ : SimplexFacet n} :
+    τ ∈ section5SegmentSubfaces u f ↔
+      τ.IsSubfaceOf u.cell ∧ τ.vertices.Nonempty ∧
+        (FacetImageHull f τ ∩ prefixBarycenterSegment n u.level).Nonempty := by
+  classical
+  constructor
+  · intro hτ
+    rcases Finset.mem_image.mp hτ with ⟨s, hs, hs_eq⟩
+    have hs_vertices : s = τ.vertices := by
+      simpa using congrArg SimplexFacet.vertices hs_eq
+    subst hs_vertices
+    refine ⟨(Finset.mem_powerset.mp (Finset.mem_filter.mp hs).1), ?_, ?_⟩
+    · exact (Finset.mem_filter.mp hs).2.1
+    · exact (Finset.mem_filter.mp hs).2.2
+  · rintro ⟨hτsub, hτne, hτhit⟩
+    refine Finset.mem_image.mpr ⟨τ.vertices, ?_, by rfl⟩
+    exact Finset.mem_filter.mpr ⟨Finset.mem_powerset.mpr hτsub, hτne, hτhit⟩
+
+theorem section5SegmentSubfaces_nonempty {n : ℕ} {T : SimplexTriangulation n}
+    {f : SelfMapOnRentSimplex n} {u : Section5Node n} (hu : IsSection5GraphNode T f u) :
+    (section5SegmentSubfaces u f).Nonempty := by
+  classical
+  refine ⟨u.cell, ?_⟩
+  exact (mem_section5SegmentSubfaces_iff (u := u) (f := f) (τ := u.cell)).mpr
+    ⟨Finset.Subset.refl _, hu.cell_nonempty, hu.meets_chain⟩
+
+theorem exists_minimal_section5SegmentSubface {n : ℕ} {T : SimplexTriangulation n}
+    {f : SelfMapOnRentSimplex n} {u : Section5Node n} (hu : IsSection5GraphNode T f u) :
+    ∃ τ ∈ section5SegmentSubfaces u f,
+      ∀ σ ∈ section5SegmentSubfaces u f, τ.vertices.card ≤ σ.vertices.card := by
+  classical
+  exact Finset.exists_min_image (section5SegmentSubfaces u f) (fun τ => τ.vertices.card)
+    (section5SegmentSubfaces_nonempty hu)
+
+theorem IsPiecewiseAffineOn.exists_point_in_realization_of_mem_section5SegmentSubfaces
+    {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    (hfpl : IsPiecewiseAffineOn T f) {u : Section5Node n} (hu : IsSection5GraphNode T f u)
+    {τ : SimplexFacet n} (hτ : τ ∈ section5SegmentSubfaces u f) :
+    ∃ x : RentSimplex n, ((x : RentSimplex n) : RentCoordinates n) ∈ τ.realization ∧
+      f x ∈ prefixBarycenterSegment n u.level := by
+  rcases (mem_section5SegmentSubfaces_iff (u := u) (f := f) (τ := τ)).mp hτ with
+    ⟨hτsub, _hτne, hτhit⟩
+  have hτface : T.IsFace τ := by
+    rcases hu.isFace with ⟨σ, hσ, hσsub⟩
+    exact ⟨σ, hσ, hτsub.trans hσsub⟩
+  rcases hτhit with ⟨y, hyHull, hySeg⟩
+  rcases hfpl.exists_point_in_realization_of_facetImageContains hτface hyHull with
+    ⟨x, hx, hfx⟩
+  refine ⟨x, hx, ?_⟩
+  simpa [hfx] using hySeg
+
 theorem IsSection5GraphNode.vertex_mem_affineSpan_prefixVertexPoints {n : ℕ}
     {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n} {u : Section5Node n}
     (hu : IsSection5GraphNode T f u) {v : RentSimplex n} (hv : v ∈ u.cell.vertices) :
