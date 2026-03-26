@@ -1940,6 +1940,33 @@ structure Section5OneComplexGeometry {n : ℕ} [NeZero n]
           v.1.1.level + 1 = w.1.1.level) →
         IsSection5Endpoint T f v.1.1
 
+theorem section5OneComplexGeometry_of_remainingFields {n : ℕ} [NeZero n]
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    {hstart : IsSection5GraphNode T f (section5StartNode n)}
+    (hlower :
+      ∀ v : section5StartComponent hstart,
+        v ≠ section5StartVertexInComponent hstart →
+          ∃ u : section5StartComponent hstart,
+            (section5StartComponentGraph hstart).Adj u v ∧
+              u.1.1.level + 1 = v.1.1.level)
+    (hupper :
+      ∀ {v u w : section5StartComponent hstart},
+        (section5StartComponentGraph hstart).Adj v u →
+        v.1.1.level + 1 = u.1.1.level →
+        (section5StartComponentGraph hstart).Adj v w →
+        v.1.1.level + 1 = w.1.1.level →
+          u = w)
+    (hendpoint :
+      ∀ v : section5StartComponent hstart,
+        (¬ ∃ w : section5StartComponent hstart,
+          (section5StartComponentGraph hstart).Adj v w ∧
+            v.1.1.level + 1 = w.1.1.level) →
+          IsSection5Endpoint T f v.1.1) :
+    Section5OneComplexGeometry T f hstart := by
+  refine ⟨hlower, ?_, hupper, hendpoint⟩
+  intro u w v huv huLevel hwv hwLevel
+  exact section5StartComponentGraph_lower_neighbor_unique huv huLevel hwv hwLevel
+
 theorem Section5OneComplexGeometry.degree_le_two {n : ℕ} [NeZero n]
     {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
     {hstart : IsSection5GraphNode T f (section5StartNode n)}
