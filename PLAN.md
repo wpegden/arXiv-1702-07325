@@ -318,6 +318,12 @@
   new honest support-layer frontier is: derive `Section5CanonicalLowerEntryGenericity` directly
   from the manuscript's perturbation / segment-intersection sentence, and treat the optimizer
   route as a diagnostic backup rather than the default main line.
+  This frontier is now even sharper locally: on one graph node `u`, Lean proves
+  `Nonempty (Section5CanonicalLowerEntryData u f)` is equivalent to the canonical pair
+  `(section5LowerPrefixVertices u).card = u.level` together with
+  `FacetImageContains f (⟨section5LowerPrefixVertices u⟩ : SimplexFacet n)
+    (prefixBarycenter n u.level)`. So the remaining geometry can now be phrased entirely on the
+  canonical lower-prefix face itself, without separately carrying an explicit slice witness.
   So the remaining honest geometry on `u.cell` is now: prove that the slice reaches the lower
   prefix face, and prove that the canonical lower-prefix face has exactly `u.level` vertices.
   The older `Section5OneComplexGeometry` layer remains useful as cleanup, but it is no longer the

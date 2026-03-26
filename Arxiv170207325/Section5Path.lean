@@ -3393,6 +3393,38 @@ def Section5CanonicalLowerEntryData.toLowerEntryFaceData
     hf hfpl hu hulevel hdata.point_mem_slice.1 hdata.point_mem_coordinateFace
     hdata.point_mem_slice.2 hdata.card_eq_lowerPrefixVertices
 
+theorem section5CanonicalLowerEntryData_nonempty_iff_card_eq_and_facetImageContains_lowerPrefixVertices
+    {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    (hf : IsFaceRespecting f) (hfpl : IsPiecewiseAffineOn T f) {u : Section5Node n}
+    (hu : IsSection5GraphNode T f u) (hulevel : 0 < u.level) :
+    Nonempty (Section5CanonicalLowerEntryData u f) ↔
+      (section5LowerPrefixVertices u).card = u.level ∧
+        FacetImageContains f (⟨section5LowerPrefixVertices u⟩ : SimplexFacet n)
+          (prefixBarycenter n u.level) := by
+  constructor
+  · rintro ⟨hdata⟩
+    refine ⟨hdata.card_eq_lowerPrefixVertices, ?_⟩
+    exact
+      (hfpl.facetImageContains_section5LowerPrefixVertices_iff_exists_mem_section5CellSlice_and_mem_coordinateFace
+        hf hu hulevel).2
+        ⟨hdata.point, hdata.point_mem_slice, hdata.point_mem_coordinateFace⟩
+  · rintro ⟨hcard, hhit⟩
+    rcases
+        hfpl.exists_mem_section5CellSlice_and_mem_coordinateFace_of_facetImageContains_section5LowerPrefixVertices
+          hu hhit with
+      ⟨x, hxSlice, hxFace⟩
+    exact ⟨⟨hcard, x, hxSlice, hxFace⟩⟩
+
+theorem section5CanonicalLowerEntryData_nonempty_iff_lowerEntryFaceData_nonempty
+    {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    (hf : IsFaceRespecting f) (hfpl : IsPiecewiseAffineOn T f) {u : Section5Node n}
+    (hu : IsSection5GraphNode T f u) (hulevel : 0 < u.level) :
+    Nonempty (Section5CanonicalLowerEntryData u f) ↔
+      Nonempty (Section5LowerEntryFaceData u f) := by
+  rw [section5CanonicalLowerEntryData_nonempty_iff_card_eq_and_facetImageContains_lowerPrefixVertices
+    hf hfpl hu hulevel]
+  rw [section5LowerEntryFaceData_nonempty_iff_card_eq_and_facetImageContains_lowerPrefixVertices hu]
+
 theorem exists_section5LowerStep_of_card_eq_and_mem_realization_map_prefixBarycenter
     {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
     (hfpl : IsPiecewiseAffineOn T f) {u : Section5Node n} (hu : IsSection5GraphNode T f u)
@@ -4566,6 +4598,23 @@ def Section5CanonicalLowerEntryGenericity.toEntryFaceGenericity {n : ℕ} [NeZer
   have hv_level : 0 < v.1.1.level := section5StartComponent_pos_level_of_ne_start hv
   exact (hcanon.lower_entry_data_of_ne_start v hv).toLowerEntryFaceData
     hf hfpl hv_node hv_level
+
+def Section5EntryFaceGenericity.toCanonicalLowerEntryGenericity {n : ℕ} [NeZero n]
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    (hf : IsFaceRespecting f) (hfpl : IsPiecewiseAffineOn T f)
+    {hstart : IsSection5GraphNode T f (section5StartNode n)}
+    (hentry : Section5EntryFaceGenericity T f hstart) :
+    Section5CanonicalLowerEntryGenericity T f hstart := by
+  classical
+  refine ⟨?_, hentry.upper_step_unique, hentry.no_upper_step_is_endpoint⟩
+  intro v hv
+  have hv_node : IsSection5GraphNode T f v.1.1 := (mem_section5Nodes_iff).mp v.1.2
+  have hv_level : 0 < v.1.1.level := section5StartComponent_pos_level_of_ne_start hv
+  have hnonempty : Nonempty (Section5CanonicalLowerEntryData v.1.1 f) := by
+    rw [section5CanonicalLowerEntryData_nonempty_iff_lowerEntryFaceData_nonempty
+      hf hfpl hv_node hv_level]
+    exact ⟨hentry.lower_entry_face_of_ne_start v hv⟩
+  exact Classical.choice hnonempty
 
 theorem Section5SimplexSliceGenericity.exists_point_mem_section5CellSlice_and_mem_coordinateFace
     {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
