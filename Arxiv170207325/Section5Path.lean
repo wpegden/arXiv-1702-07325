@@ -566,6 +566,23 @@ theorem mem_coordinateFace_of_mem_ambientCoordinateFace {n : ℕ} {I : Finset (R
   rw [mem_coordinateFace_iff]
   exact coordSupport_subset_iff.mp hv.2
 
+theorem SimplexFacet.realization_subset_ambientCoordinateFace_of_vertices_mem_coordinateFace
+    {n : ℕ} {τ : SimplexFacet n} {I : Finset (RoomIndex n)}
+    (hverts : ∀ ⦃v : RentSimplex n⦄, v ∈ τ.vertices → v ∈ coordinateFace I) :
+    τ.realization ⊆ ambientCoordinateFace I := by
+  rw [SimplexFacet.realization]
+  refine convexHull_min ?_ (convex_ambientCoordinateFace I)
+  rintro y ⟨v, hv, rfl⟩
+  exact mem_ambientCoordinateFace_of_mem_coordinateFace (hverts hv)
+
+theorem SimplexFacet.mem_coordinateFace_of_mem_realization_of_vertices_mem_coordinateFace
+    {n : ℕ} {τ : SimplexFacet n} {I : Finset (RoomIndex n)} {x : RentSimplex n}
+    (hxτ : ((x : RentSimplex n) : RentCoordinates n) ∈ τ.realization)
+    (hverts : ∀ ⦃v : RentSimplex n⦄, v ∈ τ.vertices → v ∈ coordinateFace I) :
+    x ∈ coordinateFace I := by
+  exact mem_coordinateFace_of_mem_ambientCoordinateFace <|
+    τ.realization_subset_ambientCoordinateFace_of_vertices_mem_coordinateFace hverts hxτ
+
 theorem mem_coordinateFace_prefixRooms_two_of_mem_ambientCoordinateFace {n : ℕ} [NeZero n]
     {v : RentSimplex n}
     (hv : ((v : RentSimplex n) : RentCoordinates n) ∈ ambientCoordinateFace (prefixRooms n 2)) :
@@ -918,6 +935,23 @@ theorem IsPiecewiseAffineOn.facetImageContains_section5LowerPrefixVertices_of_me
   have hhit :
       FacetImageContains f (⟨section5LowerPrefixVertices u⟩ : SimplexFacet n) (f x) :=
     hfpl.facetImageContains_of_mem_realization hσFace hσreal
+  simpa [hfx] using hhit
+
+theorem IsPiecewiseAffineOn.facetImageContains_of_mem_realization_of_vertices_mem_coordinateFace
+    {n k : ℕ} [NeZero n] [NeZero k] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    (hf : IsFaceRespecting f) (hfpl : IsPiecewiseAffineOn T f) {σ : SimplexFacet n}
+    (hσ : T.IsFace σ) (hk : k + 1 ≤ n) {x : RentSimplex n}
+    (hxσ : ((x : RentSimplex n) : RentCoordinates n) ∈ σ.realization)
+    (hσface : ∀ ⦃v : RentSimplex n⦄, v ∈ σ.vertices → v ∈ coordinateFace (prefixRooms n k))
+    (hfxSeg : f x ∈ prefixBarycenterSegment n k) :
+    FacetImageContains f σ (prefixBarycenter n k) := by
+  have hxFace : x ∈ coordinateFace (prefixRooms n k) :=
+    σ.mem_coordinateFace_of_mem_realization_of_vertices_mem_coordinateFace hxσ hσface
+  have hfx : f x = prefixBarycenter n k := by
+    exact hf.eq_prefixBarycenter_of_mem_coordinateFace_of_map_mem_prefixBarycenterSegment
+      hk hxFace hfxSeg
+  have hhit : FacetImageContains f σ (f x) :=
+    hfpl.facetImageContains_of_mem_realization hσ hxσ
   simpa [hfx] using hhit
 
 theorem IsPiecewiseAffineOn.facetImageContains_section5LowerPrefixVertices_of_mem_realization_of_map_mem_segment
@@ -1342,6 +1376,63 @@ theorem exists_section5StartComponentLowerStep_of_subface_card_eq_and_facetImage
     exact Subtype.ext (Subtype.ext hu_eq_start)
   rcases exists_section5LowerStep_of_subface_card_eq_and_facetImageContains
       hu_node hulevel hτsub hτcard hτface hhit with ⟨v0, hv0, hv0_step⟩
+  let vnode : section5Nodes T f := ⟨v0, hv0.mem_section5Nodes⟩
+  have hu_reach :
+      (section5NodeGraph T f).Reachable (section5StartNodeInNodes hstart) u.1 := by
+    exact (mem_section5StartComponent_iff_reachable (hstart := hstart)).mp u.2
+  have hv0_adj : (section5NodeGraph T f).Adj vnode u.1 := by
+    simpa [section5NodeGraph, section5SimpleGraph, vnode] using
+      (Or.inl hv0_step : Section5Adjacent f v0 u.1.1)
+  have hv_reach :
+      (section5NodeGraph T f).Reachable (section5StartNodeInNodes hstart) vnode := by
+    exact hu_reach.trans <| (SimpleGraph.reachable_comm.mp (SimpleGraph.Adj.reachable hv0_adj))
+  refine ⟨⟨vnode, (mem_section5StartComponent_iff_reachable (hstart := hstart)).mpr hv_reach⟩, hv0_step⟩
+
+theorem exists_section5LowerStep_of_subface_card_eq_and_mem_realization_map_segment
+    {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    (hf : IsFaceRespecting f) (hfpl : IsPiecewiseAffineOn T f)
+    {u : Section5Node n} (hu : IsSection5GraphNode T f u) (hulevel : 0 < u.level)
+    {τ : SimplexFacet n} (hτsub : τ.IsSubfaceOf u.cell)
+    (hτcard : τ.vertices.card = u.level)
+    (hτface : ∀ ⦃w : RentSimplex n⦄, w ∈ τ.vertices → w ∈ coordinateFace (prefixRooms n u.level))
+    {x : RentSimplex n}
+    (hxτ : ((x : RentSimplex n) : RentCoordinates n) ∈ τ.realization)
+    (hfxSeg : f x ∈ prefixBarycenterSegment n u.level) :
+    ∃ v : Section5Node n, IsSection5GraphNode T f v ∧ Section5Step f v u := by
+  have hτisFace : T.IsFace τ := by
+    rcases hu.isFace with ⟨σ, hσ, hσsub⟩
+    exact ⟨σ, hσ, hτsub.trans hσsub⟩
+  have hhit : FacetImageContains f τ (prefixBarycenter n u.level) := by
+    haveI : NeZero u.level := ⟨Nat.ne_of_gt hulevel⟩
+    exact hfpl.facetImageContains_of_mem_realization_of_vertices_mem_coordinateFace
+      hf hτisFace hu.level_le hxτ hτface hfxSeg
+  exact exists_section5LowerStep_of_subface_card_eq_and_facetImageContains
+    hu hulevel hτsub hτcard hτface hhit
+
+theorem exists_section5StartComponentLowerStep_of_subface_card_eq_and_mem_realization_map_segment
+    {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    (hf : IsFaceRespecting f) (hfpl : IsPiecewiseAffineOn T f)
+    {hstart : IsSection5GraphNode T f (section5StartNode n)}
+    {u : section5StartComponent hstart}
+    (hu_ne : u ≠ section5StartVertexInComponent hstart)
+    {τ : SimplexFacet n} (hτsub : τ.IsSubfaceOf u.1.1.cell)
+    (hτcard : τ.vertices.card = u.1.1.level)
+    (hτface :
+      ∀ ⦃w : RentSimplex n⦄, w ∈ τ.vertices →
+        w ∈ coordinateFace (prefixRooms n u.1.1.level))
+    {x : RentSimplex n}
+    (hxτ : ((x : RentSimplex n) : RentCoordinates n) ∈ τ.realization)
+    (hfxSeg : f x ∈ prefixBarycenterSegment n u.1.1.level) :
+    ∃ v : section5StartComponent hstart, Section5Step f v.1.1 u.1.1 := by
+  have hu_node : IsSection5GraphNode T f u.1.1 := (mem_section5Nodes_iff).mp u.1.2
+  have hulevel : 0 < u.1.1.level := by
+    by_contra hzero
+    have hu0 : u.1.1.level = 0 := Nat.eq_zero_of_not_pos hzero
+    have hu_eq_start : u.1.1 = section5StartNode n := section5_levelZero_eq_startNode hu_node hu0
+    apply hu_ne
+    exact Subtype.ext (Subtype.ext hu_eq_start)
+  rcases exists_section5LowerStep_of_subface_card_eq_and_mem_realization_map_segment
+      hf hfpl hu_node hulevel hτsub hτcard hτface hxτ hfxSeg with ⟨v0, hv0, hv0_step⟩
   let vnode : section5Nodes T f := ⟨v0, hv0.mem_section5Nodes⟩
   have hu_reach :
       (section5NodeGraph T f).Reachable (section5StartNodeInNodes hstart) u.1 := by

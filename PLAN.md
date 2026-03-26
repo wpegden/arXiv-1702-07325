@@ -232,10 +232,16 @@
   image hull contains `b_k`. More importantly, `Section5Path.lean` now has the direct
   manuscript-shaped predecessor theorem: if the geometry produces an actual codimension-one lower
   face `τ ≤ u.cell` with `τ.vertices.card = u.level`, all vertices of `τ` in the lower prefix
-  face, and `b_k ∈ λ(τ)`, then that face already gives the predecessor `Section5Step`. So the
-  remaining lower-step work is best phrased geometrically: identify the concrete entering lower
-  face of a cell that meets `[b_k,b_{k+1}]`. The older `section5LowerPrefixVertices` route remains
-  available as a fallback, and the new local obstruction theorem still records that if the
+  face, and `b_k ∈ λ(τ)`, then that face already gives the predecessor `Section5Step`. The newest
+  bridge removes even that final `b_k ∈ λ(τ)` packaging step: if the geometry gives a point of
+  `τ.realization` whose image stays on `[b_k,b_{k+1}]`, convexity forces that whole face to lie in
+  the lower prefix face, the endpoint lemma turns the image into `b_k`, and the direct theorem
+  `exists_section5StartComponentLowerStep_of_subface_card_eq_and_mem_realization_map_segment`
+  yields the predecessor immediately. So the remaining lower-step work is now best phrased as:
+  identify the concrete entering codimension-one lower face of a cell that meets
+  `[b_k,b_{k+1}]`, together with a segment-point witness on that face. The older
+  `section5LowerPrefixVertices` route remains available as a fallback, and the new local
+  obstruction theorem still records that if the
   filtered lower subface already hits `b_k`, then every room in `prefixRooms n k` appears in the
   support of some lower-prefix vertex, while any actual lower-face preimage of `b_k` has simplex
   support exactly `prefixRooms n k`.
