@@ -2932,6 +2932,68 @@ theorem Section5LocalLowerTransversality.exists_section5StartComponentLowerStep_
   exact exists_section5StartComponentLowerStep_of_subface_card_eq_and_map_eq_hitParamLeft
     hf hfpl hu_ne hτsub hτcard hτface hxτ hfx
 
+/-- For a level-1 cell containing the start vertex, the left endpoint is already `b₁`. -/
+theorem section5HitParamLeft_eq_zero_of_levelOne_and_start_subface
+    {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    {u : Section5Node n} (hf : IsFaceRespecting f) (hu : IsSection5GraphNode T f u)
+    (hulevel : u.level = 1) (hstartsub : (section5StartCell n).IsSubfaceOf u.cell) :
+    section5HitParamLeft u f = 0 := by
+  have hhit : prefixBarycenter n 1 ∈ FacetImageHull f u.cell := by
+    rw [← hf.map_section5StartVertex_eq_prefixBarycenter, FacetImageHull]
+    exact subset_convexHull ℝ _ <| Set.mem_image_of_mem (fun v : RentSimplex n => f v) <| by
+      exact hstartsub (by simp [section5StartCell])
+  have hzeroMem : (0 : ℝ) ∈ section5HitParams u f := by
+    refine (mem_section5HitParams_iff (u := u) (f := f) (t := 0)).mpr ⟨by simp, ?_⟩
+    simpa [hulevel, section5HitParamMap] using hhit
+  have hleft_nonneg : 0 ≤ section5HitParamLeft u f := (section5HitParamLeft_mem_Icc hu).1
+  have hleft_le_zero :
+      section5HitParamLeft u f ≤ 0 :=
+    ((isCompact_section5HitParams u f).isLeast_sInf (section5HitParams_nonempty hu)).2 hzeroMem
+  linarith
+
+/-- For a level-1 cell containing the start vertex, the start singleton is an exact left hit. -/
+theorem section5StartCell_mem_section5HitParamLeftSubfaces_of_levelOne_and_start_subface
+    {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    {u : Section5Node n} (hf : IsFaceRespecting f) (hu : IsSection5GraphNode T f u)
+    (hulevel : u.level = 1) (hstartsub : (section5StartCell n).IsSubfaceOf u.cell) :
+    section5StartCell n ∈ section5HitParamLeftSubfaces u f := by
+  have hleft0 :
+      section5HitParamLeft u f = 0 :=
+    section5HitParamLeft_eq_zero_of_levelOne_and_start_subface hf hu hulevel hstartsub
+  have hhit' :
+      FacetImageContains f (section5StartCell n)
+        (section5HitParamMap n u.level (section5HitParamLeft u f)) := by
+    rw [hleft0, hulevel]
+    simpa [section5HitParamMap] using hf.startCell_hits_prefixBarycenter
+  have hhit :
+      section5HitParamMap n u.level (section5HitParamLeft u f) ∈
+        FacetImageHull f (section5StartCell n) := by
+    simpa [FacetImageContains] using hhit'
+  exact (mem_section5PointHitSubfaces_iff
+    (u := u) (f := f)
+    (y := section5HitParamMap n u.level (section5HitParamLeft u f))
+    (τ := section5StartCell n)).mpr
+      ⟨hstartsub, by simp [section5StartCell], hhit⟩
+
+/-- In the level-1 start-subface situation, minimal exact left hits are already singletons. -/
+theorem minimal_section5HitParamLeftSubface_card_eq_one_of_levelOne_and_start_subface
+    {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    {u : Section5Node n} (hf : IsFaceRespecting f) (hu : IsSection5GraphNode T f u)
+    (hulevel : u.level = 1) (hstartsub : (section5StartCell n).IsSubfaceOf u.cell)
+    {τ : SimplexFacet n} (hτ : τ ∈ section5HitParamLeftSubfaces u f)
+    (hmin : ∀ σ ∈ section5HitParamLeftSubfaces u f, τ.vertices.card ≤ σ.vertices.card) :
+    τ.vertices.card = 1 := by
+  have hcard_le : τ.vertices.card ≤ 1 := by
+    simpa [section5StartCell] using hmin _ <|
+      section5StartCell_mem_section5HitParamLeftSubfaces_of_levelOne_and_start_subface
+        hf hu hulevel hstartsub
+  have hcard_pos : 0 < τ.vertices.card := Finset.card_pos.mpr <|
+    (mem_section5PointHitSubfaces_iff
+      (u := u) (f := f)
+      (y := section5HitParamMap n u.level (section5HitParamLeft u f))
+      (τ := τ)).mp hτ |>.2.1
+  omega
+
 /-- Exact remaining local left-endpoint input: a minimal exact left hit already occurs on a
 codimension-one lower face of the current Section 5 cell. -/
 def Section5LocalLeftBoundaryFaceGenericity {n : ℕ} (u : Section5Node n)
@@ -2951,6 +3013,16 @@ def Section5LocalLeftCodimensionGenericity {n : ℕ} (u : Section5Node n)
     τ ∈ section5HitParamLeftSubfaces u f →
     (∀ σ ∈ section5HitParamLeftSubfaces u f, τ.vertices.card ≤ σ.vertices.card) →
       τ.vertices.card = u.level
+
+theorem section5LocalLeftCodimensionGenericity_of_levelOne_and_start_subface
+    {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    {u : Section5Node n} (hf : IsFaceRespecting f) (hu : IsSection5GraphNode T f u)
+    (hulevel : u.level = 1) (hstartsub : (section5StartCell n).IsSubfaceOf u.cell) :
+    Section5LocalLeftCodimensionGenericity u f := by
+  intro τ hτ hmin
+  rw [hulevel]
+  exact minimal_section5HitParamLeftSubface_card_eq_one_of_levelOne_and_start_subface
+    hf hu hulevel hstartsub hτ hmin
 
 theorem Section5LocalLowerTransversality.leftBoundaryFaceGenericity_of_leftCodimensionGenericity
     {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}

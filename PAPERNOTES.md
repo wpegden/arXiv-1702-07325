@@ -56,6 +56,13 @@
   lower-side input is exactly the codimension/cardinality claim itself. The extra geometry still
   needed is therefore concentrated in the degenerate exact-endpoint cases, especially the level-1
   situation, plus the right-side uniqueness/endpoint claims.
+- Section 5, level-1/start-subface refinement: Lean now also proves the easy numeric part of that
+  degenerate regime. If `u.level = 1` and `section5StartCell n` is a subface of `u.cell`, then the
+  left endpoint parameter is already `0`, the start singleton is an exact left hit, and every
+  minimal exact left hit is therefore a singleton; equivalently, `Section5LocalLeftCodimensionGenericity u f`
+  holds automatically in that explicit case. The remaining level-1 gap is geometric, not numeric:
+  one still needs an argument that such a singleton exact left hit must actually be the lower
+  boundary face `section5StartCell n`, not some other level-1 vertex.
 - Section 5, current formalization status: this remaining manuscript sentence is now represented directly by the support-layer structure `Section5BoundarySegmentGenericity`. That package is already sufficient, together with the canonical start-successor theorem, to derive the paper-facing Section 5 target-facet conclusion; the unresolved work is therefore the actual geometric proof of `Section5BoundarySegmentGenericity`, not any further graph-theoretic packaging.
 - Section 5, current proof boundary: the Lean development now also has the more literal step-level perturbation package `Section5PerturbationGenericity`, whose fields say that a non-start cell is entered from a lower face, has at most one upper continuation as a `Section5Step`, and if there is no such continuation then it already contains the barycenter. This matches the manuscript's segment-intersection language more closely than the older neighbor-cardinality packaging, so the remaining work is best understood as proving `Section5PerturbationGenericity` from the paper's genericity/perturbation claim.
 - Section 5, interface status after the latest cleanup: the step-level and boundary-segment

@@ -264,7 +264,12 @@
   upgrades to the full `Section5LocalLeftBoundaryFaceGenericity u f` and hence to the lower
   predecessor theorem. So for higher-level cells the left-side proof boundary is now purely the
   codimension/cardinality claim; only the degenerate exact-endpoint cases (notably the level-1
-  regime) still require additional geometry beyond that.
+  regime) still require additional geometry beyond that. The support layer now also closes the
+  easy numeric part of the level-1 start-subface case: if `u.level = 1` and `section5StartCell n`
+  is a subface of `u.cell`, then `section5HitParamLeft u f = 0`, `section5StartCell n` is an exact
+  left hit, minimal exact left hits are singletons, and therefore `Section5LocalLeftCodimensionGenericity u f`
+  already holds in that explicit regime. What remains there is no longer cardinality; it is the
+  genuinely geometric claim that such a singleton exact left hit must be the lower face itself.
   On the packaging side, the remaining graph-theoretic conversion gap is now gone: the support
   layer proves `Section5PerturbationGenericity.toBoundarySegmentGenericity`, and the existing
   local-left/upper-endpoint wrapper is rerouted through
