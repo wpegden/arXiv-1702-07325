@@ -2326,6 +2326,33 @@ theorem section5Step_vertices_eq_lowerPrefixVertices {n : ℕ} {T : SimplexTrian
     (section5LowerPrefixVertices v).card ≤ v.level := hcard_le
     _ = u.cell.vertices.card := hcard_eq.symm
 
+theorem section5Node_eq_of_level_eq_and_cell_vertices_eq {n : ℕ} {u w : Section5Node n}
+    (hlevel_eq : u.level = w.level) (hcell_verts : u.cell.vertices = w.cell.vertices) :
+    u = w := by
+  cases u with
+  | mk ul uc =>
+      cases w with
+      | mk wl wc =>
+          simp at hlevel_eq
+          subst hlevel_eq
+          have hc : uc = wc := by
+            cases uc
+            cases wc
+            simpa using hcell_verts
+          cases hc
+          rfl
+
+theorem section5Step_same_source_eq_of_cell_vertices_eq {n : ℕ}
+    {f : SelfMapOnRentSimplex n} {v u w : Section5Node n}
+    (huv : Section5Step f v u) (hvw : Section5Step f v w)
+    (hcell_verts : u.cell.vertices = w.cell.vertices) :
+    u = w := by
+  have huv_level : v.level + 1 = u.level := huv.1
+  have hvw_level : v.level + 1 = w.level := hvw.1
+  apply section5Node_eq_of_level_eq_and_cell_vertices_eq
+  · omega
+  · exact hcell_verts
+
 /-- The undirected adjacency relation on the Section 5 graph. -/
 def Section5Adjacent {n : ℕ} (f : SelfMapOnRentSimplex n) (u v : Section5Node n) : Prop :=
   Section5Step f u v ∨ Section5Step f v u
@@ -3188,22 +3215,28 @@ theorem section5StartComponentGraph_lower_neighbor_unique {n : ℕ} [NeZero n]
   have hcell_verts : u.1.1.cell.vertices = w.1.1.cell.vertices := by
     rw [huverts, hwverts]
   have hlevel_eq : u.1.1.level = w.1.1.level := by omega
-  have hnode_eq : u.1.1 = w.1.1 := by
-    cases hnode_u : u.1.1 with
-    | mk ul uc =>
-        cases hnode_w : w.1.1 with
-        | mk wl wc =>
-            have hlevel_eq' : ul = wl := by
-              simpa [hnode_u, hnode_w] using hlevel_eq
-            have hcell_verts' : uc.vertices = wc.vertices := by
-              simpa [hnode_u, hnode_w] using hcell_verts
-            cases hlevel_eq'
-            cases uc
-            cases wc
-            simpa using hcell_verts'
+  have hnode_eq : u.1.1 = w.1.1 :=
+    section5Node_eq_of_level_eq_and_cell_vertices_eq hlevel_eq hcell_verts
   have hnodes_eq : u.1 = w.1 := by
     exact Subtype.ext hnode_eq
   exact Subtype.ext hnodes_eq
+
+theorem section5StartComponent_upper_step_unique_of_cell_vertices_eq {n : ℕ} [NeZero n]
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    {hstart : IsSection5GraphNode T f (section5StartNode n)}
+    (hcell_verts :
+      ∀ {v u w : section5StartComponent hstart},
+        Section5Step f v.1.1 u.1.1 →
+        Section5Step f v.1.1 w.1.1 →
+          u.1.1.cell.vertices = w.1.1.cell.vertices) :
+    ∀ {v u w : section5StartComponent hstart},
+      Section5Step f v.1.1 u.1.1 →
+      Section5Step f v.1.1 w.1.1 →
+        u = w := by
+  intro v u w huv hvw
+  apply Subtype.ext
+  apply Subtype.ext
+  exact section5Step_same_source_eq_of_cell_vertices_eq huv hvw (hcell_verts huv hvw)
 
 theorem section5StartComponentGraph_lower_neighbor_of_levelOne_eq_start {n : ℕ} [NeZero n]
     {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
