@@ -185,7 +185,12 @@
   is the affine zero fiber of `prefixSegmentCollapseMap n k ∘ g`, and
   `IsSection5GraphNode.exists_point_in_incidentPrefixFace_mem_segmentZeroFiber_of_piecewiseAffineOn`
   packages the local witness directly as a point of that affine subspace inside one induced prefix
-  face.
+  face. The purely combinatorial normal form on the domain side is also now in place:
+  `IsSection5GraphNode.lower_cell_eq_prefixFace_of_supercell` shows a lower node is exactly the
+  induced prefix face of any supercell, `IsSection5GraphNode.upper_step_vertices_eq_insert` shows
+  an upper step adds exactly one new vertex, and
+  `IsSection5GraphNode.upper_step_unique_of_common_incidentFacet` removes all ambiguity once two
+  candidate upper continuations lie in the same incident facet.
 - Next local objective:
   discharge `Section5SegmentGeometry` from the actual Section 5 geometry:
   prove that every graph node in the actual start component has at most two neighbors while every
@@ -200,7 +205,10 @@
   segment from `prefixBarycenter n v.level` to the new standard vertex on the ambient prefix face,
   and then prove that its intersection with the simplicial subdivision of the induced prefix face
   has at most one upper codimension-one continuation and that the no-upper-continuation case
-  already forces the barycenter endpoint.
+  already forces the barycenter endpoint. Because common-facet ambiguity is now gone, the only
+  genuinely remaining case is to compare candidate upper continuations coming from distinct
+  incident facets and show the collapsed slice can meet at most one of them away from the lower
+  face.
 - Current structural blocker:
   the present `SimplexTriangulation` wrapper now exposes induced prefix faces and their induced
   realizations, but it still does not expose the full simplicial-subdivision combinatorics of

@@ -1827,6 +1827,17 @@ theorem IsSection5GraphNode.lower_cell_eq_prefixVertices_of_supercell {n : ℕ}
     simpa [hw.card_eq] using hprefixCard
   exact Finset.eq_of_subset_of_card_le hsub hprefixCard'
 
+theorem IsSection5GraphNode.lower_cell_eq_prefixFace_of_supercell {n : ℕ}
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    {u w : Section5Node n} (hu : IsSection5GraphNode T f u)
+    (hw : IsSection5GraphNode T f w) (hlevel : w.level + 1 = u.level)
+    (hwu : w.cell.IsSubfaceOf u.cell) :
+    w.cell = u.cell.section5PrefixFace w.level := by
+  cases hwCell : w.cell with
+  | mk wverts =>
+    simpa [hwCell, SimplexFacet.section5PrefixFace] using
+      hu.lower_cell_eq_prefixVertices_of_supercell hw hlevel hwu
+
 theorem IsFaceRespecting.section5StartNode_isGraphNode {n : ℕ} [NeZero n]
     {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n} (hf : IsFaceRespecting f) :
     IsSection5GraphNode T f (section5StartNode n) := by
@@ -1868,6 +1879,38 @@ theorem section5Adjacent_of_level_succ_eq_iff_step {n : ℕ} {f : SelfMapOnRentS
       omega
   · intro huv
     exact Or.inl huv
+
+theorem IsSection5GraphNode.upper_step_vertices_eq_insert {n : ℕ}
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    {u v : Section5Node n} (hu : IsSection5GraphNode T f u)
+    (hv : IsSection5GraphNode T f v) (huv : Section5Step f u v) :
+    ∃ a : RentSimplex n, a ∉ u.cell.vertices ∧ insert a u.cell.vertices = v.cell.vertices := by
+  classical
+  refine (Finset.exists_eq_insert_iff).2 ?_
+  refine ⟨huv.2.1, ?_⟩
+  calc
+    u.cell.vertices.card + 1 = (u.level + 1) + 1 := by rw [hu.card_eq]
+    _ = v.level + 1 := by simp [huv.1]
+    _ = v.cell.vertices.card := by rw [hv.card_eq]
+
+theorem IsSection5GraphNode.upper_step_unique_of_common_incidentFacet {n : ℕ}
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    {u v w : Section5Node n} (_hu : IsSection5GraphNode T f u)
+    (hv : IsSection5GraphNode T f v) (hw : IsSection5GraphNode T f w)
+    (huv : Section5Step f u v) (huw : Section5Step f u w)
+    {τ : SimplexFacet n} (hτ : τ ∈ T.facets)
+    (hvτ : v.cell.IsSubfaceOf τ) (hwτ : w.cell.IsSubfaceOf τ) :
+    v = w := by
+  have hvLevel : v.level = u.level + 1 := huv.1.symm
+  have hwLevel : w.level = u.level + 1 := huw.1.symm
+  have hlevel : v.level = w.level := hvLevel.trans hwLevel.symm
+  have hvCell : v.cell = τ.section5PrefixFace v.level :=
+    hv.cell_eq_prefixFace_of_incidentFacet hτ hvτ
+  have hwCell : w.cell = τ.section5PrefixFace w.level :=
+    hw.cell_eq_prefixFace_of_incidentFacet hτ hwτ
+  have hcell : v.cell = w.cell := by
+    rw [hvCell, hwCell, hlevel]
+  exact Section5Node.eq_of_level_eq_of_cell_eq hlevel hcell
 
 theorem IsSection5GraphNode.lower_step_unique {n : ℕ}
     {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
