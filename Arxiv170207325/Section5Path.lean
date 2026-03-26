@@ -287,6 +287,13 @@ theorem section5HitParamMap_apply (n k : ℕ) (t : ℝ) :
       AffineMap.lineMap (prefixBarycenter n k) (prefixBarycenter n (k + 1)) t :=
   rfl
 
+theorem section5HitParamMap_mem_prefixBarycenterSegment {n k : ℕ} {t : ℝ}
+    (ht : t ∈ Set.Icc (0 : ℝ) 1) :
+    section5HitParamMap n k t ∈ prefixBarycenterSegment n k := by
+  rw [prefixBarycenterSegment,
+    segment_eq_image_lineMap ℝ (prefixBarycenter n k) (prefixBarycenter n (k + 1))]
+  exact ⟨t, ht, rfl⟩
+
 theorem prefixBarycenterSegment_subset_ambientCoordinateFace {n k : ℕ} [NeZero k]
     (hk : k + 1 ≤ n) :
     prefixBarycenterSegment n k ⊆ ambientCoordinateFace (prefixRooms n (k + 1)) := by
@@ -926,6 +933,42 @@ theorem section5HitParamRight_mem {n : ℕ} {T : SimplexTriangulation n}
     section5HitParamRight u f ∈ section5HitParams u f := by
   exact (isCompact_section5HitParams u f).sSup_mem (section5HitParams_nonempty hu)
 
+theorem section5HitParamLeft_mem_Icc {n : ℕ} {T : SimplexTriangulation n}
+    {f : SelfMapOnRentSimplex n} {u : Section5Node n} (hu : IsSection5GraphNode T f u) :
+    section5HitParamLeft u f ∈ Set.Icc (0 : ℝ) 1 := by
+  exact (mem_section5HitParams_iff.mp (section5HitParamLeft_mem hu)).1
+
+theorem section5HitParamRight_mem_Icc {n : ℕ} {T : SimplexTriangulation n}
+    {f : SelfMapOnRentSimplex n} {u : Section5Node n} (hu : IsSection5GraphNode T f u) :
+    section5HitParamRight u f ∈ Set.Icc (0 : ℝ) 1 := by
+  exact (mem_section5HitParams_iff.mp (section5HitParamRight_mem hu)).1
+
+theorem section5HitParamLeft_image_mem_facetImageHull {n : ℕ}
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n} {u : Section5Node n}
+    (hu : IsSection5GraphNode T f u) :
+    section5HitParamMap n u.level (section5HitParamLeft u f) ∈ FacetImageHull f u.cell := by
+  exact (mem_section5HitParams_iff.mp (section5HitParamLeft_mem hu)).2
+
+theorem section5HitParamRight_image_mem_facetImageHull {n : ℕ}
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n} {u : Section5Node n}
+    (hu : IsSection5GraphNode T f u) :
+    section5HitParamMap n u.level (section5HitParamRight u f) ∈ FacetImageHull f u.cell := by
+  exact (mem_section5HitParams_iff.mp (section5HitParamRight_mem hu)).2
+
+theorem section5HitParamLeft_image_mem_prefixBarycenterSegment {n : ℕ}
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n} {u : Section5Node n}
+    (hu : IsSection5GraphNode T f u) :
+    section5HitParamMap n u.level (section5HitParamLeft u f) ∈
+      prefixBarycenterSegment n u.level := by
+  exact section5HitParamMap_mem_prefixBarycenterSegment (section5HitParamLeft_mem_Icc hu)
+
+theorem section5HitParamRight_image_mem_prefixBarycenterSegment {n : ℕ}
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n} {u : Section5Node n}
+    (hu : IsSection5GraphNode T f u) :
+    section5HitParamMap n u.level (section5HitParamRight u f) ∈
+      prefixBarycenterSegment n u.level := by
+  exact section5HitParamMap_mem_prefixBarycenterSegment (section5HitParamRight_mem_Icc hu)
+
 theorem section5HitParams_eq_Icc {n : ℕ} {T : SimplexTriangulation n}
     {f : SelfMapOnRentSimplex n} {u : Section5Node n} (hu : IsSection5GraphNode T f u) :
     section5HitParams u f =
@@ -941,6 +984,22 @@ theorem section5HitParams_eq_Icc {n : ℕ} {T : SimplexTriangulation n}
   · intro ht
     exact (convex_section5HitParams u f).ordConnected.out
       (section5HitParamLeft_mem hu) (section5HitParamRight_mem hu) ht
+
+theorem IsPiecewiseAffineOn.exists_point_in_cell_realization_of_hitParamLeft {n : ℕ}
+    [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    (hfpl : IsPiecewiseAffineOn T f) {u : Section5Node n} (hu : IsSection5GraphNode T f u) :
+    ∃ x : RentSimplex n, ((x : RentSimplex n) : RentCoordinates n) ∈ u.cell.realization ∧
+      f x = section5HitParamMap n u.level (section5HitParamLeft u f) := by
+  exact hfpl.exists_point_in_realization_of_facetImageContains hu.isFace
+    (section5HitParamLeft_image_mem_facetImageHull hu)
+
+theorem IsPiecewiseAffineOn.exists_point_in_cell_realization_of_hitParamRight {n : ℕ}
+    [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    (hfpl : IsPiecewiseAffineOn T f) {u : Section5Node n} (hu : IsSection5GraphNode T f u) :
+    ∃ x : RentSimplex n, ((x : RentSimplex n) : RentCoordinates n) ∈ u.cell.realization ∧
+      f x = section5HitParamMap n u.level (section5HitParamRight u f) := by
+  exact hfpl.exists_point_in_realization_of_facetImageContains hu.isFace
+    (section5HitParamRight_image_mem_facetImageHull hu)
 
 /-- The nonempty subfaces of one Section 5 cell whose image still meets the current barycenter
 segment. -/
@@ -1917,6 +1976,45 @@ theorem exists_section5StartComponentLowerStep_of_subface_card_eq_and_mem_realiz
       (section5NodeGraph T f).Reachable (section5StartNodeInNodes hstart) vnode := by
     exact hu_reach.trans <| (SimpleGraph.reachable_comm.mp (SimpleGraph.Adj.reachable hv0_adj))
   refine ⟨⟨vnode, (mem_section5StartComponent_iff_reachable (hstart := hstart)).mpr hv_reach⟩, hv0_step⟩
+
+theorem exists_section5StartComponentLowerStep_of_subface_card_eq_and_map_eq_hitParamLeft
+    {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    (hf : IsFaceRespecting f) (hfpl : IsPiecewiseAffineOn T f)
+    {hstart : IsSection5GraphNode T f (section5StartNode n)}
+    {u : section5StartComponent hstart}
+    (hu_ne : u ≠ section5StartVertexInComponent hstart)
+    {τ : SimplexFacet n} (hτsub : τ.IsSubfaceOf u.1.1.cell)
+    (hτcard : τ.vertices.card = u.1.1.level)
+    (hτface :
+      ∀ ⦃w : RentSimplex n⦄, w ∈ τ.vertices →
+        w ∈ coordinateFace (prefixRooms n u.1.1.level))
+    {x : RentSimplex n}
+    (hxτ : ((x : RentSimplex n) : RentCoordinates n) ∈ τ.realization)
+    (hfx :
+      f x = section5HitParamMap n u.1.1.level (section5HitParamLeft u.1.1 f)) :
+    ∃ v : section5StartComponent hstart, Section5Step f v.1.1 u.1.1 := by
+  have hu_node : IsSection5GraphNode T f u.1.1 := (mem_section5Nodes_iff).mp u.1.2
+  have hfxSeg : f x ∈ prefixBarycenterSegment n u.1.1.level := by
+    simpa [hfx] using section5HitParamLeft_image_mem_prefixBarycenterSegment hu_node
+  exact exists_section5StartComponentLowerStep_of_subface_card_eq_and_mem_realization_map_segment
+    hf hfpl hu_ne hτsub hτcard hτface hxτ hfxSeg
+
+theorem exists_section5LowerStep_of_subface_card_eq_and_map_eq_hitParamLeft
+    {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    (hf : IsFaceRespecting f) (hfpl : IsPiecewiseAffineOn T f)
+    {u : Section5Node n} (hu : IsSection5GraphNode T f u) (hulevel : 0 < u.level)
+    {τ : SimplexFacet n} (hτsub : τ.IsSubfaceOf u.cell)
+    (hτcard : τ.vertices.card = u.level)
+    (hτface :
+      ∀ ⦃w : RentSimplex n⦄, w ∈ τ.vertices → w ∈ coordinateFace (prefixRooms n u.level))
+    {x : RentSimplex n}
+    (hxτ : ((x : RentSimplex n) : RentCoordinates n) ∈ τ.realization)
+    (hfx : f x = section5HitParamMap n u.level (section5HitParamLeft u f)) :
+    ∃ v : Section5Node n, IsSection5GraphNode T f v ∧ Section5Step f v u := by
+  have hfxSeg : f x ∈ prefixBarycenterSegment n u.level := by
+    simpa [hfx] using section5HitParamLeft_image_mem_prefixBarycenterSegment hu
+  exact exists_section5LowerStep_of_subface_card_eq_and_mem_realization_map_segment
+    hf hfpl hu hulevel hτsub hτcard hτface hxτ hfxSeg
 
 theorem exists_section5LowerStep_of_card_eq_and_mem_realization_map_prefixBarycenter
     {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
@@ -3588,6 +3686,22 @@ theorem IsFaceRespecting.exists_barycenter_targetFacet_of_boundarySegmentGeneric
     have hn : 2 ≤ n := by omega
     exact hf.exists_barycenter_targetFacet_of_two_le_and_boundarySegmentGenericity hn (hseg hn)
 
+theorem section5BoundarySegmentGenericity_of_upperCardLeOneAndEndpointRule {n : ℕ} [NeZero n]
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    {hstart : IsSection5GraphNode T f (section5StartNode n)}
+    (hupper :
+      ∀ v : section5StartComponent hstart,
+        (section5UpperNeighbors v).card ≤ 1)
+    (hendpoint :
+      ∀ v : section5StartComponent hstart,
+        v ≠ section5StartVertexInComponent hstart →
+          (section5BoundaryNeighbors v).card = 1 →
+            IsSection5Endpoint T f v.1.1) :
+    Section5BoundarySegmentGenericity T f hstart := by
+  refine ⟨?_, hendpoint⟩
+  intro v
+  exact section5BoundaryNeighbors_card_le_two_of_upper_card_le_one (hupper v)
+
 theorem IsFaceRespecting.exists_barycenter_targetFacet_of_upperCardLeOneAndEndpointRule
     {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
     (hf : IsFaceRespecting f)
@@ -3603,10 +3717,6 @@ theorem IsFaceRespecting.exists_barycenter_targetFacet_of_upperCardLeOneAndEndpo
       FacetImageContains f τ ((rentBarycenter n : RentSimplex n) : RentCoordinates n) := by
   refine hf.exists_barycenter_targetFacet_of_boundarySegmentGenericity ?_
   intro hn
-  refine ⟨?_, ?_⟩
-  · intro v
-    exact section5BoundaryNeighbors_card_le_two_of_upper_card_le_one (hupper v)
-  · intro v hv hcard
-    exact hendpoint v hv hcard
+  exact section5BoundarySegmentGenericity_of_upperCardLeOneAndEndpointRule hupper hendpoint
 
 end Arxiv170207325

@@ -273,11 +273,18 @@
   graph node `u`, the file now proves that `section5HitParams u f` is nonempty, compact, convex,
   and therefore equal to the closed interval between those two endpoint parameters. This removes
   the remaining ambiguity about the correct viewpoint: the next proof step is now concretely to
-  identify which codimension-one faces are hit by the left and right endpoints of this interval,
-  then to feed the left-endpoint face into
-  `exists_section5StartComponentLowerStep_of_subface_card_eq_and_mem_realization_map_segment` and
-  the right-endpoint face into the upper-neighbor / endpoint parts of
-  `Section5BoundarySegmentGenericity`.
+  identify which codimension-one faces are hit by the left and right endpoints of this interval.
+  The support layer now already covers the immediate endpoint bookkeeping: the endpoint images lie
+  on the relevant barycenter segment, `IsPiecewiseAffineOn` extracts actual points of
+  `u.cell.realization` mapping to `section5HitParamLeft` and `section5HitParamRight`, and a
+  codimension-one lower-face witness at the left endpoint can be handed directly to
+  `exists_section5StartComponentLowerStep_of_subface_card_eq_and_mem_realization_map_segment`
+  through the new wrapper
+  `exists_section5StartComponentLowerStep_of_subface_card_eq_and_map_eq_hitParamLeft`. So the
+  remaining work is no longer to rebuild any segment/predecessor infrastructure, but specifically
+  to prove that the endpoint realization points lie on the correct lower and upper boundary faces,
+  then to feed the left-endpoint face into the predecessor theorem and the right-endpoint face
+  into the upper-neighbor / endpoint parts of `Section5BoundarySegmentGenericity`.
 - First prove the barycenter-specialized version if that is the easiest entry point.
 - Then generalize to arbitrary interior targets if Section 6 needs it.
 - If full surjectivity is still awkward, keep the theorem in the "target in interior" form first; that already covers the barycenter and the interior `y` used in the first Section 6 theorem.
