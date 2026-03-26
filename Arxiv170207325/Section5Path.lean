@@ -366,6 +366,167 @@ theorem SimplexTriangulation.section5PrefixFace_isFace {n : ℕ} {T : SimplexTri
     T.IsFace (τ.section5PrefixFace k) :=
   ⟨τ, hτ, τ.section5PrefixFace_isSubface k⟩
 
+/-- The standard vertices spanning the prefix face `conv{e₁, ..., e_{k+1}}`. -/
+def prefixFaceStdVertices (n k : ℕ) : Finset (RentCoordinates n) :=
+  (prefixRooms n (k + 1)).image fun i : RoomIndex n =>
+    ((stdSimplex.vertex (S := ℝ) i : RentSimplex n) : RentCoordinates n)
+
+theorem prefixFaceStdVertices_card {n k : ℕ} (hk : k + 1 ≤ n) :
+    (prefixFaceStdVertices n k).card = k + 1 := by
+  classical
+  unfold prefixFaceStdVertices
+  rw [Finset.card_image_of_injective]
+  · exact prefixRooms_card hk
+  · intro i j hij
+    have hval : i.1 = j.1 := by
+      by_contra hne
+      have hcoord :
+          (((stdSimplex.vertex (S := ℝ) j : RentSimplex n) : RentCoordinates n) i) = 1 := by
+        simpa using congrArg (fun p : RentCoordinates n => p i) hij.symm
+      have hcoord0 :
+          (((stdSimplex.vertex (S := ℝ) j : RentSimplex n) : RentCoordinates n) i) = 0 := by
+        have hji : j ≠ i := by
+          intro h
+          exact hne (congrArg Fin.val h.symm)
+        simp [hji]
+      linarith
+    exact Fin.ext hval
+
+theorem mem_affineSpan_prefixFaceStdVertices_of_mem_coordinateFace {n k : ℕ}
+    {x : RentSimplex n} (hx : x ∈ coordinateFace (prefixRooms n (k + 1))) :
+    ((x : RentSimplex n) : RentCoordinates n) ∈
+      affineSpan ℝ ((prefixFaceStdVertices n k : Finset (RentCoordinates n)) :
+        Set (RentCoordinates n)) := by
+  classical
+  let I : Finset (RoomIndex n) := prefixRooms n (k + 1)
+  let p : I → RentCoordinates n := fun i =>
+    ((stdSimplex.vertex (S := ℝ) (i : RoomIndex n) : RentSimplex n) : RentCoordinates n)
+  let w : I → ℝ := fun i => x.1 i
+  have hsumI : ∑ i ∈ I, x.1 i = (1 : ℝ) := by
+    calc
+      ∑ i ∈ I, x.1 i = ∑ i, x.1 i := by
+        dsimp [I]
+        rw [prefixRooms, Finset.sum_filter]
+        refine Finset.sum_congr rfl ?_
+        intro i hi
+        by_cases hi' : i.1 < k + 1
+        · simp [hi']
+        · have hxi : x.1 i = 0 := by
+            exact (mem_coordinateFace_iff.mp hx) i
+              (by simpa [mem_prefixRooms_iff] using hi')
+          simp [hi', hxi]
+      _ = (1 : ℝ) := by simpa using x.2.2
+  have hw1 : ∑ i, w i = (1 : ℝ) := by
+    rw [← Finset.attach_eq_univ (s := I)]
+    rw [Finset.sum_attach]
+    simpa [w] using hsumI
+  have hcomb :
+      (Finset.univ.affineCombination ℝ p w : RentCoordinates n) =
+        ((x : RentSimplex n) : RentCoordinates n) := by
+    rw [Finset.affineCombination_eq_linear_combination _ _ _ hw1]
+    ext j
+    by_cases hj : j ∈ I
+    · let jI : I := ⟨j, hj⟩
+      rw [show (∑ i : I, w i • p i) j =
+          ∑ i : I, x.1 i *
+            (((stdSimplex.vertex (S := ℝ) (i : RoomIndex n) : RentSimplex n) :
+              RentCoordinates n) j) by
+            simp [w, p]]
+      rw [Finset.sum_eq_single jI]
+      · have hjVertex :
+            (((stdSimplex.vertex (S := ℝ) (jI : RoomIndex n) : RentSimplex n) :
+              RentCoordinates n) j) = 1 := by
+          simp [jI]
+        rw [hjVertex]
+        rw [mul_one]
+        rfl
+      · intro i _ hij
+        have hij' : (i : RoomIndex n) ≠ j := by
+          intro hEq
+          exact hij (Subtype.ext hEq)
+        simp [hij']
+      · simp [jI]
+    · have hsum_zero :
+          ∑ i : I, x.1 i *
+            (((stdSimplex.vertex (S := ℝ) (i : RoomIndex n) : RentSimplex n) :
+              RentCoordinates n) j) = 0 := by
+        refine Finset.sum_eq_zero ?_
+        intro i hi
+        have hij' : (i : RoomIndex n) ≠ j := by
+          intro hEq
+          exact hj (hEq ▸ i.2)
+        simp [hij']
+      have hxj : x.1 j = 0 := by
+        exact (mem_coordinateFace_iff.mp hx) j hj
+      rw [show (∑ i : I, w i • p i) j =
+          ∑ i : I, x.1 i *
+            (((stdSimplex.vertex (S := ℝ) (i : RoomIndex n) : RentSimplex n) :
+              RentCoordinates n) j) by
+            simp [w, p]]
+      calc
+        ∑ i : I, x.1 i *
+            (((stdSimplex.vertex (S := ℝ) (i : RoomIndex n) : RentSimplex n) :
+              RentCoordinates n) j) = 0 := hsum_zero
+        _ = x j := by simpa using hxj.symm
+  have hrange :
+      Set.range p =
+        ((prefixFaceStdVertices n k : Finset (RentCoordinates n)) : Set (RentCoordinates n)) := by
+    ext y
+    simp [prefixFaceStdVertices, p, I]
+  have hxSpan :
+      ((x : RentSimplex n) : RentCoordinates n) ∈ affineSpan ℝ (Set.range p) := by
+    rw [← hcomb]
+    exact affineCombination_mem_affineSpan hw1 p
+  simpa [hrange] using hxSpan
+
+theorem SimplexTriangulation.prefixVertices_card_le_of_isFace {n : ℕ}
+    (T : SimplexTriangulation n) {σ : SimplexFacet n} (hσ : T.IsFace σ)
+    {k : ℕ} (hk : k + 1 ≤ n) :
+    (σ.section5PrefixVertices k).card ≤ k + 1 := by
+  classical
+  rcases hσ with ⟨τ, hτ, hστ⟩
+  let sCoords : Finset (RentCoordinates n) :=
+    (σ.section5PrefixVertices k).image fun v : RentSimplex n =>
+      ((v : RentSimplex n) : RentCoordinates n)
+  let pτ : τ.vertices → RentCoordinates n := fun v =>
+    ((v : RentSimplex n) : RentCoordinates n)
+  have hτind :
+      AffineIndependent ℝ (fun x => x : Set.range pτ → RentCoordinates n) :=
+    (T.facet_affineIndependent τ hτ).range
+  have hsSubset : (sCoords : Set (RentCoordinates n)) ⊆ Set.range pτ := by
+    intro y hy
+    rcases Finset.mem_image.mp hy with ⟨v, hv, rfl⟩
+    exact ⟨⟨v, hστ (σ.mem_section5PrefixVertices_iff.mp hv).1⟩, rfl⟩
+  let emb : sCoords ↪ Set.range pτ := {
+    toFun := fun y => ⟨y, hsSubset y.2⟩
+    inj' := by
+      intro y z hyz
+      have hval : (y : RentCoordinates n) = (z : RentCoordinates n) :=
+        by simpa using congrArg (fun t : Set.range pτ => (t : RentCoordinates n)) hyz
+      exact Subtype.ext hval }
+  have hsAff : AffineIndependent ℝ (fun x : sCoords => (x : RentCoordinates n)) := by
+    simpa [emb] using hτind.comp_embedding emb
+  have hsSpan :
+      (sCoords : Set (RentCoordinates n)) ⊆
+        affineSpan ℝ ((prefixFaceStdVertices n k : Finset (RentCoordinates n)) :
+          Set (RentCoordinates n)) := by
+    intro y hy
+    rcases Finset.mem_image.mp hy with ⟨v, hv, rfl⟩
+    exact mem_affineSpan_prefixFaceStdVertices_of_mem_coordinateFace
+      ((σ.mem_section5PrefixVertices_iff.mp hv).2)
+  have hsCard :
+      sCoords.card ≤ (prefixFaceStdVertices n k).card :=
+    hsAff.card_le_card_of_subset_affineSpan hsSpan
+  have hsCard' : sCoords.card = (σ.section5PrefixVertices k).card := by
+    dsimp [sCoords]
+    rw [Finset.card_image_of_injective]
+    intro a b hab
+    exact Subtype.ext hab
+  calc
+    (σ.section5PrefixVertices k).card = sCoords.card := hsCard'.symm
+    _ ≤ (prefixFaceStdVertices n k).card := hsCard
+    _ = k + 1 := prefixFaceStdVertices_card hk
+
 /-- The triangulation vertices of one facet that lie on the boundary edge `[e₁,e₂]`. -/
 abbrev SimplexFacet.section5BoundaryVertices {n : ℕ}
     (τ : SimplexFacet n) : Finset (RentSimplex n) :=
@@ -398,57 +559,8 @@ theorem SimplexTriangulation.section5BoundaryFace_isFace {n : ℕ} {T : SimplexT
 theorem SimplexTriangulation.boundaryVertices_card_le_two {n : ℕ} [NeZero n]
     (hn : 2 ≤ n) (T : SimplexTriangulation n) {τ : SimplexFacet n} (hτ : τ ∈ T.facets) :
     τ.section5BoundaryVertices.card ≤ 2 := by
-  classical
-  by_contra hcard
-  have hcard' : 2 < τ.section5BoundaryVertices.card := by
-    omega
-  rcases Finset.two_lt_card.mp hcard' with
-    ⟨a, ha, b, hb, c, hc, hab, hac, hbc⟩
-  have haτ : a ∈ τ.vertices := (τ.mem_section5BoundaryVertices_iff.mp ha).1
-  have hbτ : b ∈ τ.vertices := (τ.mem_section5BoundaryVertices_iff.mp hb).1
-  have hcτ : c ∈ τ.vertices := (τ.mem_section5BoundaryVertices_iff.mp hc).1
-  have haFace : a ∈ coordinateFace (prefixRooms n 2) :=
-    (τ.mem_section5BoundaryVertices_iff.mp ha).2
-  have hbFace : b ∈ coordinateFace (prefixRooms n 2) :=
-    (τ.mem_section5BoundaryVertices_iff.mp hb).2
-  have hcFace : c ∈ coordinateFace (prefixRooms n 2) :=
-    (τ.mem_section5BoundaryVertices_iff.mp hc).2
-  let emb : Fin 3 ↪ τ.vertices := {
-    toFun := ![⟨a, haτ⟩, ⟨b, hbτ⟩, ⟨c, hcτ⟩]
-    inj' := by
-      intro i j hij
-      fin_cases i <;> fin_cases j
-      · rfl
-      · exfalso
-        exact hab (by simpa using congrArg Subtype.val hij)
-      · exfalso
-        exact hac (by simpa using congrArg Subtype.val hij)
-      · exfalso
-        exact hab.symm (by simpa using congrArg Subtype.val hij)
-      · rfl
-      · exfalso
-        exact hbc (by simpa using congrArg Subtype.val hij)
-      · exfalso
-        exact hac.symm (by simpa using congrArg Subtype.val hij)
-      · exfalso
-        exact hbc.symm (by simpa using congrArg Subtype.val hij)
-      · rfl }
-  let p : Fin 3 → RentCoordinates n := fun i =>
-    ((((emb i : τ.vertices) : RentSimplex n) : RentCoordinates n))
-  have hind : AffineIndependent ℝ p := by
-    exact (T.facet_affineIndependent τ hτ).comp_embedding emb
-  have hnotcol :
-      ¬ Collinear ℝ
-        ({((a : RentSimplex n) : RentCoordinates n),
-          ((b : RentSimplex n) : RentCoordinates n),
-          ((c : RentSimplex n) : RentCoordinates n)} : Set (RentCoordinates n)) :=
-    by
-      have hnotcol' :
-          ¬ Collinear ℝ ({p 0, p 1, p 2} : Set (RentCoordinates n)) :=
-        (affineIndependent_iff_not_collinear_of_ne
-          (k := ℝ) (p := p) (by decide) (by decide) (by decide)).mp hind
-      simpa [p, emb]
-  exact hnotcol (collinear_boundary_vertices hn haFace hbFace hcFace)
+  simpa [SimplexFacet.section5BoundaryVertices] using
+    T.prefixVertices_card_le_of_isFace (T.facet_isFace hτ) (k := 1) hn
 
 theorem exists_nonstart_boundary_vertex_of_mem_convexHull {n : ℕ} [NeZero n] (hn : 2 ≤ n)
     {s : Finset (RentSimplex n)} {y : RentSimplex n}
@@ -1152,6 +1264,33 @@ theorem Section5Node.eq_of_level_eq_one_of_cell_eq {n : ℕ} {u v : Section5Node
   cases hcell
   rfl
 
+theorem Section5Node.eq_of_level_eq_of_cell_eq {n : ℕ} {u v : Section5Node n}
+    (hlevel : u.level = v.level) (hcell : u.cell = v.cell) :
+    u = v := by
+  cases u
+  cases v
+  cases hlevel
+  cases hcell
+  rfl
+
+theorem IsSection5GraphNode.lower_cell_eq_prefixVertices_of_supercell {n : ℕ}
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    {u w : Section5Node n} (hu : IsSection5GraphNode T f u)
+    (hw : IsSection5GraphNode T f w) (hlevel : w.level + 1 = u.level)
+    (hwu : w.cell.IsSubfaceOf u.cell) :
+    w.cell.vertices = u.cell.section5PrefixVertices w.level := by
+  have hsub : w.cell.vertices ⊆ u.cell.section5PrefixVertices w.level := by
+    intro v hv
+    refine u.cell.mem_section5PrefixVertices_iff.mpr ⟨hwu hv, ?_⟩
+    simpa [hlevel] using hw.prefix_vertices hv
+  have hprefixCard :
+      (u.cell.section5PrefixVertices w.level).card ≤ w.level + 1 :=
+    T.prefixVertices_card_le_of_isFace hu.isFace hw.level_le
+  have hprefixCard' :
+      (u.cell.section5PrefixVertices w.level).card ≤ w.cell.vertices.card := by
+    simpa [hw.card_eq] using hprefixCard
+  exact Finset.eq_of_subset_of_card_le hsub hprefixCard'
+
 theorem IsFaceRespecting.section5StartNode_isGraphNode {n : ℕ} [NeZero n]
     {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n} (hf : IsFaceRespecting f) :
     IsSection5GraphNode T f (section5StartNode n) := by
@@ -1180,6 +1319,53 @@ theorem section5Adjacent_symm {n : ℕ} {f : SelfMapOnRentSimplex n}
   constructor <;> intro h
   · exact h.elim Or.inr Or.inl
   · exact h.elim Or.inr Or.inl
+
+theorem section5Adjacent_of_level_succ_eq_iff_step {n : ℕ} {f : SelfMapOnRentSimplex n}
+    {u v : Section5Node n} (hlevel : u.level + 1 = v.level) :
+    Section5Adjacent f u v ↔ Section5Step f u v := by
+  constructor
+  · intro huv
+    rcases huv with huv | hvu
+    · exact huv
+    · exfalso
+      have hvuLevel : v.level + 1 = u.level := hvu.1
+      omega
+  · intro huv
+    exact Or.inl huv
+
+theorem IsSection5GraphNode.lower_step_unique {n : ℕ}
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    {u v w : Section5Node n} (hu : IsSection5GraphNode T f u)
+    (hv : IsSection5GraphNode T f v) (hw : IsSection5GraphNode T f w)
+    (hvu : Section5Step f v u) (hwu : Section5Step f w u) :
+    v = w := by
+  have hvuLevel : v.level + 1 = u.level := hvu.1
+  have hwuLevel : w.level + 1 = u.level := hwu.1
+  have hlevel : v.level = w.level := by
+    omega
+  have hvCell :
+      v.cell.vertices = u.cell.section5PrefixVertices v.level :=
+    hu.lower_cell_eq_prefixVertices_of_supercell hv hvuLevel hvu.2.1
+  have hwCell :
+      w.cell.vertices = u.cell.section5PrefixVertices w.level :=
+    hu.lower_cell_eq_prefixVertices_of_supercell hw hwuLevel hwu.2.1
+  have hverts : v.cell.vertices = w.cell.vertices := by
+    have hwCell' : w.cell.vertices = u.cell.section5PrefixVertices v.level := by
+      rw [hlevel]
+      exact hwCell
+    exact hvCell.trans hwCell'.symm
+  have hcell : v.cell = w.cell := by
+    cases hvCellEq : v.cell with
+    | mk vverts =>
+      cases hwCellEq : w.cell with
+      | mk wverts =>
+        simp only [SimplexFacet.mk.injEq]
+        simpa [hvCellEq, hwCellEq] using hverts
+  let g : Section5Node n → ℕ × SimplexFacet n := fun t => (t.level, t.cell)
+  have hg : Function.Injective g := by
+    rintro ⟨la, ca⟩ ⟨lb, cb⟩ hab
+    simpa [g] using hab
+  exact hg <| Prod.ext hlevel hcell
 
 theorem not_section5Step_self {n : ℕ} {f : SelfMapOnRentSimplex n} {u : Section5Node n} :
     ¬ Section5Step f u u := by
@@ -1326,6 +1512,29 @@ theorem section5StartComponentGraph_adj_iff {n : ℕ} [NeZero n]
     (section5StartComponentGraph hstart).Adj u v ↔ Section5Adjacent f u.1.1 v.1.1 := by
   exact SimpleGraph.ConnectedComponent.toSimpleGraph_adj (C := section5StartComponent hstart)
     u.2 v.2
+
+theorem section5StartComponentGraph_lower_neighbor_unique {n : ℕ} [NeZero n]
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    {hstart : IsSection5GraphNode T f (section5StartNode n)}
+    {u a b : section5StartComponent hstart}
+    (haAdj : (section5StartComponentGraph hstart).Adj a u)
+    (haLevel : a.1.1.level + 1 = u.1.1.level)
+    (hbAdj : (section5StartComponentGraph hstart).Adj b u)
+    (hbLevel : b.1.1.level + 1 = u.1.1.level) :
+    a = b := by
+  have huNode : IsSection5GraphNode T f u.1.1 := mem_section5Nodes_iff.mp u.1.2
+  have haNode : IsSection5GraphNode T f a.1.1 := mem_section5Nodes_iff.mp a.1.2
+  have hbNode : IsSection5GraphNode T f b.1.1 := mem_section5Nodes_iff.mp b.1.2
+  have haStep : Section5Step f a.1.1 u.1.1 := by
+    exact (section5Adjacent_of_level_succ_eq_iff_step (f := f) haLevel).mp <|
+      (section5StartComponentGraph_adj_iff hstart).mp haAdj
+  have hbStep : Section5Step f b.1.1 u.1.1 := by
+    exact (section5Adjacent_of_level_succ_eq_iff_step (f := f) hbLevel).mp <|
+      (section5StartComponentGraph_adj_iff hstart).mp hbAdj
+  have habNode : a.1.1 = b.1.1 :=
+    huNode.lower_step_unique haNode hbNode haStep hbStep
+  have habNode' : a.1 = b.1 := Subtype.ext habNode
+  exact Subtype.ext habNode'
 
 theorem not_section5Step_to_startNode {n : ℕ} [NeZero n] {f : SelfMapOnRentSimplex n}
     {u : Section5Node n} : ¬ Section5Step f u (section5StartNode n) := by
