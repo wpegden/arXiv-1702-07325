@@ -841,6 +841,85 @@ theorem eq_prefixBarycenter_of_mem_prefixBarycenterSegment_of_levelCoord_eq_zero
   exact eq_prefixBarycenter_of_mem_prefixBarycenterSegment_of_mem_ambientCoordinateFace
     hk hySeg hyFace
 
+theorem mem_segment_of_mem_prefixBarycenterSegment_of_levelCoord_between
+    {n k : ℕ} [NeZero k] (hk : k + 1 ≤ n) {x y z : RentCoordinates n}
+    (hxSeg : x ∈ prefixBarycenterSegment n k)
+    (hySeg : y ∈ prefixBarycenterSegment n k)
+    (hzSeg : z ∈ prefixBarycenterSegment n k)
+    (hxy :
+      x ⟨k, lt_of_lt_of_le (Nat.lt_succ_self k) hk⟩ ≤
+        y ⟨k, lt_of_lt_of_le (Nat.lt_succ_self k) hk⟩)
+    (hxz :
+      x ⟨k, lt_of_lt_of_le (Nat.lt_succ_self k) hk⟩ ≤
+        z ⟨k, lt_of_lt_of_le (Nat.lt_succ_self k) hk⟩)
+    (hzy :
+      z ⟨k, lt_of_lt_of_le (Nat.lt_succ_self k) hk⟩ ≤
+        y ⟨k, lt_of_lt_of_le (Nat.lt_succ_self k) hk⟩) :
+    z ∈ segment ℝ x y := by
+  let ik : RoomIndex n := ⟨k, lt_of_lt_of_le (Nat.lt_succ_self k) hk⟩
+  by_cases hxy_eq : x ik = y ik
+  · have hzy' : z ik ≤ x ik := by simpa [ik, hxy_eq] using hzy
+    have hzik : z ik = x ik := le_antisymm hzy' (by simpa [ik] using hxz)
+    have hz_eq_x : z = x := by
+      ext i
+      by_cases hi : i.1 < k
+      · rw [mem_prefixBarycenterSegment_apply_of_lt hk hzSeg hi,
+          mem_prefixBarycenterSegment_apply_of_lt hk hxSeg hi, hzik]
+      · by_cases hik : i = ik
+        · subst hik
+          simpa using hzik
+        · have hi_notin : i ∉ prefixRooms n (k + 1) := by
+            rw [mem_prefixRooms_iff]
+            by_contra hi_mem
+            have hi_not_lt : ¬ i.1 < k := hi
+            have : i.1 = k := by omega
+            exact hik (Fin.ext this)
+          have hxFace := prefixBarycenterSegment_subset_ambientCoordinateFace hk hxSeg
+          have hzFace := prefixBarycenterSegment_subset_ambientCoordinateFace hk hzSeg
+          rw [(coordSupport_subset_iff.mp hzFace.2) i hi_notin,
+            (coordSupport_subset_iff.mp hxFace.2) i hi_notin]
+    simpa [hz_eq_x] using (left_mem_segment ℝ x y : x ∈ segment ℝ x y)
+  · have hxy_lt : x ik < y ik := lt_of_le_of_ne (by simpa [ik] using hxy) hxy_eq
+    have hkR : (k : ℝ) ≠ 0 := by exact_mod_cast (NeZero.ne k)
+    have hyx_pos : 0 < y ik - x ik := by linarith
+    have hyx_ne : y ik - x ik ≠ 0 := by linarith
+    let t : ℝ := (z ik - x ik) / (y ik - x ik)
+    rw [segment_eq_image_lineMap ℝ x y]
+    refine ⟨t, ⟨?_, ?_⟩, ?_⟩
+    · dsimp [t]
+      exact div_nonneg (sub_nonneg.mpr (by simpa [ik] using hxz)) (le_of_lt hyx_pos)
+    · dsimp [t]
+      exact (div_le_one hyx_pos).2 (by linarith)
+    · ext i
+      rw [AffineMap.lineMap_apply_module]
+      simp_rw [Pi.add_apply, Pi.smul_apply, smul_eq_mul]
+      by_cases hi : i.1 < k
+      · rw [mem_prefixBarycenterSegment_apply_of_lt hk hxSeg hi,
+          mem_prefixBarycenterSegment_apply_of_lt hk hySeg hi,
+          mem_prefixBarycenterSegment_apply_of_lt hk hzSeg hi]
+        dsimp [t]
+        field_simp [hkR, hyx_ne]
+        ring
+      · by_cases hik : i = ik
+        · subst hik
+          dsimp [t]
+          field_simp [hyx_ne]
+          ring
+        · have hi_notin : i ∉ prefixRooms n (k + 1) := by
+            rw [mem_prefixRooms_iff]
+            by_contra hi_mem
+            have hi_not_lt : ¬ i.1 < k := hi
+            have : i.1 = k := by omega
+            exact hik (Fin.ext this)
+          have hxFace := prefixBarycenterSegment_subset_ambientCoordinateFace hk hxSeg
+          have hyFace := prefixBarycenterSegment_subset_ambientCoordinateFace hk hySeg
+          have hzFace := prefixBarycenterSegment_subset_ambientCoordinateFace hk hzSeg
+          have hxi_zero : x i = 0 := (coordSupport_subset_iff.mp hxFace.2) i hi_notin
+          have hyi_zero : y i = 0 := (coordSupport_subset_iff.mp hyFace.2) i hi_notin
+          have hzi_zero : z i = 0 := (coordSupport_subset_iff.mp hzFace.2) i hi_notin
+          rw [hzi_zero, hxi_zero, hyi_zero]
+          ring
+
 theorem IsFaceRespecting.eq_prefixBarycenter_of_mem_coordinateFace_of_map_mem_prefixBarycenterSegment
     {n k : ℕ} [NeZero k] {f : SelfMapOnRentSimplex n} (hf : IsFaceRespecting f)
     (hk : k + 1 ≤ n) {x : RentSimplex n}
@@ -1635,6 +1714,58 @@ theorem exists_isMaxOn_levelCoord_section5SubfaceSliceSet {n : ℕ} (u : Section
   have hcont : Continuous fun z : RentCoordinates n => (g z) ik := by
     exact (continuous_apply ik).comp g.continuous_of_finiteDimensional
   exact (isCompact_section5SubfaceSliceSet u τ g).exists_isMaxOn hne hcont.continuousOn
+
+theorem image_section5SubfaceSliceSet_eq_segment_of_isMinOn_isMaxOn_levelCoord
+    {n : ℕ} {u : Section5Node n} [NeZero u.level] (hulevel : u.level + 1 ≤ n)
+    {τ : SimplexFacet n} {g : RentCoordinates n →ᵃ[ℝ] RentCoordinates n}
+    {a b : RentCoordinates n}
+    (ha : a ∈ section5SubfaceSliceSet u τ g)
+    (hb : b ∈ section5SubfaceSliceSet u τ g)
+    (hmin :
+      let ik : RoomIndex n := ⟨u.level, lt_of_lt_of_le (Nat.lt_succ_self u.level) hulevel⟩
+      IsMinOn (fun z : RentCoordinates n => (g z) ik) (section5SubfaceSliceSet u τ g) a)
+    (hmax :
+      let ik : RoomIndex n := ⟨u.level, lt_of_lt_of_le (Nat.lt_succ_self u.level) hulevel⟩
+      IsMaxOn (fun z : RentCoordinates n => (g z) ik) (section5SubfaceSliceSet u τ g) b) :
+    g '' section5SubfaceSliceSet u τ g = segment ℝ (g a) (g b) := by
+  let ik : RoomIndex n := ⟨u.level, lt_of_lt_of_le (Nat.lt_succ_self u.level) hulevel⟩
+  ext z
+  constructor
+  · rintro ⟨w, hw, rfl⟩
+    have hsubset := image_section5SubfaceSliceSet_subset_prefixBarycenterSegment u τ g
+    have haSeg : g a ∈ prefixBarycenterSegment n u.level := hsubset ⟨a, ha, rfl⟩
+    have hbSeg : g b ∈ prefixBarycenterSegment n u.level := hsubset ⟨b, hb, rfl⟩
+    have hwSeg : g w ∈ prefixBarycenterSegment n u.level := hsubset ⟨w, hw, rfl⟩
+    have hmin' : ∀ y ∈ section5SubfaceSliceSet u τ g, (g a) ik ≤ (g y) ik := by
+      simpa [ik] using (isMinOn_iff.mp hmin)
+    have hmax' : ∀ y ∈ section5SubfaceSliceSet u τ g, (g y) ik ≤ (g b) ik := by
+      simpa [ik] using (isMaxOn_iff.mp hmax)
+    exact mem_segment_of_mem_prefixBarycenterSegment_of_levelCoord_between hulevel
+      haSeg hbSeg hwSeg (hmin' _ hb) (hmin' _ hw) (hmax' _ hw)
+  · intro hz
+    have himgConvex :
+        Convex ℝ (g '' section5SubfaceSliceSet u τ g) :=
+      (isCompact_convex_nonempty_image_section5SubfaceSliceSet u τ g ⟨a, ha⟩).2.1
+    exact himgConvex.segment_subset ⟨a, ha, rfl⟩ ⟨b, hb, rfl⟩ hz
+
+theorem exists_endpoints_image_section5SubfaceSliceSet_eq_segment
+    {n : ℕ} {u : Section5Node n} [NeZero u.level] (hulevel : u.level + 1 ≤ n)
+    {τ : SimplexFacet n} {g : RentCoordinates n →ᵃ[ℝ] RentCoordinates n}
+    (hne : (section5SubfaceSliceSet u τ g).Nonempty) :
+    ∃ a ∈ section5SubfaceSliceSet u τ g,
+      ∃ b ∈ section5SubfaceSliceSet u τ g,
+        let ik : RoomIndex n := ⟨u.level, lt_of_lt_of_le (Nat.lt_succ_self u.level) hulevel⟩
+        IsMinOn (fun z : RentCoordinates n => (g z) ik) (section5SubfaceSliceSet u τ g) a ∧
+          IsMaxOn (fun z : RentCoordinates n => (g z) ik) (section5SubfaceSliceSet u τ g) b ∧
+          g '' section5SubfaceSliceSet u τ g = segment ℝ (g a) (g b) := by
+  rcases exists_isMinOn_levelCoord_section5SubfaceSliceSet u hulevel τ g hne with
+    ⟨a, ha, hmin⟩
+  rcases exists_isMaxOn_levelCoord_section5SubfaceSliceSet u hulevel τ g hne with
+    ⟨b, hb, hmax⟩
+  refine ⟨a, ha, b, hb, ?_⟩
+  exact ⟨hmin, hmax,
+    image_section5SubfaceSliceSet_eq_segment_of_isMinOn_isMaxOn_levelCoord
+      hulevel ha hb hmin hmax⟩
 
 theorem map_eq_prefixBarycenter_of_isMinOn_levelCoord_section5SubfaceSliceSet
     {n : ℕ} {u : Section5Node n} [NeZero u.level] (hulevel : u.level + 1 ≤ n)

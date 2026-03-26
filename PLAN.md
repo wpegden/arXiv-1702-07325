@@ -266,10 +266,13 @@
   than re-deriving which codomain point the minimizer hits.
   The codomain picture is now packaged one step more honestly as well:
   `g '' section5SubfaceSliceSet u τ g` is itself compact, convex, nonempty, and contained in
-  `[b_k,b_{k+1}]`, and the slice has both level-coordinate minimizers and maximizers. So the next
-  endpoint-route contradiction can be phrased directly as: the left endpoint of this image
-  subsegment cannot lie strictly above `b_k`; once that is ruled out, the new minimizer lemma
-  gives an actual slice point mapping to `b_k`.
+  `[b_k,b_{k+1}]`, and the slice has both level-coordinate minimizers and maximizers. The new
+  interpolation lemma `mem_segment_of_mem_prefixBarycenterSegment_of_levelCoord_between` now
+  upgrades this from a vague convex image to an actual closed segment:
+  `g '' section5SubfaceSliceSet u τ g` equals the segment joining the images of any such
+  minimizer and maximizer. So the next endpoint-route contradiction can be phrased directly as:
+  the left endpoint of this image segment cannot lie strictly above `b_k`; once that is ruled
+  out, the new minimizer lemma gives an actual slice point mapping to `b_k`.
   The next sharper naming step is now checked too:
   `Section5MinimalSubfaceLowerBoundaryGenericity u f` is the exact theorem on a minimal
   `τ ∈ section5SegmentSubfaces u f` that the quoted sentence still has to supply. It says such a
