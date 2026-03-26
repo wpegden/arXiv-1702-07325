@@ -171,10 +171,14 @@
   prefix face can be erased while retaining a slice point on the opposite face, then all vertices
   of `τ` already lie in `coordinateFace (prefixRooms n u.level)`; if in addition
   `τ.vertices.card = u.level`, this immediately packages as
-  `Section5MinimalSliceLowerBoundaryGeometry u f`. So the remaining geometry is now concentrated
-  in two honest claims extracted from the manuscript's generic picture: prove all vertices of the
-  minimal face lie in the lower prefix face, and prove the minimal face has exactly `u.level`
-  vertices. The new theorem
+  `Section5MinimalSliceLowerBoundaryGeometry u f`. The newest local collapse is sharper still:
+  `minimal_section5SegmentSubface_card_eq_and_vertices_mem_coordinateFace_of_lower_boundary_face`
+  shows that one codimension-one lower boundary face `ρ ≤ τ` with `ρ.vertices.card = u.level`,
+  all `ρ`-vertices in the lower prefix face, and one slice point on `ρ` already forces both
+  remaining face-level conclusions for `τ`. So the remaining geometry is now concentrated in a
+  single honest manuscript-level task: prove that the 1-dimensional slice inside a minimal
+  segment-hitting face enters the lower prefix face through such a codimension-one lower boundary
+  face. The new theorem
   `minimal_section5SegmentSubface_exists_mem_coordinateFace_point_of_vertices_mem_coordinateFace`
   now makes the lower-prefix slice point automatic from the vertex condition, so one no longer
   has to construct that point separately once the face-in-lower-prefix statement is known.

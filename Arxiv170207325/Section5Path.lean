@@ -1566,6 +1566,66 @@ def minimal_section5SegmentSubface_lowerBoundaryGeometry_of_card_eq_of_vertices_
   exact minimal_section5SegmentSubface_lowerBoundaryGeometry_of_card_eq_of_mem_coordinateFace_point
     hfpl hu hτ hmin hτcard hxτ hxFace hfxSeg
 
+theorem minimal_section5SegmentSubface_card_eq_and_vertices_mem_coordinateFace_of_lower_boundary_face
+    {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    (hfpl : IsPiecewiseAffineOn T f) {u : Section5Node n} (hu : IsSection5GraphNode T f u)
+    (hulevel : 0 < u.level)
+    {τ ρ : SimplexFacet n}
+    (hτ : τ ∈ section5SegmentSubfaces u f)
+    (hmin : ∀ σ ∈ section5SegmentSubfaces u f, τ.vertices.card ≤ σ.vertices.card)
+    (hρsub : ρ.IsSubfaceOf τ)
+    (hρcard : ρ.vertices.card = u.level)
+    (hρface :
+      ∀ ⦃w : RentSimplex n⦄, w ∈ ρ.vertices → w ∈ coordinateFace (prefixRooms n u.level))
+    {x : RentSimplex n}
+    (hxρ : ((x : RentSimplex n) : RentCoordinates n) ∈ ρ.realization)
+    (hfxSeg : f x ∈ prefixBarycenterSegment n u.level) :
+    τ.vertices.card = u.level ∧
+      (∀ ⦃w : RentSimplex n⦄, w ∈ τ.vertices → w ∈ coordinateFace (prefixRooms n u.level)) := by
+  have hτsubu : τ.IsSubfaceOf u.cell :=
+    (mem_section5SegmentSubfaces_iff (u := u) (f := f) (τ := τ)).mp hτ |>.1
+  have hρsubu : ρ.IsSubfaceOf u.cell := hρsub.trans hτsubu
+  have hρne : ρ.vertices.Nonempty := by
+    have hρcard_pos : 0 < ρ.vertices.card := by
+      rw [hρcard]
+      exact hulevel
+    exact Finset.card_pos.mp hρcard_pos
+  have hρmem : ρ ∈ section5SegmentSubfaces u f :=
+    mem_section5SegmentSubfaces_of_mem_realization_map_segment hfpl hu hρsubu hρne hxρ hfxSeg
+  have hτcard_le : τ.vertices.card ≤ ρ.vertices.card := hmin _ hρmem
+  have hρcard_le : ρ.vertices.card ≤ τ.vertices.card := Finset.card_le_card hρsub
+  have hcard_eq : τ.vertices.card = u.level := by
+    have hfaces_card_eq : τ.vertices.card = ρ.vertices.card := le_antisymm hτcard_le hρcard_le
+    rw [hfaces_card_eq, hρcard]
+  have hverts_eq : ρ.vertices = τ.vertices := by
+    exact Finset.eq_of_subset_of_card_le hρsub hτcard_le
+  refine ⟨hcard_eq, ?_⟩
+  intro w hw
+  have hwρ : w ∈ ρ.vertices := by
+    simpa [hverts_eq] using hw
+  exact hρface hwρ
+
+def minimal_section5SegmentSubface_lowerBoundaryGeometry_of_lower_boundary_face
+    {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    (hfpl : IsPiecewiseAffineOn T f) {u : Section5Node n} (hu : IsSection5GraphNode T f u)
+    (hulevel : 0 < u.level)
+    {τ ρ : SimplexFacet n}
+    (hτ : τ ∈ section5SegmentSubfaces u f)
+    (hmin : ∀ σ ∈ section5SegmentSubfaces u f, τ.vertices.card ≤ σ.vertices.card)
+    (hρsub : ρ.IsSubfaceOf τ)
+    (hρcard : ρ.vertices.card = u.level)
+    (hρface :
+      ∀ ⦃w : RentSimplex n⦄, w ∈ ρ.vertices → w ∈ coordinateFace (prefixRooms n u.level))
+    {x : RentSimplex n}
+    (hxρ : ((x : RentSimplex n) : RentCoordinates n) ∈ ρ.realization)
+    (hfxSeg : f x ∈ prefixBarycenterSegment n u.level) :
+    Section5MinimalSliceLowerBoundaryGeometry u f := by
+  obtain ⟨hτcard, hτface⟩ :=
+    minimal_section5SegmentSubface_card_eq_and_vertices_mem_coordinateFace_of_lower_boundary_face
+      hfpl hu hulevel hτ hmin hρsub hρcard hρface hxρ hfxSeg
+  exact minimal_section5SegmentSubface_lowerBoundaryGeometry_of_card_eq_of_vertices_mem_coordinateFace
+    hfpl hu hτ hmin hτcard hτface
+
 theorem IsSection5GraphNode.vertex_mem_affineSpan_prefixVertexPoints {n : ℕ}
     {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n} {u : Section5Node n}
     (hu : IsSection5GraphNode T f u) {v : RentSimplex n} (hv : v ∈ u.cell.vertices) :
