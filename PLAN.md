@@ -243,31 +243,26 @@
   family exists, and the existing piecewise-affine API extracts an actual point of that minimal
   face mapping to the segment. The newest refinement is that this witness can now be chosen with
   nonzero barycentric weight on every vertex of the minimal face, via
-  `IsPiecewiseAffineOn.exists_point_with_nonzero_weights_of_minimal_section5SegmentSubface`, so
-  the remaining lower-step work is now best phrased as one local contradiction lemma on a
-  canonical relative-interior point of this chosen face. The support layer now sharpens this one
-  step further: `minimal_section5SegmentSubface_erase_not_mem` and
-  `minimal_section5SegmentSubface_vertices_mem_coordinateFace_of_erase_mem` reduce the bad-vertex
-  contradiction to a single concrete erased-face statement. It is now enough to show that if a
-  vertex of the minimal segment-hitting face lies outside the lower prefix face, then erasing
-  that one vertex still leaves a face whose image meets `[b_k,b_{k+1}]`; minimality then yields
-  the contradiction automatically. The newest helper
-  `IsPiecewiseAffineOn.exists_erased_face_point_of_minimal_section5SegmentSubface` now packages
-  the domain-side part of this erasure completely: after choosing `v`, it builds a point `x'` in
-  the erased face realization and a coefficient `0 < c < 1` such that the original witness point
-  is `lineMap x' v c` and its image is `lineMap (f x') (f v) c`. However, a direct codomain lemma
-  saying that `lineMap (f x') (f v) c ∈ [b_k,b_{k+1}]` forces `f x' ∈ [b_k,b_{k+1}]` is false
-  under the current ambient-face hypotheses alone; a concrete counterexample now appears in
-  `PAPERNOTES.md`. So the next move is not to keep pushing that bare erased-face lemma, but to
-  encode the extra transversality/genericity input the manuscript is actually using on one cell,
-  or else to return to `Section5BoundarySegmentGenericity` as the honest statement of the missing
-  geometric content. The older `section5LowerPrefixVertices` route remains
-  available as a fallback, and the new local
-  obstruction theorem still records that if the
-  filtered lower subface already hits `b_k`, then every room in `prefixRooms n k` appears in the
-  support of some lower-prefix vertex, while any actual lower-face preimage of `b_k` has simplex
-  support exactly `prefixRooms n k`.
-- First prove the barycenter-specialized version if that is the easiest entry point.
+  `IsPiecewiseAffineOn.exists_point_with_nonzero_weights_of_minimal_section5SegmentSubface`, and
+  the erased-face API still isolates the concrete counterexample showing why the old codomain
+  lemma cannot be salvaged from ambient-face data alone. Rather than pushing that false route
+  further, `Section5Path.lean` now exposes the honest replacement interface:
+  `section5CellSlice` is the actual preimage slice of `[b_k,b_{k+1}]` inside one cell,
+  `Section5MinimalSliceFaceData` packages a minimal segment-hitting codimension-one lower face,
+  and `Section5SimplexSliceGenericity` records these local slice facts on every non-start node.
+  The new bridge theorem
+  `Section5SimplexSliceGenericity.toPerturbationGenericity` feeds the lower field directly into
+  `exists_section5StartComponentLowerStep_of_subface_card_eq_and_mem_realization_map_segment`, and
+  `Section5PerturbationGenericity.toBoundarySegmentGenericity` then recovers the manuscript-level
+  boundary-neighbor package automatically. So the immediate frontier is now precise: prove the
+  actual fields of `Section5SimplexSliceGenericity` from the paper's generic segment-intersection
+  sentence, rather than trying to deduce them from erased codomain endpoints. Concretely, the
+  next local theorem should show that for a minimal `τ ∈ section5SegmentSubfaces u f`, the slice
+  `section5CellSlice u f` behaves as a genuine 1-dimensional segment in `u.cell`, so its boundary
+  meets at most two codimension-one subfaces of `τ` and, when it terminates at `b_k`, exactly one
+  such boundary face lies in `coordinateFace (prefixRooms n u.level)`. That statement should
+  produce `Section5MinimalSliceFaceData` for the lower predecessor and simultaneously feed the
+  existing upper-step uniqueness / endpoint rules.
 - Then generalize to arbitrary interior targets if Section 6 needs it.
 - If full surjectivity is still awkward, keep the theorem in the "target in interior" form first; that already covers the barycenter and the interior `y` used in the first Section 6 theorem.
 

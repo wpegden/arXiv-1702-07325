@@ -826,6 +826,27 @@ theorem IsPiecewiseAffineOn.exists_point_in_cell_realization_of_graphNode {n : �
   refine ⟨x, hx, ?_⟩
   simpa [hfx] using hySeg
 
+/-- The actual preimage slice of the current barycenter segment inside one Section 5 cell. -/
+def section5CellSlice {n : ℕ} (u : Section5Node n) (f : SelfMapOnRentSimplex n) :
+    Set (RentSimplex n) :=
+  {x | ((x : RentSimplex n) : RentCoordinates n) ∈ u.cell.realization ∧
+    f x ∈ prefixBarycenterSegment n u.level}
+
+@[simp]
+theorem mem_section5CellSlice_iff {n : ℕ} {u : Section5Node n} {f : SelfMapOnRentSimplex n}
+    {x : RentSimplex n} :
+    x ∈ section5CellSlice u f ↔
+      ((x : RentSimplex n) : RentCoordinates n) ∈ u.cell.realization ∧
+        f x ∈ prefixBarycenterSegment n u.level :=
+  Iff.rfl
+
+theorem IsPiecewiseAffineOn.exists_mem_section5CellSlice_of_graphNode {n : ℕ} [NeZero n]
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    (hfpl : IsPiecewiseAffineOn T f) {u : Section5Node n} (hu : IsSection5GraphNode T f u) :
+    ∃ x : RentSimplex n, x ∈ section5CellSlice u f := by
+  rcases hfpl.exists_point_in_cell_realization_of_graphNode hu with ⟨x, hx, hfx⟩
+  exact ⟨x, hx, hfx⟩
+
 theorem IsFaceRespecting.section5StartNode_isGraphNode {n : ℕ} [NeZero n]
     {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n} (hf : IsFaceRespecting f) :
     IsSection5GraphNode T f (section5StartNode n) := by
@@ -890,6 +911,24 @@ theorem exists_minimal_section5SegmentSubface {n : ℕ} {T : SimplexTriangulatio
   exact Finset.exists_min_image (section5SegmentSubfaces u f) (fun τ => τ.vertices.card)
     (section5SegmentSubfaces_nonempty hu)
 
+/-- Local lower-boundary data for one Section 5 cell: a minimal segment-hitting subface whose
+vertices already lie in the lower prefix face and whose cardinality is exactly codimension one. -/
+structure Section5MinimalSliceFaceData {n : ℕ} (u : Section5Node n)
+    (f : SelfMapOnRentSimplex n) where
+  face : SimplexFacet n
+  mem_segmentSubfaces : face ∈ section5SegmentSubfaces u f
+  minimal :
+    ∀ σ ∈ section5SegmentSubfaces u f, face.vertices.card ≤ σ.vertices.card
+  card_eq : face.vertices.card = u.level
+  lower_prefix_vertices :
+    ∀ ⦃w : RentSimplex n⦄, w ∈ face.vertices → w ∈ coordinateFace (prefixRooms n u.level)
+
+theorem Section5MinimalSliceFaceData.face_isSubface {n : ℕ} {u : Section5Node n}
+    {f : SelfMapOnRentSimplex n} (hdata : Section5MinimalSliceFaceData u f) :
+    hdata.face.IsSubfaceOf u.cell :=
+  (mem_section5SegmentSubfaces_iff
+    (u := u) (f := f) (τ := hdata.face)).mp hdata.mem_segmentSubfaces |>.1
+
 theorem IsPiecewiseAffineOn.exists_point_in_realization_of_mem_section5SegmentSubfaces
     {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
     (hfpl : IsPiecewiseAffineOn T f) {u : Section5Node n} (hu : IsSection5GraphNode T f u)
@@ -906,6 +945,20 @@ theorem IsPiecewiseAffineOn.exists_point_in_realization_of_mem_section5SegmentSu
     ⟨x, hx, hfx⟩
   refine ⟨x, hx, ?_⟩
   simpa [hfx] using hySeg
+
+theorem Section5MinimalSliceFaceData.exists_point_mem_slice {n : ℕ} [NeZero n]
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    (hfpl : IsPiecewiseAffineOn T f) {u : Section5Node n}
+    (hu : IsSection5GraphNode T f u) (hdata : Section5MinimalSliceFaceData u f) :
+    ∃ x : RentSimplex n,
+      x ∈ section5CellSlice u f ∧
+        ((x : RentSimplex n) : RentCoordinates n) ∈ hdata.face.realization := by
+  rcases IsPiecewiseAffineOn.exists_point_in_realization_of_mem_section5SegmentSubfaces
+      hfpl hu hdata.mem_segmentSubfaces with ⟨x, hxface, hfxSeg⟩
+  have hxcell :
+      ((x : RentSimplex n) : RentCoordinates n) ∈ u.cell.realization :=
+    SimplexFacet.realization_mono_of_isSubface hdata.face_isSubface hxface
+  exact ⟨x, ⟨hxcell, hfxSeg⟩, hxface⟩
 
 theorem IsPiecewiseAffineOn.exists_point_with_nonzero_weights_of_minimal_section5SegmentSubface
     {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
@@ -1915,6 +1968,19 @@ theorem exists_section5StartComponentLowerStep_of_card_eq_and_mem_realization_ma
   exact exists_section5StartComponentLowerStep_of_card_eq_and_mem_realization_map_prefixBarycenter
     hfpl hu_ne hxτ hxFace hfx hcard
 
+theorem Section5MinimalSliceFaceData.exists_startComponentLowerStep {n : ℕ} [NeZero n]
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    (hf : IsFaceRespecting f) (hfpl : IsPiecewiseAffineOn T f)
+    {hstart : IsSection5GraphNode T f (section5StartNode n)}
+    {u : section5StartComponent hstart}
+    (hu_ne : u ≠ section5StartVertexInComponent hstart)
+    (hdata : Section5MinimalSliceFaceData u.1.1 f) :
+    ∃ v : section5StartComponent hstart, Section5Step f v.1.1 u.1.1 := by
+  have hu_node : IsSection5GraphNode T f u.1.1 := (mem_section5Nodes_iff).mp u.1.2
+  rcases hdata.exists_point_mem_slice hfpl hu_node with ⟨x, hxSlice, hxface⟩
+  exact exists_section5StartComponentLowerStep_of_subface_card_eq_and_mem_realization_map_segment
+    hf hfpl hu_ne hdata.face_isSubface hdata.card_eq hdata.lower_prefix_vertices hxface hxSlice.2
+
 theorem section5StartComponentGraph_lower_neighbor_unique {n : ℕ} [NeZero n]
     {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
     {hstart : IsSection5GraphNode T f (section5StartNode n)}
@@ -2851,6 +2917,26 @@ structure Section5BoundarySegmentGenericity {n : ℕ} [NeZero n]
         (section5BoundaryNeighbors v).card = 1 →
           IsSection5Endpoint T f v.1.1
 
+/-- Global simplex-slice genericity on the real start component. The lower field is phrased using
+a minimal segment-hitting subface inside each cell so it can be discharged from local slice
+geometry and then fed directly to the existing lower-step constructor. -/
+structure Section5SimplexSliceGenericity {n : ℕ} [NeZero n]
+    (T : SimplexTriangulation n) (f : SelfMapOnRentSimplex n)
+    (hstart : IsSection5GraphNode T f (section5StartNode n)) where
+  lower_minimal_slice_face_of_ne_start :
+    ∀ v : section5StartComponent hstart,
+      v ≠ section5StartVertexInComponent hstart →
+        Section5MinimalSliceFaceData v.1.1 f
+  upper_step_unique :
+    ∀ {v u w : section5StartComponent hstart},
+      Section5Step f v.1.1 u.1.1 →
+      Section5Step f v.1.1 w.1.1 →
+        u = w
+  no_upper_step_is_endpoint :
+    ∀ v : section5StartComponent hstart,
+      (¬ ∃ w : section5StartComponent hstart, Section5Step f v.1.1 w.1.1) →
+        IsSection5Endpoint T f v.1.1
+
 theorem section5LowerNeighbors_eq_singleton_of_ne_start {n : ℕ} [NeZero n]
     {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
     {hstart : IsSection5GraphNode T f (section5StartNode n)}
@@ -3111,6 +3197,55 @@ theorem Section5PerturbationGenericity.upperNeighbors_card_le_one {n : ℕ} [NeZ
     (v : section5StartComponent hstart) :
     (section5UpperNeighbors v).card ≤ 1 := by
   exact section5UpperNeighbors_card_le_one_of_step_unique hpert.upper_step_unique v
+
+theorem Section5SimplexSliceGenericity.toPerturbationGenericity {n : ℕ} [NeZero n]
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    (hf : IsFaceRespecting f) (hfpl : IsPiecewiseAffineOn T f)
+    {hstart : IsSection5GraphNode T f (section5StartNode n)}
+    (hslice : Section5SimplexSliceGenericity T f hstart) :
+    Section5PerturbationGenericity T f hstart := by
+  refine ⟨?_, hslice.upper_step_unique, hslice.no_upper_step_is_endpoint⟩
+  intro v hv
+  exact (hslice.lower_minimal_slice_face_of_ne_start v hv).exists_startComponentLowerStep
+    hf hfpl hv
+
+theorem Section5PerturbationGenericity.toBoundarySegmentGenericity {n : ℕ} [NeZero n]
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    {hstart : IsSection5GraphNode T f (section5StartNode n)}
+    (hpert : Section5PerturbationGenericity T f hstart) :
+    Section5BoundarySegmentGenericity T f hstart := by
+  refine ⟨?_, ?_⟩
+  · intro v
+    exact section5BoundaryNeighbors_card_le_two_of_upper_card_le_one
+      (hpert.upperNeighbors_card_le_one v)
+  · intro v hv hcard
+    rcases hpert.lower_step_exists_of_ne_start v hv with ⟨u, huStep⟩
+    have huMem : u ∈ section5LowerNeighbors v := by
+      exact (mem_section5LowerNeighbors_iff).mpr
+        ⟨(section5StartComponentGraph_adj_iff hstart).mpr (Or.inl huStep), huStep.1⟩
+    have hlower_pos : 0 < (section5LowerNeighbors v).card := Finset.card_pos.mpr ⟨u, huMem⟩
+    have hlower_le : (section5LowerNeighbors v).card ≤ 1 := section5LowerNeighbors_card_le_one v
+    have hlower_eq : (section5LowerNeighbors v).card = 1 := by
+      omega
+    have hupper_eq : (section5UpperNeighbors v).card = 0 := by
+      rw [section5BoundaryNeighbors_card_eq_lower_add_upper] at hcard
+      omega
+    apply hpert.no_upper_step_is_endpoint v
+    intro hupper
+    rcases hupper with ⟨w, hwStep⟩
+    have hwMem : w ∈ section5UpperNeighbors v := by
+      exact (mem_section5UpperNeighbors_iff).mpr
+        ⟨(section5StartComponentGraph_adj_iff hstart).mpr (Or.inl hwStep), hwStep.1⟩
+    have hupper_pos : 0 < (section5UpperNeighbors v).card := Finset.card_pos.mpr ⟨w, hwMem⟩
+    omega
+
+theorem Section5SimplexSliceGenericity.toBoundarySegmentGenericity {n : ℕ} [NeZero n]
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    (hf : IsFaceRespecting f) (hfpl : IsPiecewiseAffineOn T f)
+    {hstart : IsSection5GraphNode T f (section5StartNode n)}
+    (hslice : Section5SimplexSliceGenericity T f hstart) :
+    Section5BoundarySegmentGenericity T f hstart := by
+  exact (hslice.toPerturbationGenericity hf hfpl).toBoundarySegmentGenericity
 
 theorem Section5PerturbationGenericity.toOneComplexGeometry {n : ℕ} [NeZero n]
     {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
