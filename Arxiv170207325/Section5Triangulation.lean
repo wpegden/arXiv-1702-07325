@@ -6,6 +6,12 @@ noncomputable section
 
 namespace Arxiv170207325
 
+/-- The vertices of a simplex facet all lie in the ambient simplex. -/
+theorem SimplexFacet.pointSet_subset_scaledSimplex {n : ℕ} (τ : SimplexFacet n) :
+    τ.pointSet ⊆ scaledSimplex 1 n := by
+  rintro x ⟨v, hv, rfl⟩
+  simpa [RentSimplex, scaledSimplex] using v.2
+
 /-- The common vertex set of two facets. -/
 def SimplexFacet.commonVertices {n : ℕ} (τ₁ τ₂ : SimplexFacet n) : Finset (RentSimplex n) :=
   τ₁.vertices ∩ τ₂.vertices
@@ -144,6 +150,13 @@ theorem SimplexFacet.realization_mono_of_isSubface {n : ℕ} {σ τ : SimplexFac
   rintro x ⟨v, hv, rfl⟩
   exact Set.mem_image_of_mem ((↑) : RentSimplex n → RentCoordinates n) (hστ hv)
 
+/-- Every geometric realization of a simplex facet lies in the ambient simplex. -/
+theorem SimplexFacet.realization_subset_scaledSimplex {n : ℕ} (τ : SimplexFacet n) :
+    τ.realization ⊆ scaledSimplex 1 n := by
+  rw [SimplexFacet.realization]
+  refine convexHull_min τ.pointSet_subset_scaledSimplex ?_
+  simpa [RentSimplex, scaledSimplex] using (convex_stdSimplex ℝ (RoomIndex n))
+
 theorem SimplexFacet.realization_eq_segment_of_vertices_eq_pair {n : ℕ} (τ : SimplexFacet n)
     {x y : RentSimplex n} (hτ : τ.vertices = {x, y}) :
     τ.realization =
@@ -213,6 +226,134 @@ def SimplexTriangulation.IsFace {n : ℕ} (T : SimplexTriangulation n) (σ : Sim
 theorem SimplexTriangulation.facet_isFace {n : ℕ} {T : SimplexTriangulation n}
     {τ : SimplexFacet n} (hτ : τ ∈ T.facets) : T.IsFace τ :=
   ⟨τ, hτ, SimplexFacet.isSubfaceOf_refl _⟩
+
+theorem IsPiecewiseAffineOn.facetImageContains_of_mem_realization
+    {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    (hf : IsPiecewiseAffineOn T f) {σ : SimplexFacet n} (hσ : T.IsFace σ)
+    {x : RentSimplex n} (hx : ((x : RentSimplex n) : RentCoordinates n) ∈ σ.realization) :
+    FacetImageContains f σ (f x) := by
+  rcases hσ with ⟨τ, hτ, hστ⟩
+  rcases hf τ hτ with ⟨g, hg⟩
+  have hxτ : ((x : RentSimplex n) : RentCoordinates n) ∈ τ.realization :=
+    SimplexFacet.realization_mono_of_isSubface hστ hx
+  have hfx : f x = g x := (hg x hxτ).symm
+  have hg_mem : g x ∈ convexHull ℝ (g '' σ.pointSet) := by
+    have hx' : ((x : RentSimplex n) : RentCoordinates n) ∈ convexHull ℝ σ.pointSet := by
+      simpa [SimplexFacet.realization] using hx
+    have hx'' : g x ∈ g '' convexHull ℝ σ.pointSet := ⟨x, hx', rfl⟩
+    rwa [AffineMap.image_convexHull] at hx''
+  have hg_pointSet :
+      g '' σ.pointSet = ((fun v : RentSimplex n => f v) '' (σ.vertices : Set (RentSimplex n))) := by
+    ext z
+    constructor
+    · rintro ⟨y, hy, rfl⟩
+      rcases hy with ⟨v, hv, rfl⟩
+      refine ⟨v, hv, ?_⟩
+      have hvσ : ((v : RentSimplex n) : RentCoordinates n) ∈ σ.realization := by
+        rw [SimplexFacet.realization]
+        exact subset_convexHull ℝ _ <| Set.mem_image_of_mem ((↑) : RentSimplex n → RentCoordinates n) hv
+      have hvτ : ((v : RentSimplex n) : RentCoordinates n) ∈ τ.realization :=
+        SimplexFacet.realization_mono_of_isSubface hστ hvσ
+      exact (hg v hvτ).symm
+    · rintro ⟨v, hv, rfl⟩
+      refine ⟨((v : RentSimplex n) : RentCoordinates n), ?_, ?_⟩
+      · exact Set.mem_image_of_mem ((↑) : RentSimplex n → RentCoordinates n) hv
+      · symm
+        have hvσ : ((v : RentSimplex n) : RentCoordinates n) ∈ σ.realization := by
+          rw [SimplexFacet.realization]
+          exact subset_convexHull ℝ _ <| Set.mem_image_of_mem ((↑) : RentSimplex n → RentCoordinates n) hv
+        have hvτ : ((v : RentSimplex n) : RentCoordinates n) ∈ τ.realization :=
+          SimplexFacet.realization_mono_of_isSubface hστ hvσ
+        exact (hg v hvτ).symm
+  rw [FacetImageContains, FacetImageHull]
+  rw [← hg_pointSet]
+  simpa [hfx] using hg_mem
+
+theorem IsPiecewiseAffineOn.exists_point_in_realization_of_facetImageContains
+    {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    (hf : IsPiecewiseAffineOn T f) {σ : SimplexFacet n} (hσ : T.IsFace σ)
+    {y : RentCoordinates n} (hy : FacetImageContains f σ y) :
+    ∃ x : RentSimplex n, ((x : RentSimplex n) : RentCoordinates n) ∈ σ.realization ∧ f x = y := by
+  classical
+  rcases hσ with ⟨τ, hτ, hστ⟩
+  rcases hf τ hτ with ⟨g, hg⟩
+  let s : Finset (RentCoordinates n) := σ.vertices.image fun v : RentSimplex n => f v
+  have hyconv : y ∈ convexHull ℝ (s : Set (RentCoordinates n)) := by
+    simpa [FacetImageContains, FacetImageHull, s] using hy
+  obtain ⟨w, hw_nonneg, hw_sum, hw_center⟩ := (Finset.mem_convexHull).mp hyconv
+  have hpreimage : ∀ z ∈ s, ∃ v : RentSimplex n, v ∈ σ.vertices ∧ f v = z := by
+    intro z hz
+    rcases Finset.mem_image.mp hz with ⟨v, hv, rfl⟩
+    exact ⟨v, hv, rfl⟩
+  let t : Finset {z // z ∈ s} := s.attach
+  let weights : {z // z ∈ s} → ℝ := fun z => w z.1
+  let pickVertex : {z // z ∈ s} → RentSimplex n := fun z =>
+    Classical.choose (hpreimage z.1 z.2)
+  let pickPoint : {z // z ∈ s} → RentCoordinates n := fun z =>
+    ((pickVertex z : RentSimplex n) : RentCoordinates n)
+  have hweights_nonneg : ∀ z ∈ t, 0 ≤ weights z := by
+    intro z hz
+    simpa [t, weights] using hw_nonneg z.1 z.2
+  have hweights_sum : ∑ z ∈ t, weights z = 1 := by
+    dsimp [t, weights]
+    rw [Finset.sum_attach]
+    exact hw_sum
+  have hpick_mem_pointSet : ∀ z ∈ t, pickPoint z ∈ σ.pointSet := by
+    intro z hz
+    rcases Classical.choose_spec (hpreimage z.1 z.2) with ⟨hvσ, _⟩
+    exact Set.mem_image_of_mem ((↑) : RentSimplex n → RentCoordinates n) hvσ
+  have hpick_realization :
+      t.centerMass weights pickPoint ∈ σ.realization := by
+    rw [SimplexFacet.realization]
+    exact Finset.centerMass_mem_convexHull t hweights_nonneg (by
+      rw [hweights_sum]
+      norm_num) hpick_mem_pointSet
+  have hpick_in_τ :
+      ∀ z ∈ t, ((pickVertex z : RentSimplex n) : RentCoordinates n) ∈ τ.realization := by
+    intro z hz
+    rw [SimplexFacet.realization]
+    rcases Classical.choose_spec (hpreimage z.1 z.2) with ⟨hvσ, _⟩
+    exact subset_convexHull ℝ _ <|
+      Set.mem_image_of_mem ((↑) : RentSimplex n → RentCoordinates n) (hστ hvσ)
+  have hg_on_picks : ∀ z ∈ t, g (pickPoint z) = z.1 := by
+    intro z hz
+    rcases Classical.choose_spec (hpreimage z.1 z.2) with ⟨_, hvfz⟩
+    have hτreal : ((pickVertex z : RentSimplex n) : RentCoordinates n) ∈ τ.realization :=
+      hpick_in_τ z hz
+    simpa [pickPoint, pickVertex] using (hg (pickVertex z) hτreal).trans hvfz
+  have hg_centerMass : g (t.centerMass weights pickPoint) = y := by
+    calc
+      g (t.centerMass weights pickPoint)
+          = t.centerMass weights (fun z => g (pickPoint z)) := by
+              rw [← affineCombination_eq_centerMass (R := ℝ) (t := t)
+                (p := pickPoint) (w := weights) hweights_sum]
+              rw [t.map_affineCombination (k := ℝ) pickPoint weights hweights_sum g]
+              rw [affineCombination_eq_centerMass (R := ℝ) (t := t)
+                (p := g ∘ pickPoint) (w := weights) hweights_sum]
+              rfl
+      _ = t.centerMass weights (fun z => z.1) := by
+            refine Finset.centerMass_congr_fun ?_
+            intro z hz _hwz
+            exact hg_on_picks z hz
+      _ = y := by
+            have hcenter_attach :
+                t.centerMass weights (fun z => z.1) = s.centerMass w id := by
+              dsimp [t, weights]
+              rw [Finset.centerMass, Finset.centerMass]
+              simp only [id_eq]
+              rw [← s.sum_attach (f := fun z : RentCoordinates n => w z),
+                ← s.sum_attach (f := fun z : RentCoordinates n => w z • z)]
+            exact hcenter_attach.trans hw_center
+  let x : RentSimplex n := ⟨t.centerMass weights pickPoint, by
+    simpa [RentSimplex, scaledSimplex] using σ.realization_subset_scaledSimplex hpick_realization⟩
+  have hx_realization : ((x : RentSimplex n) : RentCoordinates n) ∈ σ.realization :=
+    hpick_realization
+  have hxτ_realization : ((x : RentSimplex n) : RentCoordinates n) ∈ τ.realization :=
+    SimplexFacet.realization_mono_of_isSubface hστ hx_realization
+  refine ⟨x, hx_realization, ?_⟩
+  calc
+    f x = g x := (hg x hxτ_realization).symm
+    _ = y := by simpa [x, t, weights, pickPoint] using hg_centerMass
 
 /-- The facets of `T` incident to a cell `σ`. -/
 def SimplexTriangulation.incidentFacets {n : ℕ} (T : SimplexTriangulation n)

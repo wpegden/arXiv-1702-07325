@@ -135,11 +135,11 @@ def IsFaceRespecting {n : ℕ} (f : SelfMapOnRentSimplex n) : Prop :=
 abbrev PreservesCoordinateFaces {n : ℕ} (f : PiecewiseLinearSimplexMap n) : Prop :=
   IsFaceRespecting f
 
-/-- A map is piecewise affine when each facet carries one affine interpolation matching the vertex
-values of the map. -/
+/-- A map is piecewise affine when each facet carries one affine chart whose restriction to that
+facet realization agrees with the map. -/
 def IsPiecewiseAffineOn {n : ℕ} (T : SimplexTriangulation n) (f : SelfMapOnRentSimplex n) : Prop :=
   ∀ τ ∈ T.facets, ∃ g : RentCoordinates n →ᵃ[ℝ] RentCoordinates n,
-    ∀ v ∈ (τ.vertices : Set (RentSimplex n)), g v = f v
+    ∀ x : RentSimplex n, ((x : RentSimplex n) : RentCoordinates n) ∈ τ.realization → g x = f x
 
 /-- Manuscript-facing alias: the paper says piecewise linear, while the Lean statement uses affine
 interpolation on each simplex. -/

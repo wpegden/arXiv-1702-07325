@@ -711,6 +711,17 @@ theorem IsSection5GraphNode.cell_nonempty {n : ℕ} {T : SimplexTriangulation n}
   rw [hu.card_eq]
   omega
 
+theorem IsPiecewiseAffineOn.exists_point_in_cell_realization_of_graphNode {n : ℕ} [NeZero n]
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    (hfpl : IsPiecewiseAffineOn T f) {u : Section5Node n} (hu : IsSection5GraphNode T f u) :
+    ∃ x : RentSimplex n, ((x : RentSimplex n) : RentCoordinates n) ∈ u.cell.realization ∧
+      f x ∈ prefixBarycenterSegment n u.level := by
+  rcases hu.meets_chain with ⟨y, hyHull, hySeg⟩
+  rcases hfpl.exists_point_in_realization_of_facetImageContains hu.isFace hyHull with
+    ⟨x, hx, hfx⟩
+  refine ⟨x, hx, ?_⟩
+  simpa [hfx] using hySeg
+
 theorem IsFaceRespecting.section5StartNode_isGraphNode {n : ℕ} [NeZero n]
     {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n} (hf : IsFaceRespecting f) :
     IsSection5GraphNode T f (section5StartNode n) := by

@@ -207,7 +207,15 @@
   `Section5PerturbationGenericity`, and the theorem
   `IsFaceRespecting.exists_barycenter_targetFacet_of_two_le_and_perturbationGenericity` shows
   that once the manuscript's perturbation sentence is proved in this explicit step language, the
-  Section 5 target-facet conclusion is immediate.
+  Section 5 target-facet conclusion is immediate. A separate modeling correction was also made at
+  the paper-facing boundary: `IsPiecewiseAffineOn` now means agreement with one affine chart on
+  the whole realization of each triangulation facet, not only on its vertices. With that stronger
+  and manuscript-faithful hypothesis, `Section5Triangulation.lean` now proves the two-way bridge
+  between `FacetImageContains` and actual simplex points: one can extract a point of
+  `σ.realization` from a hull hit, and conversely any point of `σ.realization` maps back into
+  `FacetImageHull f σ`. `Section5Path.lean` already specializes the extraction direction to
+  Section 5 graph nodes via `IsPiecewiseAffineOn.exists_point_in_cell_realization_of_graphNode`,
+  which is the new starting point for the remaining perturbation proof.
 - Current structural blocker:
   the present `SimplexTriangulation` wrapper does not yet expose the induced simplicial
   subdivision of the prefix faces, especially the boundary edge `[e_1,e_2]`, and it also does
@@ -217,7 +225,10 @@
   further to proving the concrete fields of `Section5BoundarySegmentGenericity` from actual simplex
   intersections with the barycenter chain. A later cleanup may still derive the remaining
   `Section5OneComplexGeometry` fields from the same input, but that is no longer the main blocker
-  for the target-facet theorem.
+  for the target-facet theorem. The immediate next experiment should use the new point/hull bridge
+  to attack `Section5PerturbationGenericity.lower_step_exists_of_ne_start` by taking a real point
+  in one Section 5 cell whose image lies on `[b_k, b_{k+1}]` and shrinking it to a lower-face
+  witness at `b_k`.
 - First prove the barycenter-specialized version if that is the easiest entry point.
 - Then generalize to arbitrary interior targets if Section 6 needs it.
 - If full surjectivity is still awkward, keep the theorem in the "target in interior" form first; that already covers the barycenter and the interior `y` used in the first Section 6 theorem.
