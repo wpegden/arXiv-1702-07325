@@ -284,7 +284,14 @@
   remaining work is no longer to rebuild any segment/predecessor infrastructure, but specifically
   to prove that the endpoint realization points lie on the correct lower and upper boundary faces,
   then to feed the left-endpoint face into the predecessor theorem and the right-endpoint face
-  into the upper-neighbor / endpoint parts of `Section5BoundarySegmentGenericity`.
+  into the upper-neighbor / endpoint parts of `Section5BoundarySegmentGenericity`. The latest
+  refinement removes another bookkeeping layer on the lower side: if the geometric argument shows
+  that a left-endpoint realization point lies in the lower prefix face, then
+  `section5HitParamLeft u f = 0` is now automatic; and if it produces any codimension-one lower
+  subface with `u.level` vertices in that face, then
+  `(section5LowerPrefixVertices u).card = u.level` is also automatic. So the unresolved work is
+  now purely the geometric extraction of those actual lower/upper boundary faces from the endpoint
+  realization points, not the downstream cardinality or parameter algebra.
 - First prove the barycenter-specialized version if that is the easiest entry point.
 - Then generalize to arbitrary interior targets if Section 6 needs it.
 - If full surjectivity is still awkward, keep the theorem in the "target in interior" form first; that already covers the barycenter and the interior `y` used in the first Section 6 theorem.
