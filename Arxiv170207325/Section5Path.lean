@@ -4764,6 +4764,21 @@ theorem IsFaceRespecting.exists_barycenter_targetFacet_of_two_le_and_perturbatio
   exact Section5CanonicalBoundarySuccessorData.exists_targetFacet_of_perturbationGenericity
     (T := T) (f := f) hf (hf.section5CanonicalBoundarySuccessorData_of_two_le hn) hpert
 
+/-- Exact remaining right-endpoint input: at most one higher-level continuation through the next
+endpoint, and if there is none then the current Section 5 node already hits the final barycenter. -/
+structure Section5LocalUpperEndpointGenericity {n : ℕ} [NeZero n]
+    (T : SimplexTriangulation n) (f : SelfMapOnRentSimplex n)
+    (hstart : IsSection5GraphNode T f (section5StartNode n)) : Prop where
+  upper_step_unique :
+    ∀ {v u w : section5StartComponent hstart},
+      Section5Step f v.1.1 u.1.1 →
+      Section5Step f v.1.1 w.1.1 →
+        u = w
+  no_upper_step_is_endpoint :
+    ∀ v : section5StartComponent hstart,
+      (¬ ∃ w : section5StartComponent hstart, Section5Step f v.1.1 w.1.1) →
+        IsSection5Endpoint T f v.1.1
+
 theorem section5BoundarySegmentGenericity_of_localLeftBoundaryFaceAndUpperEndpoint
     {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
     {hstart : IsSection5GraphNode T f (section5StartNode n)}
@@ -4772,19 +4787,12 @@ theorem section5BoundarySegmentGenericity_of_localLeftBoundaryFaceAndUpperEndpoi
       ∀ v : section5StartComponent hstart,
         v ≠ section5StartVertexInComponent hstart →
           Section5LocalLeftBoundaryFaceGenericity v.1.1 f)
-    (hupper :
-      ∀ {v u w : section5StartComponent hstart},
-        Section5Step f v.1.1 u.1.1 →
-        Section5Step f v.1.1 w.1.1 →
-          u = w)
-    (hendpoint :
-      ∀ v : section5StartComponent hstart,
-        (¬ ∃ w : section5StartComponent hstart, Section5Step f v.1.1 w.1.1) →
-          IsSection5Endpoint T f v.1.1) :
+    (hupper : Section5LocalUpperEndpointGenericity T f hstart) :
     Section5BoundarySegmentGenericity T f hstart := by
   exact
     (section5PerturbationGenericity_of_localLeftBoundaryFaceAndUpperEndpoint
-      (T := T) (f := f) (hstart := hstart) hf hfpl hlower hupper hendpoint
+      (T := T) (f := f) (hstart := hstart) hf hfpl hlower
+      hupper.upper_step_unique hupper.no_upper_step_is_endpoint
     ).toBoundarySegmentGenericity
 
 theorem IsFaceRespecting.exists_barycenter_targetFacet_of_two_le_and_localLeftBoundaryFaceAndUpperEndpoint
@@ -4795,21 +4803,13 @@ theorem IsFaceRespecting.exists_barycenter_targetFacet_of_two_le_and_localLeftBo
         v ≠ section5CanonicalStartVertexInComponent (T := T) (f := f) hf →
           Section5LocalLeftBoundaryFaceGenericity v.1.1 f)
     (hupper :
-      ∀ {v u w : section5CanonicalStartComponent (T := T) (f := f) hf},
-        Section5Step f v.1.1 u.1.1 →
-        Section5Step f v.1.1 w.1.1 →
-          u = w)
-    (hendpoint :
-      ∀ v : section5CanonicalStartComponent (T := T) (f := f) hf,
-        (¬ ∃ w : section5CanonicalStartComponent (T := T) (f := f) hf,
-          Section5Step f v.1.1 w.1.1) →
-            IsSection5Endpoint T f v.1.1) :
+      Section5LocalUpperEndpointGenericity T f hf.section5StartNode_isGraphNode) :
     ∃ τ ∈ T.facets,
       FacetImageContains f τ ((rentBarycenter n : RentSimplex n) : RentCoordinates n) := by
   exact hf.exists_barycenter_targetFacet_of_two_le_and_boundarySegmentGenericity hn <|
     section5BoundarySegmentGenericity_of_localLeftBoundaryFaceAndUpperEndpoint
       (T := T) (f := f) (hstart := hf.section5StartNode_isGraphNode)
-      hf hfpl hlower hupper hendpoint
+      hf hfpl hlower hupper
 
 theorem IsFaceRespecting.exists_barycenter_targetFacet_of_boundarySegmentGenericity
     {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}

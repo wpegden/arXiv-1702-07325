@@ -277,6 +277,10 @@
   Lean now names the missing premise itself as `Section5LocalLevelOneLeftVertexGenericity u f`.
   So the remaining level-1 work is exactly to prove that named local hypothesis, i.e. to show
   that the unique vertex of a minimal singleton exact left hit lies in that lower face.
+  Dually, the exact remaining right-endpoint input is now also named explicitly:
+  `Section5LocalUpperEndpointGenericity T f hstart` bundles the two still-unproved fields that
+  the manuscript's generic path argument needs on the outgoing side, namely uniqueness of an upper
+  `Section5Step` and the fact that a node with no such upper step already hits the final barycenter.
   On the packaging side, the remaining graph-theoretic conversion gap is now gone: the support
   layer proves `Section5PerturbationGenericity.toBoundarySegmentGenericity`, and the existing
   local-left/upper-endpoint wrapper is rerouted through
