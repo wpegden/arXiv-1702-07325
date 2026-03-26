@@ -266,7 +266,18 @@
   obstruction theorem still records that if the
   filtered lower subface already hits `b_k`, then every room in `prefixRooms n k` appears in the
   support of some lower-prefix vertex, while any actual lower-face preimage of `b_k` has simplex
-  support exactly `prefixRooms n k`.
+  support exactly `prefixRooms n k`. The newest infrastructure now follows the supervisor's
+  interval route directly: `Section5Path.lean` defines the affine parameterization
+  `section5HitParamMap n k`, the hit-parameter set `section5HitParams u f ⊆ [0,1]`, and its two
+  endpoint parameters `section5HitParamLeft` / `section5HitParamRight`. For every actual Section 5
+  graph node `u`, the file now proves that `section5HitParams u f` is nonempty, compact, convex,
+  and therefore equal to the closed interval between those two endpoint parameters. This removes
+  the remaining ambiguity about the correct viewpoint: the next proof step is now concretely to
+  identify which codimension-one faces are hit by the left and right endpoints of this interval,
+  then to feed the left-endpoint face into
+  `exists_section5StartComponentLowerStep_of_subface_card_eq_and_mem_realization_map_segment` and
+  the right-endpoint face into the upper-neighbor / endpoint parts of
+  `Section5BoundarySegmentGenericity`.
 - First prove the barycenter-specialized version if that is the easiest entry point.
 - Then generalize to arbitrary interior targets if Section 6 needs it.
 - If full surjectivity is still awkward, keep the theorem in the "target in interior" form first; that already covers the barycenter and the interior `y` used in the first Section 6 theorem.

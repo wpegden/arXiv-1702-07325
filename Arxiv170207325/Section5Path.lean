@@ -2,7 +2,10 @@ import Mathlib.Data.List.Chain
 import Mathlib.Data.Finset.Powerset
 import Mathlib.Combinatorics.SimpleGraph.Connectivity.Connected
 import Mathlib.Combinatorics.SimpleGraph.DegreeSum
+import Mathlib.Analysis.Convex.Topology
 import Mathlib.LinearAlgebra.AffineSpace.FiniteDimensional
+import Mathlib.Topology.Algebra.Affine
+import Mathlib.Topology.Order.Compact
 import Arxiv170207325.InteriorTarget
 import Arxiv170207325.Section5Triangulation
 
@@ -272,6 +275,17 @@ theorem prefixBarycenter_self_eq_rentBarycenter (n : ℕ) [NeZero n] :
 /-- The Section 5 chain segment joining consecutive prefix-face barycenters. -/
 def prefixBarycenterSegment (n k : ℕ) : Set (RentCoordinates n) :=
   segment ℝ (prefixBarycenter n k) (prefixBarycenter n (k + 1))
+
+/-- The affine parameterization `t ↦ (1 - t) b_k + t b_{k+1}` of the `k`th Section 5 chain
+segment. -/
+def section5HitParamMap (n k : ℕ) : ℝ →ᵃ[ℝ] RentCoordinates n :=
+  AffineMap.lineMap (prefixBarycenter n k) (prefixBarycenter n (k + 1))
+
+@[simp]
+theorem section5HitParamMap_apply (n k : ℕ) (t : ℝ) :
+    section5HitParamMap n k t =
+      AffineMap.lineMap (prefixBarycenter n k) (prefixBarycenter n (k + 1)) t :=
+  rfl
 
 theorem prefixBarycenterSegment_subset_ambientCoordinateFace {n k : ℕ} [NeZero k]
     (hk : k + 1 ≤ n) :
@@ -845,6 +859,88 @@ theorem IsSection5GraphNode.level_eq_card_pred {n : ℕ} {T : SimplexTriangulati
     u.level = u.cell.vertices.card - 1 := by
   rw [hu.card_eq]
   omega
+
+/-- The parameter values `t ∈ [0,1]` for which the `u.level` barycenter segment lies in the image
+hull of `u.cell`. This is the interval-valued viewpoint suggested by the manuscript's Section 5
+genericity sentence. -/
+def section5HitParams {n : ℕ} (u : Section5Node n) (f : SelfMapOnRentSimplex n) : Set ℝ :=
+  Set.Icc (0 : ℝ) 1 ∩ (section5HitParamMap n u.level) ⁻¹' FacetImageHull f u.cell
+
+@[simp]
+theorem mem_section5HitParams_iff {n : ℕ} {u : Section5Node n} {f : SelfMapOnRentSimplex n}
+    {t : ℝ} :
+    t ∈ section5HitParams u f ↔
+      t ∈ Set.Icc (0 : ℝ) 1 ∧ section5HitParamMap n u.level t ∈ FacetImageHull f u.cell :=
+  Iff.rfl
+
+theorem convex_section5HitParams {n : ℕ} (u : Section5Node n) (f : SelfMapOnRentSimplex n) :
+    Convex ℝ (section5HitParams u f) := by
+  refine Convex.inter (convex_Icc (0 : ℝ) 1) ?_
+  simpa [FacetImageHull] using
+    (convex_convexHull ℝ
+      (((fun v : RentSimplex n => f v) '' (u.cell.vertices : Set (RentSimplex n))))).affine_preimage
+        (section5HitParamMap n u.level)
+
+theorem isCompact_section5HitParams {n : ℕ} (u : Section5Node n) (f : SelfMapOnRentSimplex n) :
+    IsCompact (section5HitParams u f) := by
+  have hfinite :
+      (((fun v : RentSimplex n => f v) '' (u.cell.vertices : Set (RentSimplex n))) :
+        Set (RentCoordinates n)).Finite :=
+    u.cell.vertices.finite_toSet.image (fun v : RentSimplex n => f v)
+  have hclosedHull : IsClosed (FacetImageHull f u.cell) := by
+    simpa [FacetImageHull] using hfinite.isClosed_convexHull
+  have hcont : Continuous (section5HitParamMap n u.level) := by
+    simpa [section5HitParamMap] using
+      (AffineMap.lineMap_continuous
+        (p := prefixBarycenter n u.level)
+        (q := prefixBarycenter n (u.level + 1)))
+  have hclosedPre :
+      IsClosed ((section5HitParamMap n u.level) ⁻¹' FacetImageHull f u.cell) :=
+    hclosedHull.preimage hcont
+  simpa [section5HitParams] using isCompact_Icc.inter_right hclosedPre
+
+theorem section5HitParams_nonempty {n : ℕ} {T : SimplexTriangulation n}
+    {f : SelfMapOnRentSimplex n} {u : Section5Node n} (hu : IsSection5GraphNode T f u) :
+    (section5HitParams u f).Nonempty := by
+  rcases hu.meets_chain with ⟨y, hyHull, hySeg⟩
+  rw [prefixBarycenterSegment, segment_eq_image_lineMap ℝ
+    (prefixBarycenter n u.level) (prefixBarycenter n (u.level + 1))] at hySeg
+  rcases hySeg with ⟨t, htIcc, rfl⟩
+  exact ⟨t, htIcc, hyHull⟩
+
+/-- The left endpoint of the compact interval of hit parameters for one Section 5 cell. -/
+def section5HitParamLeft {n : ℕ} (u : Section5Node n) (f : SelfMapOnRentSimplex n) : ℝ :=
+  sInf (section5HitParams u f)
+
+/-- The right endpoint of the compact interval of hit parameters for one Section 5 cell. -/
+def section5HitParamRight {n : ℕ} (u : Section5Node n) (f : SelfMapOnRentSimplex n) : ℝ :=
+  sSup (section5HitParams u f)
+
+theorem section5HitParamLeft_mem {n : ℕ} {T : SimplexTriangulation n}
+    {f : SelfMapOnRentSimplex n} {u : Section5Node n} (hu : IsSection5GraphNode T f u) :
+    section5HitParamLeft u f ∈ section5HitParams u f := by
+  exact (isCompact_section5HitParams u f).sInf_mem (section5HitParams_nonempty hu)
+
+theorem section5HitParamRight_mem {n : ℕ} {T : SimplexTriangulation n}
+    {f : SelfMapOnRentSimplex n} {u : Section5Node n} (hu : IsSection5GraphNode T f u) :
+    section5HitParamRight u f ∈ section5HitParams u f := by
+  exact (isCompact_section5HitParams u f).sSup_mem (section5HitParams_nonempty hu)
+
+theorem section5HitParams_eq_Icc {n : ℕ} {T : SimplexTriangulation n}
+    {f : SelfMapOnRentSimplex n} {u : Section5Node n} (hu : IsSection5GraphNode T f u) :
+    section5HitParams u f =
+      Set.Icc (section5HitParamLeft u f) (section5HitParamRight u f) := by
+  ext t
+  constructor
+  · intro ht
+    have hleast :=
+      (isCompact_section5HitParams u f).isLeast_sInf (section5HitParams_nonempty hu)
+    have hgreat :=
+      (isCompact_section5HitParams u f).isGreatest_sSup (section5HitParams_nonempty hu)
+    exact ⟨hleast.2 ht, hgreat.2 ht⟩
+  · intro ht
+    exact (convex_section5HitParams u f).ordConnected.out
+      (section5HitParamLeft_mem hu) (section5HitParamRight_mem hu) ht
 
 /-- The nonempty subfaces of one Section 5 cell whose image still meets the current barycenter
 segment. -/
