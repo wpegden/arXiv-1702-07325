@@ -42,6 +42,7 @@
 - [x] Make the lower-side boundary-neighbor combinatorics explicit in `Section5Path.lean`: prove `(section5LowerNeighbors v).card ≤ 1`, disjointness of lower and upper neighbor finsets, and the resulting cardinality decomposition reducing `boundaryNeighbors_card_le_two` to an upper-neighbor bound.
 - [x] Collapse the remaining Section 5 wrapper gap to the true upper-side geometric hypotheses by proving `IsFaceRespecting.exists_barycenter_targetFacet_of_upperCardLeOneAndEndpointRule`.
 - [x] Add a step-level Section 5 bridge closer to the manuscript: prove upper-neighbor cardinality from uniqueness of `Section5Step` continuations, build `Section5OneComplexGeometry` from step-level lower/upper/endpoint hypotheses, and expose the resulting canonical target-facet theorem.
+- [x] Name the manuscript-level perturbation input explicitly as `Section5PerturbationGenericity` and connect it immediately to the canonical target-facet theorem, so the remaining frontier is the geometric proof of that structure rather than more graph translation.
 - [ ] Prove the actual `Section5BoundarySegmentGenericity` fields from the manuscript's perturbation / segment-intersection picture on the barycenter-chain preimage.
 - [ ] If needed for cleanup rather than the main proof path, finish the remaining `Section5OneComplexGeometry` fields by deriving upper-continuation uniqueness and the no-upper-neighbor endpoint rule from the same geometric input.
 

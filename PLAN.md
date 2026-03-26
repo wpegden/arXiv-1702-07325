@@ -203,7 +203,11 @@
   and step-level lower/upper/endpoint hypotheses assemble directly into
   `Section5OneComplexGeometry` and the canonical target-facet theorem. So the remaining proof
   boundary can now be stated entirely in terms of the barycenter-chain segment hitting the
-  codimension-one faces of one simplex cell.
+  codimension-one faces of one simplex cell. This interface is now named
+  `Section5PerturbationGenericity`, and the theorem
+  `IsFaceRespecting.exists_barycenter_targetFacet_of_two_le_and_perturbationGenericity` shows
+  that once the manuscript's perturbation sentence is proved in this explicit step language, the
+  Section 5 target-facet conclusion is immediate.
 - Current structural blocker:
   the present `SimplexTriangulation` wrapper does not yet expose the induced simplicial
   subdivision of the prefix faces, especially the boundary edge `[e_1,e_2]`, and it also does

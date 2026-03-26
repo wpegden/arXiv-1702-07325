@@ -2110,6 +2110,27 @@ theorem section5UpperNeighbors_card_le_one_of_step_unique {n : ℕ} [NeZero n]
       omega
   exact hupper huStep hwStep
 
+/-- Minimal perturbation/genericity input in the manuscript's step-level language: every non-start
+Section 5 cell is entered through a lower codimension-one face, has at most one upper
+continuation along the next barycenter-chain segment, and if there is no such continuation then
+the cell already hits the final barycenter. -/
+structure Section5PerturbationGenericity {n : ℕ} [NeZero n]
+    (T : SimplexTriangulation n) (f : SelfMapOnRentSimplex n)
+    (hstart : IsSection5GraphNode T f (section5StartNode n)) : Prop where
+  lower_step_exists_of_ne_start :
+    ∀ v : section5StartComponent hstart,
+      v ≠ section5StartVertexInComponent hstart →
+        ∃ u : section5StartComponent hstart, Section5Step f u.1.1 v.1.1
+  upper_step_unique :
+    ∀ {v u w : section5StartComponent hstart},
+      Section5Step f v.1.1 u.1.1 →
+      Section5Step f v.1.1 w.1.1 →
+        u = w
+  no_upper_step_is_endpoint :
+    ∀ v : section5StartComponent hstart,
+      (¬ ∃ w : section5StartComponent hstart, Section5Step f v.1.1 w.1.1) →
+        IsSection5Endpoint T f v.1.1
+
 /-- A local 1-dimensional-cell-complex package for the real Section 5 start component.
 It records that every non-start node is entered from a unique lower-level neighbor, each node has
 at most one higher-level continuation, and a node with no higher-level continuation already hits
@@ -2212,6 +2233,24 @@ theorem section5OneComplexGeometry_of_stepGenericity {n : ℕ} [NeZero n]
     intro hstep
     rcases hstep with ⟨w, hwStep⟩
     exact hno ⟨w, (section5StartComponentGraph_adj_iff hstart).mpr (Or.inl hwStep), hwStep.1⟩
+
+theorem Section5PerturbationGenericity.upperNeighbors_card_le_one {n : ℕ} [NeZero n]
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    {hstart : IsSection5GraphNode T f (section5StartNode n)}
+    (hpert : Section5PerturbationGenericity T f hstart)
+    (v : section5StartComponent hstart) :
+    (section5UpperNeighbors v).card ≤ 1 := by
+  exact section5UpperNeighbors_card_le_one_of_step_unique hpert.upper_step_unique v
+
+theorem Section5PerturbationGenericity.toOneComplexGeometry {n : ℕ} [NeZero n]
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    {hstart : IsSection5GraphNode T f (section5StartNode n)}
+    (hpert : Section5PerturbationGenericity T f hstart) :
+    Section5OneComplexGeometry T f hstart := by
+  exact section5OneComplexGeometry_of_stepGenericity
+    hpert.lower_step_exists_of_ne_start
+    hpert.upper_step_unique
+    hpert.no_upper_step_is_endpoint
 
 theorem Section5OneComplexGeometry.degree_le_two {n : ℕ} [NeZero n]
     {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
@@ -2548,6 +2587,26 @@ theorem IsFaceRespecting.exists_barycenter_targetFacet_of_two_le_and_stepGeneric
   exact Section5CanonicalBoundarySuccessorData.exists_targetFacet_of_stepGenericity
     (T := T) (f := f) hf (hf.section5CanonicalBoundarySuccessorData_of_two_le hn)
     hlower hupper hendpoint
+
+theorem Section5CanonicalBoundarySuccessorData.exists_targetFacet_of_perturbationGenericity
+    {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    (hf : IsFaceRespecting f) (hsucc : Section5CanonicalBoundarySuccessorData T f hf)
+    (hpert : Section5PerturbationGenericity T f hf.section5StartNode_isGraphNode) :
+    ∃ τ ∈ T.facets,
+      FacetImageContains f τ ((rentBarycenter n : RentSimplex n) : RentCoordinates n) := by
+  exact hsucc.exists_targetFacet_of_stepGenericity hf
+    hpert.lower_step_exists_of_ne_start
+    hpert.upper_step_unique
+    hpert.no_upper_step_is_endpoint
+
+theorem IsFaceRespecting.exists_barycenter_targetFacet_of_two_le_and_perturbationGenericity
+    {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    (hn : 2 ≤ n) (hf : IsFaceRespecting f)
+    (hpert : Section5PerturbationGenericity T f hf.section5StartNode_isGraphNode) :
+    ∃ τ ∈ T.facets,
+      FacetImageContains f τ ((rentBarycenter n : RentSimplex n) : RentCoordinates n) := by
+  exact Section5CanonicalBoundarySuccessorData.exists_targetFacet_of_perturbationGenericity
+    (T := T) (f := f) hf (hf.section5CanonicalBoundarySuccessorData_of_two_le hn) hpert
 
 theorem IsFaceRespecting.exists_barycenter_targetFacet_of_boundarySegmentGenericity
     {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
