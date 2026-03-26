@@ -2353,6 +2353,112 @@ theorem section5Step_same_source_eq_of_cell_vertices_eq {n : ℕ}
   · omega
   · exact hcell_verts
 
+theorem section5Step_exists_vertex_not_mem_source {n : ℕ} {T : SimplexTriangulation n}
+    {f : SelfMapOnRentSimplex n} {v u : Section5Node n}
+    (hv : IsSection5GraphNode T f v) (hu : IsSection5GraphNode T f u)
+    (huv : Section5Step f v u) :
+    ∃ a ∈ u.cell.vertices, a ∉ v.cell.vertices := by
+  by_contra hno
+  have hu_subset : u.cell.vertices ⊆ v.cell.vertices := by
+    intro a ha
+    by_contra ha_not
+    exact hno ⟨a, ha, ha_not⟩
+  have hEq : u.cell.vertices = v.cell.vertices :=
+    Finset.Subset.antisymm hu_subset huv.2.1
+  have hcard_eq : u.cell.vertices.card = v.cell.vertices.card := by
+    simpa [hEq]
+  rw [hu.card_eq, hv.card_eq, ← huv.1] at hcard_eq
+  omega
+
+theorem section5Step_cell_vertices_eq_insert_vertex {n : ℕ} {T : SimplexTriangulation n}
+    {f : SelfMapOnRentSimplex n} {v u : Section5Node n}
+    (hv : IsSection5GraphNode T f v) (hu : IsSection5GraphNode T f u)
+    (huv : Section5Step f v u) {a : RentSimplex n}
+    (ha : a ∈ u.cell.vertices) (ha_not : a ∉ v.cell.vertices) :
+    u.cell.vertices = insert a v.cell.vertices := by
+  apply (Finset.eq_of_subset_of_card_le ?_ ?_).symm
+  · intro x hx
+    rcases Finset.mem_insert.mp hx with rfl | hxv
+    · exact ha
+    · exact huv.2.1 hxv
+  · rw [Finset.card_insert_of_notMem ha_not, hv.card_eq, hu.card_eq, ← huv.1]
+
+theorem section5Step_vertex_not_mem_source_not_mem_coordinateFace {n : ℕ}
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n} {v u : Section5Node n}
+    (hv : IsSection5GraphNode T f v) (hu : IsSection5GraphNode T f u)
+    (huv : Section5Step f v u) {a : RentSimplex n}
+    (ha : a ∈ u.cell.vertices) (ha_not : a ∉ v.cell.vertices) :
+    a ∉ coordinateFace (prefixRooms n u.level) := by
+  classical
+  intro ha_face
+  have ha_lower : a ∈ section5LowerPrefixVertices u := Finset.mem_filter.mpr ⟨ha, ha_face⟩
+  rw [← section5Step_vertices_eq_lowerPrefixVertices hv hu huv] at ha_lower
+  exact ha_not ha_lower
+
+theorem section5Step_same_source_cell_vertices_eq_of_subfaces_same_facet {n : ℕ}
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n} {v u w : Section5Node n}
+    (hv : IsSection5GraphNode T f v) (hu : IsSection5GraphNode T f u)
+    (hw : IsSection5GraphNode T f w)
+    (huv : Section5Step f v u) (hvw : Section5Step f v w)
+    {τ : SimplexFacet n} (hτ : τ ∈ T.facets)
+    (huτ : u.cell.IsSubfaceOf τ) (hwτ : w.cell.IsSubfaceOf τ) :
+    u.cell.vertices = w.cell.vertices := by
+  classical
+  rcases section5Step_exists_vertex_not_mem_source hv hu huv with ⟨a, ha_u, ha_not_v⟩
+  rcases section5Step_exists_vertex_not_mem_source hv hw hvw with ⟨b, hb_w, hb_not_v⟩
+  have ha_u_face : a ∈ coordinateFace (prefixRooms n (u.level + 1)) := hu.prefix_vertices ha_u
+  have hb_w_face : b ∈ coordinateFace (prefixRooms n (w.level + 1)) := hw.prefix_vertices hb_w
+  have huv_level : v.level + 1 = u.level := huv.1
+  have hvw_level : v.level + 1 = w.level := hvw.1
+  have hsame_level : u.level = w.level := by
+    omega
+  have hb_w_face' : b ∈ coordinateFace (prefixRooms n (u.level + 1)) := by
+    simpa [hsame_level] using hb_w_face
+  have hv_face_succ :
+      ∀ ⦃x : RentSimplex n⦄, x ∈ v.cell.vertices → x ∈ coordinateFace (prefixRooms n (u.level + 1)) := by
+    intro x hx
+    have hx_face : x ∈ coordinateFace (prefixRooms n (v.level + 1)) := hv.prefix_vertices hx
+    exact coordinateFace_mono (prefixRooms_mono (by omega)) hx_face
+  by_cases hab : a = b
+  · subst hab
+    rw [section5Step_cell_vertices_eq_insert_vertex hv hu huv ha_u ha_not_v]
+    rw [section5Step_cell_vertices_eq_insert_vertex hv hw hvw hb_w hb_not_v]
+  · let S : Finset (RentSimplex n) := insert a (insert b v.cell.vertices)
+    have hS_subset :
+        S ⊆ τ.vertices.filter fun x => x ∈ coordinateFace (prefixRooms n (u.level + 1)) := by
+      intro x hx
+      simp only [S, Finset.mem_insert, Finset.mem_filter] at hx ⊢
+      rcases hx with rfl | hx
+      · exact ⟨huτ ha_u, ha_u_face⟩
+      rcases hx with rfl | hx
+      · exact ⟨hwτ hb_w, hb_w_face'⟩
+      · exact ⟨huτ (huv.2.1 hx), hv_face_succ hx⟩
+    have hS_card :
+        S.card = u.level + 2 := by
+      simp [S, Finset.card_insert_of_notMem, ha_not_v, hb_not_v, hab, hv.card_eq, huv.1]
+    have hτ_card :
+        (τ.vertices.filter fun x => x ∈ coordinateFace (prefixRooms n (u.level + 1))).card
+          ≤ u.level + 1 := by
+      have hcard :=
+        T.card_le_prefixVertexPoints_of_subset_coordinateFace hτ
+          (show
+            (τ.vertices.filter fun x => x ∈ coordinateFace (prefixRooms n (u.level + 1))) ⊆
+              τ.vertices by
+            intro x hx
+            exact (Finset.mem_filter.mp hx).1)
+          (by
+            intro x hx
+            exact (Finset.mem_filter.mp hx).2)
+      rwa [prefixVertexPoints_card hu.level_le] at hcard
+    have : u.level + 2 ≤ u.level + 1 := by
+      calc
+        u.level + 2 = S.card := hS_card.symm
+        _ ≤
+          (τ.vertices.filter fun x => x ∈ coordinateFace (prefixRooms n (u.level + 1))).card :=
+            Finset.card_le_card hS_subset
+        _ ≤ u.level + 1 := hτ_card
+    omega
+
 /-- The undirected adjacency relation on the Section 5 graph. -/
 def Section5Adjacent {n : ℕ} (f : SelfMapOnRentSimplex n) (u v : Section5Node n) : Prop :=
   Section5Step f u v ∨ Section5Step f v u
@@ -3458,6 +3564,29 @@ theorem section5StartComponent_upper_step_unique_of_pos_level_cell_vertices_eq {
     apply Subtype.ext
     exact section5Step_same_source_eq_of_cell_vertices_eq huv hvw <|
       hcell_verts (Nat.pos_of_ne_zero hvzero) huv hvw
+
+theorem section5StartComponent_upper_step_unique_of_pos_level_common_ambientFacet {n : ℕ}
+    [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    {hstart : IsSection5GraphNode T f (section5StartNode n)}
+    (hfacet :
+      ∀ {v u w : section5StartComponent hstart},
+        0 < v.1.1.level →
+        Section5Step f v.1.1 u.1.1 →
+        Section5Step f v.1.1 w.1.1 →
+          ∃ τ ∈ T.facets, u.1.1.cell.IsSubfaceOf τ ∧ w.1.1.cell.IsSubfaceOf τ) :
+    ∀ {v u w : section5StartComponent hstart},
+      Section5Step f v.1.1 u.1.1 →
+      Section5Step f v.1.1 w.1.1 →
+        u = w := by
+  refine section5StartComponent_upper_step_unique_of_pos_level_cell_vertices_eq ?_
+  intro v u w hvpos huv hvw
+  obtain ⟨τ, hτ, huτ, hwτ⟩ := hfacet hvpos huv hvw
+  have hv_node : IsSection5GraphNode T f v.1.1 := (mem_section5Nodes_iff.mp v.1.2)
+  have hu_node : IsSection5GraphNode T f u.1.1 := (mem_section5Nodes_iff.mp u.1.2)
+  have hw_node : IsSection5GraphNode T f w.1.1 := (mem_section5Nodes_iff.mp w.1.2)
+  exact
+    section5Step_same_source_cell_vertices_eq_of_subfaces_same_facet
+      hv_node hu_node hw_node huv hvw hτ huτ hwτ
 
 theorem existsUnique_section5_levelOne_start_subface_of_exists {n : ℕ} [NeZero n]
     {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}

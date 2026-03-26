@@ -313,10 +313,15 @@
   are Section 5 graph nodes with `Section5Step f u v` and `Section5Step f u w`, then
   `section5Step_vertices_eq_lowerPrefixVertices` already gives
   `u.cell.vertices = section5LowerPrefixVertices v = section5LowerPrefixVertices w`, so the
-  remaining theorem is purely triangulation-side for `0 < u.level`: for any full-dimensional
-  boundary cell `σ` in `coordinateFace (prefixRooms n (k + 1))`, there is at most one `(k+1)`-face
-  of the triangulation inside `coordinateFace (prefixRooms n (k + 2))` whose lower-prefix vertex
-  set is `σ`.
+  remaining theorem is purely triangulation-side for `0 < u.level`. The newest Lean reduction now
+  sharpens it once more: if two upper-step cells from the same source are subfaces of one common
+  ambient triangulation facet, then affine-independence plus the prefix-face cardinality bound
+  already force those upper cells to have the same full vertex set. So the actual unresolved
+  structural lemma is now a boundary-star statement: for any full-dimensional boundary cell `σ` in
+  `coordinateFace (prefixRooms n (k + 1))`, any two `(k+1)`-faces of the triangulation inside
+  `coordinateFace (prefixRooms n (k + 2))` that have lower-prefix vertex set `σ` must in fact lie
+  in a common ambient facet, equivalently `σ` has at most one incident `(k+1)`-cell on that upper
+  side.
   On the packaging side, the remaining graph-theoretic conversion gap is now gone: the support
   layer proves `Section5PerturbationGenericity.toBoundarySegmentGenericity`, and the existing
   local-left/upper-endpoint wrapper is rerouted through
