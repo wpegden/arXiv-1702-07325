@@ -161,6 +161,8 @@
   unique lower-level neighbor, every node has at most one higher-level continuation, and the
   absence of a higher-level continuation forces a barycenter endpoint. These local one-complex
   axioms now mechanically imply the old degree/endpoint hypotheses and the target-facet theorem.
+  A first concrete fragment is already in place: level `0` is rigidly the start node, so any
+  lower neighbor of a level-`1` node is automatically and uniquely the start vertex.
   The trivial `n = 1` bookkeeping is already separated by direct one-dimensional target-facet
   lemmas, so the remaining nontrivial Section 5 path argument can stay focused on `2 ≤ n`.
 - Current structural blocker:

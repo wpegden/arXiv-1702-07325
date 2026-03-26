@@ -891,6 +891,19 @@ theorem section5StartComponentGraph_lower_neighbor_of_levelOne_eq_start {n : ℕ
   simpa [section5StartVertexInComponent, section5StartNodeInNodes] using
     (section5_levelZero_eq_startNode (T := T) (f := f) (u := u.1.1) huNode huLevelZero)
 
+theorem section5StartComponentGraph_lower_neighbor_unique_of_levelOne {n : ℕ} [NeZero n]
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    {hstart : IsSection5GraphNode T f (section5StartNode n)}
+    {u w v : section5StartComponent hstart}
+    (huv : (section5StartComponentGraph hstart).Adj u v)
+    (huLevel : u.1.1.level + 1 = v.1.1.level)
+    (hwv : (section5StartComponentGraph hstart).Adj w v)
+    (hwLevel : w.1.1.level + 1 = v.1.1.level)
+    (hvLevel : v.1.1.level = 1) :
+    u = w := by
+  rw [section5StartComponentGraph_lower_neighbor_of_levelOne_eq_start huv huLevel hvLevel]
+  exact (section5StartComponentGraph_lower_neighbor_of_levelOne_eq_start hwv hwLevel hvLevel).symm
+
 theorem section5_levelOne_start_subface_unique {n : ℕ} [NeZero n]
     {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n} {u v : Section5Node n}
     (hu : IsSection5GraphNode T f u) (hv : IsSection5GraphNode T f v)

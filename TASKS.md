@@ -34,6 +34,7 @@
 - [x] Prove the existence half of `Section5CanonicalBoundarySuccessorData` for the genuine boundary-edge regime `2 ≤ n`: extract a non-start triangulation vertex on `[e₁,e₂]`, use a maximal-boundary-vertex argument to force `e₁` into the support of a nearby covered point, and package the resulting level-1 start edge in the canonical start component.
 - [x] Isolate the remaining low-dimensional bookkeeping around the new start-successor theorem by proving direct `n = 1` target-facet lemmas, so the nontrivial Section 5 path work can now focus on `2 ≤ n`.
 - [x] Repackage the remaining Section 5 local-degree work into a direct 1-dimensional-cell-complex interface on the actual start component: define `Section5OneComplexGeometry`, prove it yields the `≤ 2` degree bound and non-start endpoint rule, and bridge it to `Section5SegmentGeometry` and the canonical target-facet theorem.
+- [x] Prove the first concrete one-complex fragment on the real start component: any level-0 node is the start node, so any lower neighbor of a level-1 node is uniquely the start vertex.
 - [ ] Prove the actual `Section5OneComplexGeometry` axioms from the manuscript's generic segment-intersection picture on the barycenter-chain preimage.
 - [ ] Discharge `Section5SegmentGeometry` from actual Section 5 lemmas on the barycenter-chain preimage by combining the canonical start-successor theorem with the new one-complex geometry.
 
