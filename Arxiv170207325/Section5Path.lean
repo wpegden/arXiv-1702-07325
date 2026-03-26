@@ -2932,6 +2932,63 @@ theorem Section5LocalLowerTransversality.exists_section5StartComponentLowerStep_
   exact exists_section5StartComponentLowerStep_of_subface_card_eq_and_map_eq_hitParamLeft
     hf hfpl hu_ne hτsub hτcard hτface hxτ hfx
 
+/-- Exact remaining local left-endpoint input: a minimal exact left hit already occurs on a
+codimension-one lower face of the current Section 5 cell. -/
+def Section5LocalLeftBoundaryFaceGenericity {n : ℕ} (u : Section5Node n)
+    (f : SelfMapOnRentSimplex n) : Prop :=
+  ∀ {τ : SimplexFacet n},
+    τ ∈ section5HitParamLeftSubfaces u f →
+    (∀ σ ∈ section5HitParamLeftSubfaces u f, τ.vertices.card ≤ σ.vertices.card) →
+      τ.vertices.card = u.level ∧
+        ∀ ⦃w : RentSimplex n⦄, w ∈ τ.vertices →
+          w ∈ coordinateFace (prefixRooms n u.level)
+
+theorem Section5LocalLeftBoundaryFaceGenericity.exists_section5LowerStep
+    {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    {u : Section5Node n} (hleft : Section5LocalLeftBoundaryFaceGenericity u f)
+    (hf : IsFaceRespecting f) (hfpl : IsPiecewiseAffineOn T f)
+    (hu : IsSection5GraphNode T f u) (hulevel : 0 < u.level) :
+    ∃ v : Section5Node n, IsSection5GraphNode T f v ∧ Section5Step f v u := by
+  rcases exists_minimal_section5HitParamLeftSubface (u := u) (f := f) hu with ⟨τ, hτ, hmin⟩
+  have hτsub : τ.IsSubfaceOf u.cell :=
+    (mem_section5PointHitSubfaces_iff
+      (u := u) (f := f)
+      (y := section5HitParamMap n u.level (section5HitParamLeft u f))
+      (τ := τ)).mp hτ |>.1
+  rcases hleft hτ hmin with ⟨hτcard, hτface⟩
+  rcases hfpl.exists_point_in_realization_of_mem_section5HitParamLeftSubfaces hu hτ with
+    ⟨x, hxτ, hfx⟩
+  exact exists_section5LowerStep_of_subface_card_eq_and_map_eq_hitParamLeft
+    hf hfpl hu hulevel hτsub hτcard hτface hxτ hfx
+
+theorem Section5LocalLeftBoundaryFaceGenericity.exists_section5StartComponentLowerStep
+    {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    {hstart : IsSection5GraphNode T f (section5StartNode n)}
+    {u : section5StartComponent hstart}
+    (hleft : Section5LocalLeftBoundaryFaceGenericity u.1.1 f)
+    (hf : IsFaceRespecting f) (hfpl : IsPiecewiseAffineOn T f)
+    (hu_ne : u ≠ section5StartVertexInComponent hstart) :
+    ∃ v : section5StartComponent hstart, Section5Step f v.1.1 u.1.1 := by
+  have hu : IsSection5GraphNode T f u.1.1 := (mem_section5Nodes_iff).mp u.1.2
+  have hulevel : 0 < u.1.1.level := by
+    by_contra hzero
+    have hu0 : u.1.1.level = 0 := Nat.eq_zero_of_not_pos hzero
+    have hu_eq_start : u.1.1 = section5StartNode n := section5_levelZero_eq_startNode hu hu0
+    apply hu_ne
+    exact Subtype.ext (Subtype.ext hu_eq_start)
+  rcases exists_minimal_section5HitParamLeftSubface (u := u.1.1) (f := f) hu with
+    ⟨τ, hτ, hmin⟩
+  have hτsub : τ.IsSubfaceOf u.1.1.cell :=
+    (mem_section5PointHitSubfaces_iff
+      (u := u.1.1) (f := f)
+      (y := section5HitParamMap n u.1.1.level (section5HitParamLeft u.1.1 f))
+      (τ := τ)).mp hτ |>.1
+  rcases hleft hτ hmin with ⟨hτcard, hτface⟩
+  rcases hfpl.exists_point_in_realization_of_mem_section5HitParamLeftSubfaces hu hτ with
+    ⟨x, hxτ, hfx⟩
+  exact exists_section5StartComponentLowerStep_of_subface_card_eq_and_map_eq_hitParamLeft
+    hf hfpl hu_ne hτsub hτcard hτface hxτ hfx
+
 theorem section5StartComponentGraph_lower_neighbor_unique {n : ℕ} [NeZero n]
     {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
     {hstart : IsSection5GraphNode T f (section5StartNode n)}
@@ -4018,6 +4075,29 @@ structure Section5PerturbationGenericity {n : ℕ} [NeZero n]
       (¬ ∃ w : section5StartComponent hstart, Section5Step f v.1.1 w.1.1) →
         IsSection5Endpoint T f v.1.1
 
+theorem section5PerturbationGenericity_of_localLeftBoundaryFaceAndUpperEndpoint
+    {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    {hstart : IsSection5GraphNode T f (section5StartNode n)}
+    (hf : IsFaceRespecting f) (hfpl : IsPiecewiseAffineOn T f)
+    (hlower :
+      ∀ v : section5StartComponent hstart,
+        v ≠ section5StartVertexInComponent hstart →
+          Section5LocalLeftBoundaryFaceGenericity v.1.1 f)
+    (hupper :
+      ∀ {v u w : section5StartComponent hstart},
+        Section5Step f v.1.1 u.1.1 →
+        Section5Step f v.1.1 w.1.1 →
+          u = w)
+    (hendpoint :
+      ∀ v : section5StartComponent hstart,
+        (¬ ∃ w : section5StartComponent hstart, Section5Step f v.1.1 w.1.1) →
+          IsSection5Endpoint T f v.1.1) :
+    Section5PerturbationGenericity T f hstart := by
+  refine ⟨?_, hupper, hendpoint⟩
+  intro v hv
+  exact Section5LocalLeftBoundaryFaceGenericity.exists_section5StartComponentLowerStep
+    (u := v) (hleft := hlower v hv) hf hfpl hv
+
 /-- A local 1-dimensional-cell-complex package for the real Section 5 start component.
 It records that every non-start node is entered from a unique lower-level neighbor, each node has
 at most one higher-level continuation, and a node with no higher-level continuation already hits
@@ -4494,6 +4574,30 @@ theorem IsFaceRespecting.exists_barycenter_targetFacet_of_two_le_and_perturbatio
       FacetImageContains f τ ((rentBarycenter n : RentSimplex n) : RentCoordinates n) := by
   exact Section5CanonicalBoundarySuccessorData.exists_targetFacet_of_perturbationGenericity
     (T := T) (f := f) hf (hf.section5CanonicalBoundarySuccessorData_of_two_le hn) hpert
+
+theorem IsFaceRespecting.exists_barycenter_targetFacet_of_two_le_and_localLeftBoundaryFaceAndUpperEndpoint
+    {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    (hn : 2 ≤ n) (hf : IsFaceRespecting f) (hfpl : IsPiecewiseAffineOn T f)
+    (hlower :
+      ∀ v : section5CanonicalStartComponent (T := T) (f := f) hf,
+        v ≠ section5CanonicalStartVertexInComponent (T := T) (f := f) hf →
+          Section5LocalLeftBoundaryFaceGenericity v.1.1 f)
+    (hupper :
+      ∀ {v u w : section5CanonicalStartComponent (T := T) (f := f) hf},
+        Section5Step f v.1.1 u.1.1 →
+        Section5Step f v.1.1 w.1.1 →
+          u = w)
+    (hendpoint :
+      ∀ v : section5CanonicalStartComponent (T := T) (f := f) hf,
+        (¬ ∃ w : section5CanonicalStartComponent (T := T) (f := f) hf,
+          Section5Step f v.1.1 w.1.1) →
+            IsSection5Endpoint T f v.1.1) :
+    ∃ τ ∈ T.facets,
+      FacetImageContains f τ ((rentBarycenter n : RentSimplex n) : RentCoordinates n) := by
+  exact hf.exists_barycenter_targetFacet_of_two_le_and_perturbationGenericity hn <|
+    section5PerturbationGenericity_of_localLeftBoundaryFaceAndUpperEndpoint
+      (T := T) (f := f) (hstart := hf.section5StartNode_isGraphNode)
+      hf hfpl hlower hupper hendpoint
 
 theorem IsFaceRespecting.exists_barycenter_targetFacet_of_boundarySegmentGenericity
     {n : ℕ} [NeZero n] {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}

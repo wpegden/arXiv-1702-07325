@@ -244,6 +244,20 @@
   minimal left/right endpoint-hit subface back into an exact endpoint hit on the erased face when
   appropriate, then extract a codimension-one lower face on the left and the corresponding
   uniqueness/endpoint facts on the right.
+- Current explicit left-side proof boundary:
+  the exact remaining lower-entry statement is now named
+  `Section5LocalLeftBoundaryFaceGenericity u f`. It says that a minimal member of
+  `section5HitParamLeftSubfaces u f` already has `u.level` vertices and all of them lie in
+  `coordinateFace (prefixRooms n u.level)`. `Section5Path.lean` now proves this hypothesis is
+  exactly enough to close the lower-step side immediately: from one minimal exact left hit it
+  extracts the predecessor `Section5Step`, packages the start-component version, and threads the
+  resulting `hlower` field directly into `Section5PerturbationGenericity` and the canonical
+  target-facet wrapper
+  `IsFaceRespecting.exists_barycenter_targetFacet_of_two_le_and_localLeftBoundaryFaceAndUpperEndpoint`.
+  So the lower-side frontier is no longer an implicit “something codimension-one happens”
+  placeholder; it is specifically the proof of `Section5LocalLeftBoundaryFaceGenericity` from the
+  existing exact-point/transversality geometry, together with the still-separate right-side upper
+  uniqueness and endpoint hypotheses.
 - Current structural blocker:
   the present `SimplexTriangulation` wrapper does not yet expose the induced simplicial
   subdivision of the prefix faces, especially the boundary edge `[e_1,e_2]`, and it also does
