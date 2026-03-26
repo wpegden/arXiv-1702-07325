@@ -204,20 +204,18 @@
   prefix-face infrastructure is no longer tied to the first boundary edge, and both the
   lower-neighbor uniqueness and lower-neighbor existence sides are now formal. The remaining work
   should therefore proceed by proving the facet-local collapsed-fiber theorem behind
-  `section5LocalOneComplexGeometry_of_uniqueUpperOrEndpoint`: for a start-component node `v`,
-  apply `IsSection5GraphNode.exists_point_in_incidentPrefixFace_mem_segmentZeroFiber_of_piecewiseAffineOn`,
-  use the new ambient slice theorem to identify `prefixSegmentZeroFiber n v.level g` with the
-  segment from `prefixBarycenter n v.level` to the new standard vertex on the ambient prefix face,
-  and then prove that its intersection with the simplicial subdivision of the induced prefix face
-  has at most one upper codimension-one continuation and that the no-upper-continuation case
-  already forces the barycenter endpoint. Because common-facet ambiguity is now gone, the only
-  genuinely remaining case is to compare candidate upper continuations coming from distinct
-  incident facets and show the collapsed slice can meet at most one of them away from the lower
-  face. The new conditional theorem
-  `IsSection5GraphNode.upper_step_eq_of_common_point_outside_lowerFace` means the remaining task
-  is now precisely to manufacture such a common non-lower point from the facet-local slice
-  geometry, or prove that no such upper continuation exists and hence the node is already an
-  endpoint.
+  `section5LocalOneComplexGeometry_of_uniqueUpperOrEndpoint` in two exact Lean-ready steps. First,
+  for an upper `Section5Step f u v`, start from a witness package produced by
+  `IsSection5GraphNode.exists_point_in_incidentPrefixFace_mem_segmentZeroFiber_of_piecewiseAffineOn`
+  on `u` and prove that the local slice `prefixSegmentZeroFiber n u.level g` inside the incident
+  upper prefix face contributes a point outside
+  `ambientCoordinateFace (prefixRooms n (u.level + 1))`; after transporting that point across
+  `face_intersection`, the existing theorem
+  `IsSection5GraphNode.upper_step_eq_of_common_point_outside_lowerFace` collapses any two
+  candidate upper continuations. Second, prove the complementary statement that if every such
+  local slice point stays in the lower ambient face, then the node already satisfies
+  `IsSection5Endpoint T f u`. Because common-facet ambiguity is now gone, these two slice lemmas
+  are the only genuinely remaining content needed to finish the Section 5 start-component branch.
 - Current structural blocker:
   the present `SimplexTriangulation` wrapper now exposes induced prefix faces and their induced
   realizations, but it still does not expose the full simplicial-subdivision combinatorics of
@@ -234,9 +232,12 @@
   image witness, and such witnesses agree on shared subfaces. So the unresolved issue is truly the
   local continuation/genericity of the chain preimage, not the existence of pointwise witnesses.
   The new collapsed-segment lemmas sharpen this further: the missing theorem is now specifically a
-  facet-local statement that the explicit ambient slice from `b_k` to `e_{k+1}` cuts the induced
-  simplicial subdivision of one prefix face like a 1-dimensional path, with at most one upper
-  codimension-one exit and an empty upper exit set forcing the barycenter endpoint.
+  pair of facet-local slice statements. One must show that a genuine upper `Section5Step` forces
+  the local slice `prefixSegmentZeroFiber n u.level g` to leave the lower ambient prefix face in
+  a way that survives across incident facets, producing the non-lower common point needed by
+  `IsSection5GraphNode.upper_step_eq_of_common_point_outside_lowerFace`. The complementary
+  statement must show that if no such non-lower slice point exists, then the node is already an
+  endpoint hitting the barycenter.
 - First prove the barycenter-specialized version if that is the easiest entry point.
 - Then generalize to arbitrary interior targets if Section 6 needs it.
 - If full surjectivity is still awkward, keep the theorem in the "target in interior" form first; that already covers the barycenter and the interior `y` used in the first Section 6 theorem.
