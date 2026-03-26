@@ -69,13 +69,20 @@
   requirement `Section5LocalLevelOneLeftVertexGenericity`; current exploration suggests it does not
   follow from `IsFaceRespecting` alone, so if the manuscript intends it, it should be understood as
   part of the local generic-position/transversality input rather than a formal consequence of face
-  preservation by itself.
+  preservation by itself. Concretely, `IsFaceRespecting` forces `f(e₁) = b₁`, but it does not by
+  itself prevent the other vertex of a level-1 cell `{e₁,w}` from also mapping to `b₁`; so a
+  minimal singleton exact-left hit at `w` is not excluded without extra local geometry.
 - Section 5, outgoing-side status: the exact right-endpoint obligations are now named in Lean as
   `Section5LocalUpperEndpointGenericity T f hstart`. This is not new mathematical content; it is
   simply the manuscript's two generic outgoing-path claims made explicit as fields: upper-step
   uniqueness and the assertion that if no further upper step exists then the current cell already
   maps to the final barycenter. These are the precise remaining right-side statements to prove from
-  the generic segment-intersection picture.
+  the generic segment-intersection picture. The current exact-right-endpoint API by itself is not
+  yet enough: minimal members of `section5HitParamRightSubfaces u f` are subfaces of `u.cell`,
+  while `upper_step_unique` is a statement about higher-dimensional cofaces containing `u.cell`.
+  So the unresolved outgoing geometry is genuinely a statement about the star of `u.cell`, namely
+  that the barycenter-chain segment exits through at most one higher-dimensional continuation cell,
+  and that if it exits through none then the right endpoint already is the final barycenter.
 - Section 5, current formalization status: this remaining manuscript sentence is now represented directly by the support-layer structure `Section5BoundarySegmentGenericity`. That package is already sufficient, together with the canonical start-successor theorem, to derive the paper-facing Section 5 target-facet conclusion; the unresolved work is therefore the actual geometric proof of `Section5BoundarySegmentGenericity`, not any further graph-theoretic packaging.
 - Section 5, current proof boundary: the Lean development now also has the more literal step-level perturbation package `Section5PerturbationGenericity`, whose fields say that a non-start cell is entered from a lower face, has at most one upper continuation as a `Section5Step`, and if there is no such continuation then it already contains the barycenter. This matches the manuscript's segment-intersection language more closely than the older neighbor-cardinality packaging, so the remaining work is best understood as proving `Section5PerturbationGenericity` from the paper's genericity/perturbation claim.
 - Section 5, interface status after the latest cleanup: the step-level and boundary-segment

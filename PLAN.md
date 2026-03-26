@@ -276,11 +276,23 @@
   `section5LocalLeftBoundaryFaceGenericity_of_levelOne_and_start_subface_of_minimal_vertex_mem`.
   Lean now names the missing premise itself as `Section5LocalLevelOneLeftVertexGenericity u f`.
   So the remaining level-1 work is exactly to prove that named local hypothesis, i.e. to show
-  that the unique vertex of a minimal singleton exact left hit lies in that lower face.
+  that the unique vertex of a minimal singleton exact left hit lies in that lower face. Current
+  exploration strongly suggests this is not derivable from `IsFaceRespecting` alone: the existing
+  hypotheses force `f(e₁)=b₁` but do not rule out the second vertex of a level-1 cell from also
+  mapping to `b₁`. So the level-1 left frontier should now be treated as either a separate
+  level-one geometric lemma or an explicit extra local genericity assumption, not as something the
+  present face-respecting API is expected to imply automatically.
   Dually, the exact remaining right-endpoint input is now also named explicitly:
   `Section5LocalUpperEndpointGenericity T f hstart` bundles the two still-unproved fields that
   the manuscript's generic path argument needs on the outgoing side, namely uniqueness of an upper
   `Section5Step` and the fact that a node with no such upper step already hits the final barycenter.
+  The current exact-right-endpoint machinery does not yet reach those fields directly, because it
+  analyzes minimal right-endpoint hits by taking subfaces of a fixed cell `u.cell`, while
+  `upper_step_unique` and `no_upper_step_is_endpoint` are statements about the cofaces in the star
+  of `u.cell`. So the actual remaining outgoing lemma is not another erased-subface statement but
+  a local star-of-a-cell genericity claim: among higher-level Section 5 cells containing `u.cell`,
+  the barycenter-chain segment has at most one outgoing continuation through the right endpoint,
+  and if there is no such continuation then that right endpoint is already the final barycenter.
   On the packaging side, the remaining graph-theoretic conversion gap is now gone: the support
   layer proves `Section5PerturbationGenericity.toBoundarySegmentGenericity`, and the existing
   local-left/upper-endpoint wrapper is rerouted through
