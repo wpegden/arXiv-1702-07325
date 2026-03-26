@@ -203,6 +203,11 @@
   `prefixBarycenter n u.level` (or equivalently exhibits one lower-prefix slice point mapping
   there). So the remaining local geometry has been reduced to exactly those two cell-level facts
   on the canonical lower-prefix face, rather than to a search for an unnamed subface `ρ`.
+  This reduction is now checked in Lean in both local and global forms:
+  `section5LowerEntryFaceData_nonempty_iff_card_eq_and_facetImageContains_lowerPrefixVertices`
+  identifies lower-entry data with those two canonical facts on one cell, and
+  `Section5EntryFaceGenericity.lower_entry_face_of_ne_start_canonical` exposes the same pair of
+  obligations for every non-start node in the start component.
   The older `Section5OneComplexGeometry` layer remains useful as cleanup, but it is no longer the
   main proof boundary.
   A first concrete fragment is already in place: level `0` is rigidly the start node, so any

@@ -2316,6 +2316,74 @@ theorem Section5LowerEntryFaceData.exists_startComponentLowerStep {n : ℕ} [NeZ
     hu_ne hentry.isSubface hentry.card_eq hentry.lower_prefix_vertices
     hentry.hits_barycenter
 
+theorem Section5LowerEntryFaceData.vertices_eq_lowerPrefixVertices {n : ℕ}
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n} {u : Section5Node n}
+    (hu : IsSection5GraphNode T f u) (hentry : Section5LowerEntryFaceData u f) :
+    hentry.face.vertices = section5LowerPrefixVertices u := by
+  classical
+  have hsub : hentry.face.vertices ⊆ section5LowerPrefixVertices u := by
+    intro w hw
+    exact Finset.mem_filter.mpr ⟨hentry.isSubface hw, hentry.lower_prefix_vertices hw⟩
+  refine Finset.eq_of_subset_of_card_le hsub ?_
+  calc
+    (section5LowerPrefixVertices u).card ≤ u.level :=
+      IsSection5GraphNode.card_lowerPrefixVertices_le hu
+    _ = hentry.face.vertices.card := hentry.card_eq.symm
+
+theorem Section5LowerEntryFaceData.face_eq_lowerPrefixVertices {n : ℕ}
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n} {u : Section5Node n}
+    (hu : IsSection5GraphNode T f u) (hentry : Section5LowerEntryFaceData u f) :
+    hentry.face = (⟨section5LowerPrefixVertices u⟩ : SimplexFacet n) := by
+  classical
+  cases hentry with
+  | mk face isSubface card_eq lower_prefix_vertices hits_barycenter =>
+      cases face with
+      | mk vertices =>
+          change ({ vertices := vertices } : SimplexFacet n) =
+            ({ vertices := section5LowerPrefixVertices u } : SimplexFacet n)
+          have hverts : vertices = section5LowerPrefixVertices u := by
+            have hsub : vertices ⊆ section5LowerPrefixVertices u := by
+              intro w hw
+              exact Finset.mem_filter.mpr ⟨isSubface hw, lower_prefix_vertices hw⟩
+            refine Finset.eq_of_subset_of_card_le hsub ?_
+            calc
+              (section5LowerPrefixVertices u).card ≤ u.level :=
+                IsSection5GraphNode.card_lowerPrefixVertices_le hu
+              _ = vertices.card := card_eq.symm
+          cases hverts
+          rfl
+
+theorem Section5LowerEntryFaceData.facetImageContains_lowerPrefixVertices {n : ℕ}
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n} {u : Section5Node n}
+    (hu : IsSection5GraphNode T f u) (hentry : Section5LowerEntryFaceData u f) :
+    FacetImageContains f (⟨section5LowerPrefixVertices u⟩ : SimplexFacet n)
+      (prefixBarycenter n u.level) := by
+  simpa [hentry.face_eq_lowerPrefixVertices hu] using hentry.hits_barycenter
+
+theorem Section5LowerEntryFaceData.card_eq_lowerPrefixVertices {n : ℕ}
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n} {u : Section5Node n}
+    (hu : IsSection5GraphNode T f u) (hentry : Section5LowerEntryFaceData u f) :
+    (section5LowerPrefixVertices u).card = u.level := by
+  simpa [hentry.vertices_eq_lowerPrefixVertices hu] using hentry.card_eq
+
+theorem section5LowerEntryFaceData_nonempty_iff_card_eq_and_facetImageContains_lowerPrefixVertices
+    {n : ℕ} {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n} {u : Section5Node n}
+    (hu : IsSection5GraphNode T f u) :
+    Nonempty (Section5LowerEntryFaceData u f) ↔
+      (section5LowerPrefixVertices u).card = u.level ∧
+        FacetImageContains f (⟨section5LowerPrefixVertices u⟩ : SimplexFacet n)
+          (prefixBarycenter n u.level) := by
+  classical
+  constructor
+  · rintro ⟨hentry⟩
+    exact ⟨hentry.card_eq_lowerPrefixVertices hu,
+      hentry.facetImageContains_lowerPrefixVertices hu⟩
+  · rintro ⟨hcard, hhit⟩
+    refine ⟨⟨⟨section5LowerPrefixVertices u⟩, section5LowerPrefixVertices_isSubface u, hcard, ?_,
+      hhit⟩⟩
+    intro w hw
+    exact (Finset.mem_filter.mp hw).2
+
 def section5LowerEntryFaceData_of_card_eq_and_facetImageContains {n : ℕ}
     {f : SelfMapOnRentSimplex n} (u : Section5Node n)
     (hcard : (section5LowerPrefixVertices u).card = u.level)
@@ -3458,6 +3526,21 @@ structure Section5EntryFaceGenericity {n : ℕ} [NeZero n]
     ∀ v : section5StartComponent hstart,
       (¬ ∃ w : section5StartComponent hstart, Section5Step f v.1.1 w.1.1) →
         IsSection5Endpoint T f v.1.1
+
+theorem Section5EntryFaceGenericity.lower_entry_face_of_ne_start_canonical {n : ℕ} [NeZero n]
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    {hstart : IsSection5GraphNode T f (section5StartNode n)}
+    (hentry : Section5EntryFaceGenericity T f hstart)
+    (v : section5StartComponent hstart)
+    (hv : v ≠ section5StartVertexInComponent hstart) :
+    (section5LowerPrefixVertices v.1.1).card = v.1.1.level ∧
+      FacetImageContains f (⟨section5LowerPrefixVertices v.1.1⟩ : SimplexFacet n)
+        (prefixBarycenter n v.1.1.level) := by
+  have hv_node : IsSection5GraphNode T f v.1.1 := (mem_section5Nodes_iff).mp v.1.2
+  exact
+    (section5LowerEntryFaceData_nonempty_iff_card_eq_and_facetImageContains_lowerPrefixVertices
+      hv_node).mp
+      ⟨hentry.lower_entry_face_of_ne_start v hv⟩
 
 def Section5SimplexSliceBoundaryGeometry.toSimplexSliceGenericity {n : ℕ} [NeZero n]
     {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
