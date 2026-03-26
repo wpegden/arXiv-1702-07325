@@ -173,7 +173,14 @@
   `IsSection5GraphNode.cell_eq_prefixFace_of_incidentFacet`. Finally,
   `IsSection5GraphNode.exists_point_in_incidentPrefixFace_zeroFiber_of_piecewiseAffineOn`
   formulates the actual local object inside one incident facet: a point of the induced prefix face
-  lying in the zero fiber of `prefixSegmentCollapseMap n k ∘ g`.
+  lying in the zero fiber of `prefixSegmentCollapseMap n k ∘ g`. The newest sharpening shows that
+  this zero fiber is already rigid on the ambient prefix face: inside
+  `ambientCoordinateFace (prefixRooms n (k + 1))` it is exactly the segment from `b_k` to the new
+  standard vertex `e_{k+1}`, while on the smaller ambient face `ambientCoordinateFace (prefixRooms
+  n k)` zero collapse forces the lower endpoint `b_k`; the same facts are now available pointwise
+  on induced prefix-face realizations via `SimplexFacet.map_mem_ambientCoordinateFace_of_mem_section5PrefixFace_realization`,
+  `SimplexFacet.mem_segment_prefixBarycenter_lastVertex_of_mem_section5PrefixFace_realization`,
+  and `SimplexFacet.eq_prefixBarycenter_succ_of_mem_section5PrefixFace_realization_of_zeroCollapse`.
 - Next local objective:
   discharge `Section5SegmentGeometry` from the actual Section 5 geometry:
   prove that every graph node in the actual start component has at most two neighbors while every
@@ -184,9 +191,11 @@
   should therefore proceed by proving the facet-local collapsed-fiber theorem behind
   `section5LocalOneComplexGeometry_of_uniqueUpperOrEndpoint`: for a start-component node `v`,
   apply `IsSection5GraphNode.exists_point_in_incidentPrefixFace_zeroFiber_of_piecewiseAffineOn`,
-  then prove that the zero fiber of `prefixSegmentCollapseMap n v.level ∘ g` inside the induced
-  prefix face has at most one upper codimension-one continuation and that the
-  no-upper-continuation case already forces the barycenter endpoint.
+  use the new ambient slice theorem to identify that zero fiber with the segment from
+  `prefixBarycenter n v.level` to the new standard vertex on the ambient prefix face, and then
+  prove that its intersection with the simplicial subdivision of the induced prefix face has at
+  most one upper codimension-one continuation and that the no-upper-continuation case already
+  forces the barycenter endpoint.
 - Current structural blocker:
   the present `SimplexTriangulation` wrapper now exposes induced prefix faces and their induced
   realizations, but it still does not expose the full simplicial-subdivision combinatorics of
@@ -203,8 +212,8 @@
   image witness, and such witnesses agree on shared subfaces. So the unresolved issue is truly the
   local continuation/genericity of the chain preimage, not the existence of pointwise witnesses.
   The new collapsed-segment lemmas sharpen this further: the missing theorem is now specifically a
-  facet-local statement that the zero fiber of the explicit map `prefixSegmentCollapseMap n k ∘ g`
-  inside an induced prefix face behaves like a 1-dimensional slice, with at most one upper
+  facet-local statement that the explicit ambient slice from `b_k` to `e_{k+1}` cuts the induced
+  simplicial subdivision of one prefix face like a 1-dimensional path, with at most one upper
   codimension-one exit and an empty upper exit set forcing the barycenter endpoint.
 - First prove the barycenter-specialized version if that is the easiest entry point.
 - Then generalize to arbitrary interior targets if Section 6 needs it.

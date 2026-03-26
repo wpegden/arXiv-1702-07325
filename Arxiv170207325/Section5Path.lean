@@ -65,6 +65,14 @@ theorem prefixRooms_eq_univ_iff {n k : ℕ} (hk : k ≤ n) :
     subst h
     simp [prefixRooms_self]
 
+theorem prefixRooms_succ_eq_insert_last {n k : ℕ} (hk : k + 1 ≤ n) :
+    prefixRooms n (k + 1) =
+      insert (⟨k, lt_of_lt_of_le (Nat.lt_succ_self k) hk⟩ : RoomIndex n)
+        (prefixRooms n k) := by
+  ext i
+  simp [mem_prefixRooms_iff, Fin.ext_iff]
+  omega
+
 /-- The first standard simplex vertex on the boundary edge `[e₁,e₂]`. -/
 def section5FirstIndex {n : ℕ} (hn : 2 ≤ n) : RoomIndex n :=
   ⟨0, lt_of_lt_of_le (by decide : 0 < 2) hn⟩
@@ -360,6 +368,182 @@ theorem prefixSegmentCollapseMap_direction_eq_zero {n k : ℕ} [NeZero n] :
   rw [LinearMap.map_sub]
   simp
 
+@[simp]
+theorem prefixSegmentCollapseMap_lastVertex {n k : ℕ} [NeZero n] (hk : k + 1 ≤ n) :
+    prefixSegmentCollapseMap n k
+      (((stdSimplex.vertex (S := ℝ)
+          (⟨k, lt_of_lt_of_le (Nat.lt_succ_self k) hk⟩ : RoomIndex n) : RentSimplex n) :
+        RentCoordinates n)) = 0 := by
+  let i : RoomIndex n := ⟨k, lt_of_lt_of_le (Nat.lt_succ_self k) hk⟩
+  ext j
+  by_cases hj : j.1 < k
+  · have hji : j ≠ i := by
+      intro h
+      have : j.1 = k := by simpa [i] using congrArg Fin.val h
+      omega
+    have h0i : (0 : RoomIndex n) ≠ i := by
+      intro h
+      have : (0 : ℕ) = k := by simpa [i] using congrArg Fin.val h
+      omega
+    simp [prefixSegmentCollapseMap, hj, hji, h0i, i]
+  · by_cases hjk : j.1 = k
+    · simp [prefixSegmentCollapseMap, hjk]
+    · have hji : j ≠ i := by
+        intro h
+        have : j.1 = k := by simpa [i] using congrArg Fin.val h
+        omega
+      simp [prefixSegmentCollapseMap, hj, hjk, hji, i]
+
+theorem mem_segment_prefixBarycenter_lastVertex_iff_prefixSegmentCollapse_eq_zero_of_mem_ambientFace
+    {n k : ℕ} [NeZero n] (hk : k + 1 ≤ n) {y : RentCoordinates n}
+    (hy : y ∈ ambientCoordinateFace (prefixRooms n (k + 1))) :
+    y ∈ segment ℝ (prefixBarycenter n k)
+      (((stdSimplex.vertex (S := ℝ)
+          (⟨k, lt_of_lt_of_le (Nat.lt_succ_self k) hk⟩ : RoomIndex n) : RentSimplex n) :
+        RentCoordinates n)) ↔
+      prefixSegmentCollapseMap n k y = 0 := by
+  let i : RoomIndex n := ⟨k, lt_of_lt_of_le (Nat.lt_succ_self k) hk⟩
+  let vk : RentCoordinates n :=
+    (((stdSimplex.vertex (S := ℝ) i : RentSimplex n) : RentCoordinates n))
+  constructor
+  · intro hySeg
+    rw [segment_eq_image_lineMap, Set.mem_image] at hySeg
+    rcases hySeg with ⟨t, _ht, rfl⟩
+    have hvk : prefixSegmentCollapseMap n k vk = 0 := by
+      simpa [vk, i] using prefixSegmentCollapseMap_lastVertex (n := n) (k := k) hk
+    have hmap :
+        prefixSegmentCollapseMap n k (AffineMap.lineMap (prefixBarycenter n k) vk t) = 0 := by
+      rw [AffineMap.lineMap_apply_module, LinearMap.map_add, LinearMap.map_smul,
+        LinearMap.map_smul, prefixSegmentCollapseMap_prefixBarycenter]
+      simp [hvk]
+    simpa using hmap
+  · intro hzero
+    have hsum : ∑ j ∈ prefixRooms n (k + 1), y j = (1 : ℝ) := by
+      calc
+        ∑ j ∈ prefixRooms n (k + 1), y j = ∑ j, y j := by
+          rw [prefixRooms, Finset.sum_filter]
+          refine Finset.sum_congr rfl ?_
+          intro j hj
+          by_cases hj' : j.1 < k + 1
+          · simp [hj']
+          · have hyj : y j = 0 := by
+              exact (coordSupport_subset_iff.mp hy.2) j
+                (by simpa [mem_prefixRooms_iff] using hj')
+            simp [hj', hyj]
+        _ = (1 : ℝ) := by exact_mod_cast hy.1.2
+    have hy_eq_zero {j : RoomIndex n} (hj : j.1 < k) : y j = y (0 : RoomIndex n) := by
+      have hcoord := congrArg (fun z : RentCoordinates n => z j) hzero
+      simp [prefixSegmentCollapseMap_apply_of_lt (n := n) (k := k) hj] at hcoord
+      linarith
+    have hk_le : k ≤ n := Nat.le_trans (Nat.le_succ k) hk
+    have hsum_prefix :
+        ∑ j ∈ prefixRooms n k, y j = (k : ℝ) * y (0 : RoomIndex n) := by
+      rw [show ∑ j ∈ prefixRooms n k, y j = ∑ j ∈ prefixRooms n k, y (0 : RoomIndex n) by
+            refine Finset.sum_congr rfl ?_
+            intro j hj
+            exact hy_eq_zero (mem_prefixRooms_iff.mp hj)]
+      simp [prefixRooms_card hk_le]
+    have hi_not_mem : i ∉ prefixRooms n k := by
+      simp [i, mem_prefixRooms_iff]
+    have hsum_coord : (k : ℝ) * y (0 : RoomIndex n) + y i = (1 : ℝ) := by
+      rw [prefixRooms_succ_eq_insert_last hk, Finset.sum_insert hi_not_mem, hsum_prefix] at hsum
+      linarith
+    let t : ℝ := y i
+    have ht0 : 0 ≤ t := by
+      dsimp [t]
+      exact hy.1.1 i
+    have ht1 : t ≤ 1 := by
+      dsimp [t]
+      have hy0_nonneg : 0 ≤ y (0 : RoomIndex n) := hy.1.1 (0 : RoomIndex n)
+      have hk_nonneg : 0 ≤ (k : ℝ) := by positivity
+      nlinarith [hsum_coord]
+    rw [segment_eq_image_lineMap, Set.mem_image]
+    refine ⟨t, ⟨ht0, ht1⟩, ?_⟩
+    ext j
+    by_cases hj : j.1 < k
+    · have hk0 : k ≠ 0 := by omega
+      have hkpos : 0 < k := Nat.pos_of_ne_zero hk0
+      have hji : j ≠ i := by
+        intro h
+        have : j.1 = k := by simpa [i] using congrArg Fin.val h
+        omega
+      have hkR_ne : (k : ℝ) ≠ 0 := by
+        exact_mod_cast hk0
+      have hy0_formula : y (0 : RoomIndex n) = (1 - y i) / (k : ℝ) := by
+        field_simp [hkR_ne]
+        linarith [hsum_coord]
+      change ((AffineMap.lineMap (prefixBarycenter n k) vk t) j) = y j
+      rw [AffineMap.lineMap_apply_module]
+      simp [Pi.smul_apply, prefixBarycenter, vk, i, hj, hji, hy_eq_zero hj, hy0_formula, t]
+      field_simp [hkR_ne]
+    · by_cases hjk : j = i
+      · subst hjk
+        change ((AffineMap.lineMap (prefixBarycenter n k) vk t) i) = y i
+        rw [AffineMap.lineMap_apply_module]
+        simp [Pi.smul_apply, prefixBarycenter, vk, i, t]
+      · have hj_not_lt : ¬ j.1 < k + 1 := by
+          have hne : j.1 ≠ k := by
+            intro hEq
+            exact hjk <| Fin.ext hEq
+          omega
+        have hyj : y j = 0 := by
+          exact (coordSupport_subset_iff.mp hy.2) j
+            (by simpa [mem_prefixRooms_iff] using hj_not_lt)
+        change ((AffineMap.lineMap (prefixBarycenter n k) vk t) j) = y j
+        rw [AffineMap.lineMap_apply_module]
+        simp [Pi.smul_apply, prefixBarycenter, vk, i, hj, hjk, hyj, t]
+
+theorem eq_prefixBarycenter_of_prefixSegmentCollapse_eq_zero_of_mem_lowerAmbientFace
+    {n k : ℕ} [NeZero n] [NeZero k] (hk : k ≤ n) {y : RentCoordinates n}
+    (hy : y ∈ ambientCoordinateFace (prefixRooms n k))
+    (hzero : prefixSegmentCollapseMap n k y = 0) :
+    y = prefixBarycenter n k := by
+  ext j
+  by_cases hj : j.1 < k
+  · have hcoord := congrArg (fun z : RentCoordinates n => z j) hzero
+    have hkR_ne : (k : ℝ) ≠ 0 := by
+      exact_mod_cast (NeZero.ne k)
+    have hsum : ∑ l ∈ prefixRooms n k, y l = (1 : ℝ) := by
+      calc
+        ∑ l ∈ prefixRooms n k, y l = ∑ l, y l := by
+          rw [prefixRooms, Finset.sum_filter]
+          refine Finset.sum_congr rfl ?_
+          intro l hl
+          by_cases hl' : l.1 < k
+          · simp [hl']
+          · have hyl : y l = 0 := by
+              exact (coordSupport_subset_iff.mp hy.2) l
+                (by simpa [mem_prefixRooms_iff] using hl')
+            simp [hl', hyl]
+        _ = (1 : ℝ) := by exact_mod_cast hy.1.2
+    have hsum_const :
+        ∑ l ∈ prefixRooms n k, y l = (k : ℝ) * y (0 : RoomIndex n) := by
+      rw [show ∑ l ∈ prefixRooms n k, y l = ∑ l ∈ prefixRooms n k, y (0 : RoomIndex n) by
+            refine Finset.sum_congr rfl ?_
+            intro l hl
+            have hlk : l.1 < k := mem_prefixRooms_iff.mp hl
+            have hcoordl := congrArg (fun z : RentCoordinates n => z l) hzero
+            simp [prefixSegmentCollapseMap_apply_of_lt (n := n) (k := k) hlk] at hcoordl
+            linarith]
+      simp [prefixRooms_card hk]
+    have hy0 : y (0 : RoomIndex n) = (k : ℝ)⁻¹ := by
+      have hkR_ne : (k : ℝ) ≠ 0 := by
+        exact_mod_cast (NeZero.ne k)
+      have : (k : ℝ) * y (0 : RoomIndex n) = 1 := by
+        linarith [hsum, hsum_const]
+      have hy0' : y (0 : RoomIndex n) = 1 / (k : ℝ) := by
+        have hy0_mul : y (0 : RoomIndex n) * (k : ℝ) = 1 := by
+          nlinarith [this]
+        exact (eq_div_iff hkR_ne).2 hy0_mul
+      simpa [one_div] using hy0'
+    have : y j = y (0 : RoomIndex n) := by
+      simp [prefixSegmentCollapseMap_apply_of_lt (n := n) (k := k) hj] at hcoord
+      linarith
+    simp [prefixBarycenter, hj, this, hy0]
+  · have hyj : y j = 0 := by
+      exact (coordSupport_subset_iff.mp hy.2) j (by simpa [mem_prefixRooms_iff] using hj)
+    simp [prefixBarycenter, hj, hyj]
+
 /-- The first barycenter `b_1`, viewed as a simplex vertex, is the Section 5 start point. -/
 def section5StartVertex (n : ℕ) [NeZero n] : RentSimplex n :=
   ⟨prefixBarycenter n 1, by
@@ -516,6 +700,56 @@ theorem SimplexTriangulation.section5PrefixFace_isFace {n : ℕ} {T : SimplexTri
     {τ : SimplexFacet n} (hτ : τ ∈ T.facets) (k : ℕ) :
     T.IsFace (τ.section5PrefixFace k) :=
   ⟨τ, hτ, τ.section5PrefixFace_isSubface k⟩
+
+theorem SimplexFacet.map_mem_ambientCoordinateFace_of_mem_section5PrefixFace_realization {n : ℕ}
+    {τ : SimplexFacet n} {f : SelfMapOnRentSimplex n} (hf : IsFaceRespecting f)
+    {k : ℕ} {g : RentCoordinates n →ᵃ[ℝ] RentCoordinates n}
+    (hg : ∀ v ∈ (τ.vertices : Set (RentSimplex n)), g v = f v)
+    {x : RentCoordinates n} (hx : x ∈ (τ.section5PrefixFace k).realization) :
+    g x ∈ ambientCoordinateFace (prefixRooms n (k + 1)) := by
+  have hxHull : g x ∈ FacetImageHull f (τ.section5PrefixFace k) := by
+    rw [← (τ.section5PrefixFace k).image_realization_eq_facetImageHull_of_isSubface
+      (τ.section5PrefixFace_isSubface k) hg]
+    exact ⟨x, hx, rfl⟩
+  refine facetImageHull_subset_ambientCoordinateFace ?_ hxHull
+  intro v hv
+  have hvFace : v ∈ coordinateFace (prefixRooms n (k + 1)) := by
+    rw [τ.section5PrefixFace_vertices] at hv
+    exact (τ.mem_section5PrefixVertices_iff.mp hv).2
+  exact hf.mapsTo_ambientCoordinateFace (prefixRooms n (k + 1)) hvFace
+
+theorem
+    SimplexFacet.mem_segment_prefixBarycenter_lastVertex_of_mem_section5PrefixFace_realization
+    {n : ℕ} [NeZero n] {τ : SimplexFacet n} {f : SelfMapOnRentSimplex n}
+    (hf : IsFaceRespecting f) {k : ℕ} (hk : k + 1 ≤ n)
+    {g : RentCoordinates n →ᵃ[ℝ] RentCoordinates n}
+    (hg : ∀ v ∈ (τ.vertices : Set (RentSimplex n)), g v = f v)
+    {x : RentCoordinates n} (hx : x ∈ (τ.section5PrefixFace k).realization)
+    (hzero : prefixSegmentCollapseMap n k (g x) = 0) :
+    g x ∈ segment ℝ (prefixBarycenter n k)
+      (((stdSimplex.vertex (S := ℝ)
+          (⟨k, lt_of_lt_of_le (Nat.lt_succ_self k) hk⟩ : RoomIndex n) : RentSimplex n) :
+        RentCoordinates n)) := by
+  exact
+    (mem_segment_prefixBarycenter_lastVertex_iff_prefixSegmentCollapse_eq_zero_of_mem_ambientFace
+      (n := n) (k := k) hk
+      (τ.map_mem_ambientCoordinateFace_of_mem_section5PrefixFace_realization hf hg hx)).mpr hzero
+
+theorem
+    SimplexFacet.eq_prefixBarycenter_succ_of_mem_section5PrefixFace_realization_of_zeroCollapse
+    {n : ℕ} [NeZero n] {τ : SimplexFacet n} {f : SelfMapOnRentSimplex n}
+    (hf : IsFaceRespecting f) {k : ℕ} (hk : k + 1 ≤ n)
+    {g : RentCoordinates n →ᵃ[ℝ] RentCoordinates n}
+    (hg : ∀ v ∈ (τ.vertices : Set (RentSimplex n)), g v = f v)
+    {x : RentCoordinates n} (hx : x ∈ (τ.section5PrefixFace k).realization)
+    (hzero : prefixSegmentCollapseMap n (k + 1) (g x) = 0) :
+    g x = prefixBarycenter n (k + 1) := by
+  have hy :
+      g x ∈ ambientCoordinateFace (prefixRooms n (k + 1)) :=
+    τ.map_mem_ambientCoordinateFace_of_mem_section5PrefixFace_realization hf hg hx
+  haveI : NeZero (k + 1) := ⟨Nat.succ_ne_zero k⟩
+  exact eq_prefixBarycenter_of_prefixSegmentCollapse_eq_zero_of_mem_lowerAmbientFace
+    (n := n) (k := k + 1) hk hy hzero
 
 /-- The standard vertices spanning the prefix face `conv{e₁, ..., e_{k+1}}`. -/
 def prefixFaceStdVertices (n k : ℕ) : Finset (RentCoordinates n) :=
