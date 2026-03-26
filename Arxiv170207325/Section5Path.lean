@@ -2466,4 +2466,86 @@ theorem exists_targetFacet_of_faceRespectingAndLocalDegreeData {n : ℕ} [NeZero
   exact (section5SegmentGeometry_of_faceRespectingAndLocalDegreeData
     (T := T) (f := f) (hstart := hstart) hn hf hdeg hendpoint).exists_targetFacet hf
 
+/-- The remaining Section 5 genericity input, stated directly with actual pointwise witnesses on
+prefix-face realizations produced by the piecewise-affine structure. -/
+structure Section5PointwiseGenericity {n : ℕ} [NeZero n]
+    (T : SimplexTriangulation n) (f : SelfMapOnRentSimplex n)
+    (hstart : IsSection5GraphNode T f (section5StartNode n)) where
+  piecewiseAffine : IsPiecewiseAffineOn T f
+  upper_continuation_unique :
+    ∀ {u a b : section5StartComponent hstart},
+      (section5StartComponentGraph hstart).Adj u a →
+      u.1.1.level + 1 = a.1.1.level →
+      (section5StartComponentGraph hstart).Adj u b →
+      u.1.1.level + 1 = b.1.1.level →
+      FaceHitWitness T f u.1.1.cell (prefixBarycenter n (u.1.1.level + 1)) →
+      a = b
+  no_upper_neighbor_hits_barycenter :
+    ∀ v : section5StartComponent hstart,
+      (¬ ∃ w : section5StartComponent hstart,
+          (section5StartComponentGraph hstart).Adj v w ∧
+            v.1.1.level + 1 = w.1.1.level) →
+        FaceHitWitness T f v.1.1.cell
+          ((rentBarycenter n : RentSimplex n) : RentCoordinates n)
+
+theorem Section5PointwiseGenericity.upper_neighbor_unique {n : ℕ} [NeZero n]
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    {hstart : IsSection5GraphNode T f (section5StartNode n)}
+    (hgeom : Section5PointwiseGenericity T f hstart) :
+    ∀ {u a b : section5StartComponent hstart},
+      (section5StartComponentGraph hstart).Adj u a →
+      u.1.1.level + 1 = a.1.1.level →
+      (section5StartComponentGraph hstart).Adj u b →
+      u.1.1.level + 1 = b.1.1.level →
+      a = b := by
+  intro u a b haAdj haLevel hbAdj hbLevel
+  have huNode : IsSection5GraphNode T f u.1.1 := mem_section5Nodes_iff.mp u.1.2
+  have haAdjRaw : Section5Adjacent f u.1.1 a.1.1 :=
+    (section5StartComponentGraph_adj_iff hstart).mp haAdj
+  have haStep : Section5Step f u.1.1 a.1.1 :=
+    (section5Adjacent_of_level_succ_eq_iff_step (f := f) haLevel).mp haAdjRaw
+  have huHit :
+      FacetImageContains f u.1.1.cell (prefixBarycenter n (u.1.1.level + 1)) := by
+    simpa [haLevel] using haStep.2.2
+  let hw : FaceHitWitness T f u.1.1.cell (prefixBarycenter n (u.1.1.level + 1)) :=
+    T.faceHitWitnessOfFacetImageContains huNode.isFace hgeom.piecewiseAffine huHit
+  exact hgeom.upper_continuation_unique haAdj haLevel hbAdj hbLevel hw
+
+theorem Section5PointwiseGenericity.no_upper_neighbor_is_endpoint {n : ℕ} [NeZero n]
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    {hstart : IsSection5GraphNode T f (section5StartNode n)}
+    (hgeom : Section5PointwiseGenericity T f hstart) :
+    ∀ v : section5StartComponent hstart,
+      (¬ ∃ w : section5StartComponent hstart,
+          (section5StartComponentGraph hstart).Adj v w ∧
+            v.1.1.level + 1 = w.1.1.level) →
+        IsSection5Endpoint T f v.1.1 := by
+  intro v hv
+  exact ⟨mem_section5Nodes_iff.mp v.1.2,
+    (hgeom.no_upper_neighbor_hits_barycenter v hv).facetImageContains⟩
+
+theorem Section5PointwiseGenericity.toSegmentGeometry {n : ℕ} [NeZero n]
+    (hn : 2 ≤ n) {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    (hf : IsFaceRespecting f)
+    {hstart : IsSection5GraphNode T f (section5StartNode n)}
+    (hgeom : Section5PointwiseGenericity T f hstart) :
+    Section5SegmentGeometry T f hstart := by
+  refine ⟨?_, ?_, ?_⟩
+  · exact (section5StartBoundaryGeometry_of_faceRespecting
+      (T := T) (f := f) (hstart := hstart) hn hf).start_unique_neighbor
+  · exact section5StartComponentGraph_degree_le_two_of_upper_neighbor_unique
+      (hstart := hstart) hgeom.upper_neighbor_unique
+  · intro v hv hne
+    exact section5StartComponent_nonstart_degree_one_is_endpoint_of_no_upper_neighbor_endpoint
+      (T := T) (f := f) (hstart := hstart) hgeom.no_upper_neighbor_is_endpoint v hv hne
+
+theorem Section5PointwiseGenericity.exists_targetFacet {n : ℕ} [NeZero n]
+    (hn : 2 ≤ n) {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n}
+    (hf : IsFaceRespecting f)
+    {hstart : IsSection5GraphNode T f (section5StartNode n)}
+    (hgeom : Section5PointwiseGenericity T f hstart) :
+    ∃ τ ∈ T.facets,
+      FacetImageContains f τ ((rentBarycenter n : RentSimplex n) : RentCoordinates n) := by
+  exact (hgeom.toSegmentGeometry hn hf).exists_targetFacet hf
+
 end Arxiv170207325

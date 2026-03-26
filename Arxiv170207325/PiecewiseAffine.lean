@@ -6,6 +6,19 @@ noncomputable section
 
 namespace Arxiv170207325
 
+/-- A pointwise witness that a target lies in the image of one triangulation face under some
+facetwise affine extension of the vertex map. -/
+structure FaceHitWitness {n : ℕ} (T : SimplexTriangulation n) (f : SelfMapOnRentSimplex n)
+    (σ : SimplexFacet n) (y : RentCoordinates n) where
+  facet : SimplexFacet n
+  facet_mem : facet ∈ T.facets
+  subface : σ.IsSubfaceOf facet
+  affineMap : RentCoordinates n →ᵃ[ℝ] RentCoordinates n
+  agrees : ∀ v ∈ (facet.vertices : Set (RentSimplex n)), affineMap v = f v
+  point : RentCoordinates n
+  point_mem : point ∈ σ.realization
+  point_image : affineMap point = y
+
 theorem SimplexFacet.image_pointSet_eq_vertexImage {n : ℕ} (σ : SimplexFacet n)
     (g : RentCoordinates n →ᵃ[ℝ] RentCoordinates n) :
     g '' σ.pointSet =
@@ -74,5 +87,35 @@ theorem SimplexTriangulation.exists_point_in_realization_of_facetImageContains {
     exact hy
   rcases hy' with ⟨x, hx, hxy⟩
   exact ⟨τ, hτ, hστ, g, hg, x, hx, hxy⟩
+
+theorem FaceHitWitness.facetImageContains {n : ℕ}
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n} {σ : SimplexFacet n}
+    {y : RentCoordinates n} (hw : FaceHitWitness T f σ y) :
+    FacetImageContains f σ y := by
+  rw [FacetImageContains]
+  have hy : y ∈ hw.affineMap '' σ.realization := ⟨hw.point, hw.point_mem, hw.point_image⟩
+  rw [σ.image_realization_eq_facetImageHull_of_isSubface hw.subface hw.agrees] at hy
+  exact hy
+
+noncomputable def SimplexTriangulation.faceHitWitnessOfFacetImageContains {n : ℕ}
+    {T : SimplexTriangulation n} {f : SelfMapOnRentSimplex n} {σ : SimplexFacet n}
+    (hσ : T.IsFace σ) (hpa : IsPiecewiseAffineOn T f) {y : RentCoordinates n}
+    (hy : FacetImageContains f σ y) : FaceHitWitness T f σ y := by
+  classical
+  let h := T.exists_point_in_realization_of_facetImageContains hσ hpa hy
+  let τ : SimplexFacet n := Classical.choose h
+  have hτ :
+      τ ∈ T.facets ∧
+        σ.IsSubfaceOf τ ∧
+        ∃ g : RentCoordinates n →ᵃ[ℝ] RentCoordinates n,
+          (∀ v ∈ (τ.vertices : Set (RentSimplex n)), g v = f v) ∧
+          ∃ x ∈ σ.realization, g x = y := Classical.choose_spec h
+  let g : RentCoordinates n →ᵃ[ℝ] RentCoordinates n := Classical.choose hτ.2.2
+  have hg :
+      (∀ v ∈ (τ.vertices : Set (RentSimplex n)), g v = f v) ∧
+        ∃ x ∈ σ.realization, g x = y := Classical.choose_spec hτ.2.2
+  let x : RentCoordinates n := Classical.choose hg.2
+  have hx : x ∈ σ.realization ∧ g x = y := Classical.choose_spec hg.2
+  exact ⟨τ, hτ.1, hτ.2.1, g, hg.1, x, hx.1, hx.2⟩
 
 end Arxiv170207325
